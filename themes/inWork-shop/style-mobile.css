@@ -1,0 +1,208 @@
+/* Variables */
+/* Mobile version */
+/* MOBILE MAIN ADJUSTMENT */
+header, article, footer {
+  width: unset;
+  margin: 0 16px;
+}
+
+.header {
+  top: 0;
+  left: 0;
+  right: 0;
+  max-width: 768px;
+}
+
+.nav-header {
+  height: unset;
+}
+
+.main-wrapper {
+  padding-top: 32px;
+}
+
+.hero__container {
+  height: calc(100vh - 55px);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: left;
+  background-image: url("assets/images/edwincornelisse.jpg");
+  background-repeat: no-repeat;
+  background-position-y: 55px;
+  background-position-x: center;
+  -webkit-background-size: 50vh;
+  background-size: 50vh;
+}
+
+.hero__container .hero__content {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 40vh;
+}
+
+.content__container {
+  flex-direction: column;
+}
+
+.content__container .content__container-left {
+  width: unset;
+}
+
+.content__container .content__container-right {
+  width: unset;
+  margin-top: 32px;
+}
+
+.project__description, .project__description-mobile {
+  height: 50px;
+  margin-top: 0;
+}
+
+.project__description .content__container-overlay, .project__description-mobile .content__container-overlay {
+  top: 0;
+  background-color: white;
+}
+
+.project__description-show {
+  height: unset;
+}
+
+.project__description-show .content__container-overlay {
+  top: unset;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0);
+}
+
+.wp-night-mode-on #containerOverlay {
+  background-color: #151515;
+}
+
+.wp-night-mode-on .project__description-show #containerOverlay {
+  background-color: rgba(255, 255, 255, 0);
+}
+
+.gt-toggle__container {
+  margin-top: 60px;
+}
+
+#description-2 {
+  margin-top: 12px;
+}
+
+.content__container-overlay-mobile {
+  opacity: 1;
+}
+
+.mobile__presentation {
+  display: flex;
+  justify-content: center;
+}
+
+.mobile__presentation .mobile__presentation-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.mobile__presentation .responsive-iframe {
+  margin-top: 1px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+}
+
+h1 {
+  font-size: 2em;
+}
+
+.navbar__container-center {
+  width: 100%;
+  filter: drop-shadow(0 0 0.3rem rgba(21, 21, 21, 0.2));
+}
+
+.navbar__container-center .nav__block-left {
+  margin-left: 16px;
+}
+
+.navbar__container-center .nav__block-right {
+  margin-right: 16px;
+}
+
+.navbar__container, .collapse__nav-container {
+  max-width: 768px;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: unset;
+  margin: 0 16px;
+  position: fixed;
+}
+
+.show-nav {
+  transition: all 0.3s ease-in-out 0s, visibility 0s linear 0.3s, z-index 0s linear 0.01s;
+}
+
+.collapse__nav-container {
+  padding: 12px 0 24px;
+  border-bottom: 1px solid #151515;
+}
+
+.wp-night-mode-on .collapse__nav-container {
+  border-bottom: 1px solid white;
+}
+
+.toggle__container, .nav-buttons__container li {
+  justify-content: center;
+}
+
+.collapse__nav-container {
+  max-width: 768px;
+  top: 54px;
+  left: 0;
+  right: 0;
+}
+
+.nav-buttons__container {
+  margin-bottom: 24px;
+}
+
+.nav-buttons__container li {
+  padding: 16px 0;
+}
+
+.nav-buttons__container li:after {
+  margin: unset;
+  content: unset;
+}
+
+.wpforms-form {
+  flex-direction: column;
+}
+
+.wpforms-form .wpforms-field-container {
+  width: 100%;
+}
+
+.wpforms-form .wpforms-field-container .wpforms-field-large {
+  left: 0;
+  right: 0;
+}
+
+.wpforms-submit-container {
+  width: 100%;
+}
+
+.wpforms-submit-container .wpforms-submit {
+  width: 100%;
+  margin-top: 24px;
+}
+
+.mobile__footer {
+  height: 75vh;
+}
