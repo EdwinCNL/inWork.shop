@@ -149,6 +149,8 @@ class Ajax extends FrontendAjax
 			$locationFilter = " AND tb1.`id` IN (SELECT `service_id` FROM `".DB::table('service_staff')."` WHERE `staff_id` IN (SELECT `id` FROM `".DB::table('staff')."` WHERE FIND_IN_SET('{$location}', IFNULL(`locations`, ''))))";
 		}
 
+		$parrent_services =
+
 		$services = DB::DB()->get_results(
 			DB::DB()->prepare( "
 				SELECT

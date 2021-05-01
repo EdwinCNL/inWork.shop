@@ -17,17 +17,14 @@
     </header>
     <div id="navigation" class="collapse__nav-container" >
         <?php
-        wp_nav_menu(
-            array(
-                'menu' => 'primary',
-                'container' => '',
-                'theme_location' => 'primary',
-                'items_wrap' => '<ul id="" class="nav-buttons__container" style="padding-left: 0px; margin-top: 0; margin-left: 16px;margin-right: 16px;">%3$s</ul>'
-            )
-        );
-
-        if(wp_is_mobile()) { include("navbar-toggles.php");
-
-        } ?>
+            wp_nav_menu(
+                array(
+                    'menu' => 'primary',
+                    'container' => '',
+                    'theme_location' => 'primary',
+                    'items_wrap' => '<ul id="" class="nav-buttons__container" style="padding-left: 0px; margin-top: 0; margin-left: 16px;margin-right: 16px;">%3$s</ul>'
+                )
+            );
+        ?>
     </div>
 </div>

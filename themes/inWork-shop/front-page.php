@@ -6,7 +6,9 @@
     <header class="page-title theme-bg-light text-center gradient py-5">
     </header>
 	<article>
-        <?php do_shortcode('[booknetic]') ?>
+        <div class="hero-container">
+
+        </div>
     </article>
 
 <?php
