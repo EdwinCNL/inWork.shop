@@ -10,14 +10,14 @@
     <?php wp_head(); ?>
 </head>
 <body>
-    <header>
-        <section class="nav__container-left">
-
+    <header class="nav__container-fixed">
+        <section class="nav__container">
+            <div class="nav__container-left">
+                <a href="<?php get_home_url() ?>"><h1>LOGO</h1></a>
+            </div>
+            <nav class="nav__container-right">
+                <?php include "include/navigation.php" ?>
+            </nav>
         </section>
-
-        <nav class="nav__container-right">
-            <?php include "include/navigation.php" ?>
-        </nav>
-
     </header>
 
