@@ -1,0 +1,30 @@
+.nav__container-fixed
+  position: relative
+  display: flex
+  justify-content: center
+  z-index: 1000
+  left: 0
+  top: 0
+  right: 0
+  height: $nav-height
+
+.nav__container
+  display: flex
+  position: fixed
+  flex-direction: row
+  justify-content: space-between
+  height: $nav-height
+  width: 100%
+  max-width: 1120px
+  .nav__container-right
+    right: 0
+    ul
+      display: flex
+      flex-direction: row
+      .page_item
+        display: block
+        margin-left: 12px
+        a
+          text-decoration: none
+          line-height: 2
+  .nav__container-left
