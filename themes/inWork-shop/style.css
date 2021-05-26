@@ -1,49 +1,18 @@
 /*
-  Theme Name: Portfolio
+  Theme Name: inWork.shop
   Author: Edwin Cornelisse
   Author URI: www.edwincornelisse.nl
-  Description: I wanted a cool portfolio, so I've created this theme.
+  Description: This theme is specifically build for the website inWork.shop.
   Version: 1.1 */
-@font-face {
-  font-family: 'noto_sans_jpthin';
-  src: url("assets/fonts/notosansjp-thin-webfont.woff2") format("woff2"), url("assets/fonts/notosansjp-thin-webfont.woff") format("woff");
-  font-weight: normal;
-  font-style: normal;
-}
+/* line 1, ../../../../../../../../../../../../../Users/edwincornelisse/Local Sites/inworkshop/app/public/wp-content/themes/inWork-shop/assets/sass/desktop/_layout.sass */
+body {
+  margin: 0 !important; }
 
-@font-face {
-  font-family: 'noto_sans_jpregular';
-  src: url("assets/fonts/notosansjp-regular-webfont.woff2") format("woff2"), url("assets/fonts/notosansjp-regular-webfont.woff") format("woff");
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'noto_sans_jpbold';
-  src: url("assets/fonts/notosansjp-bold-webfont.woff2") format("woff2"), url("assets/fonts/notosansjp-bold-webfont.woff") format("woff");
-  font-weight: normal;
-  font-style: normal;
-}
-
-/* line 1, ../../../../../../../../../../../../../Users/edwincornelisse/Local Sites/inworkshop/app/public/wp-content/themes/inWork-shop/assets/sass/import/_animation.sass */
-#nav__row-toggle--1, #nav__row-toggle--2, #nav__row-toggle--3 {
-  height: 2px;
+/* line 4, ../../../../../../../../../../../../../Users/edwincornelisse/Local Sites/inworkshop/app/public/wp-content/themes/inWork-shop/assets/sass/desktop/_layout.sass */
+.inWork-container {
+  height: 50vh;
   width: 100%;
-  background-color: #4D4D4D;
-}
-
-/* line 6, ../../../../../../../../../../../../../Users/edwincornelisse/Local Sites/inworkshop/app/public/wp-content/themes/inWork-shop/assets/sass/import/_animation.sass */
-#nav__row-toggle--1 {
-  height: 2px;
-  width: 100%;
-  background-color: #4D4D4D;
-}
-
-/* line 11, ../../../../../../../../../../../../../Users/edwincornelisse/Local Sites/inworkshop/app/public/wp-content/themes/inWork-shop/assets/sass/import/_animation.sass */
-#nav__row-toggle--2 {
-  height: 2px;
-  width: 100%;
-  background-color: #4D4D4D;
-}
+  background: #f5f5f5;
+  border-bottom: 1px solid white; }
 
 /*# sourceMappingURL=style.css.map */
