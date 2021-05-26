@@ -1,0 +1,12 @@
+{
+	"version": 3,
+	"file": "style-mobile.css",
+	"sources": [
+		"assets/sass/style-mobile.sass"
+	],
+	"sourcesContent": [
+		"\n/* Mobile version */\n"
+	],
+	"names": [],
+	"mappings": "AACA,oBAAoB"
+}
