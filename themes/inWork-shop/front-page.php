@@ -10,7 +10,9 @@
 
 <?php //This is the Booking section?>
 <section class="section-container section-container__booker">
-    <div class
+    <div class="section-container__booker-container">
+        <?php echo do_shortcode( '[booknetic]'); ?>
+    </div>
 </section>
 
 <?php //This is the Explanation section?>
