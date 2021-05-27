@@ -1,8 +1,21 @@
 body
   margin: 0 !important
 
-.inWork-container
-  height: 50vh
+main
+  @include page-width()
+  margin: auto
+
+.section-container
   width: 100%
   background: #f5f5f5
   border-bottom: 1px solid white
+
+.section-container__hero
+  height: 50vh
+  display: flex
+  align-items: center
+  .section-container__slogan
+    margin-left: 10%
+
+.section-container__booker
+  display: flex
