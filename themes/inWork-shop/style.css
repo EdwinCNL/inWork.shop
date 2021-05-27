@@ -27,22 +27,32 @@ main { width: 100%; max-width: 1120px; margin: auto; }
 
 .nav__container .nav__container-left { margin-left: 16px; }
 
-.section-container__slider { height: 50vh; display: flex; flex-direction: row; }
+.section-container__slider { display: flex; justify-content: center; }
 
-.section-container__slider .slider__button { height: 50px; width: 50px; background-color: gray; cursor: pointer; }
+.section-container__slider-container { height: 50vh; display: flex; flex-direction: column; }
 
-.section-container__slider .slider__button-not-active { opacity: 0.5; cursor: default; }
+.section-container__slider-container .slider__container-images { display: flex; flex-direction: row; }
 
-.section-container__slider .slider-container { display: flex; flex-direction: row; }
+.section-container__slider-container .slider__container-images .slider__button { height: 50px; width: 50px; background-color: gray; cursor: pointer; }
 
-.section-container__slider .slider-container .slider__box { width: 50vh; height: 50vh; display: none; }
+.section-container__slider-container .slider__container-images .slider__button-not-active { opacity: 0.5; cursor: default; }
 
-.section-container__slider .slider-container .slider__box-active { display: block; }
+.section-container__slider-container .slider__container-images .slider-container { display: flex; flex-direction: row; }
 
-#slider-1 { background-color: red; }
+.section-container__slider-container .slider__container-images .slider-container .slider__box { width: 50vh; height: 50vh; display: none; }
 
-#slider-2 { background-color: green; }
+.section-container__slider-container .slider__container-images .slider-container .slider__box-active { display: block; }
 
-#slider-3 { background-color: blue; }
+.section-container__slider-container .slider__container-images #slider-1 { background-color: red; }
 
-#slider-4 { background-color: yellow; }
+.section-container__slider-container .slider__container-images #slider-2 { background-color: green; }
+
+.section-container__slider-container .slider__container-images #slider-3 { background-color: blue; }
+
+.section-container__slider-container .slider__container-images #slider-4 { background-color: yellow; }
+
+.section-container__slider-container .slider__container-dots { display: flex; flex-direction: row; justify-content: center; }
+
+.section-container__slider-container .slider__container-dots .slider__dot { width: 24px; height: 24px; border: 1px solid #000000; border-radius: 12px; }
+
+.section-container__slider-container .slider__container-dots .slider__dot-active { background-color: red; }

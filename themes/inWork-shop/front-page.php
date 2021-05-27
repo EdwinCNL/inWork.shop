@@ -16,7 +16,7 @@
 </section>
 
 <?php //This is the Explanation section?>
-<section class="section-container">
+<section class="section-container section-container__slider">
     <?php include "include/slider.php" ?>
 </section>
 
