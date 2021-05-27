@@ -26,3 +26,23 @@ main { width: 100%; max-width: 1120px; margin: auto; }
 .nav__container .nav__container-right ul .page_item a { text-decoration: none; line-height: 2; }
 
 .nav__container .nav__container-left { margin-left: 16px; }
+
+.section-container__slider { height: 50vh; display: flex; flex-direction: row; }
+
+.section-container__slider .slider__button { height: 50px; width: 50px; background-color: gray; cursor: pointer; }
+
+.section-container__slider .slider__button-not-active { opacity: 0.5; cursor: default; }
+
+.section-container__slider .slider-container { display: flex; flex-direction: row; }
+
+.section-container__slider .slider-container .slider__box { width: 50vh; height: 50vh; display: none; }
+
+.section-container__slider .slider-container .slider__box-active { display: block; }
+
+#slider-1 { background-color: red; }
+
+#slider-2 { background-color: green; }
+
+#slider-3 { background-color: blue; }
+
+#slider-4 { background-color: yellow; }

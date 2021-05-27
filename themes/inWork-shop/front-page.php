@@ -1,6 +1,6 @@
 <?php get_header(); ?>
 
-<?php //This is the Hero section?>
+<?php  //This is the Hero section?>
 <section class="section-container section-container__hero">
     <div class="section-container__slogan">
         <h1>Kleurt je dromen</h1>
@@ -17,7 +17,7 @@
 
 <?php //This is the Explanation section?>
 <section class="section-container">
-
+    <?php include "include/slider.php" ?>
 </section>
 
 <?php //This is the Partners section?>
