@@ -10,7 +10,7 @@
     <?php wp_head(); ?>
 </head>
 <body>
-    <header class="nav__container-fixed">
+    <header class="nav__container-holder">
         <section class="nav__container">
             <div class="nav__container-left">
                 <a href="<?php get_home_url() ?>"><h1>LOGO</h1></a>
@@ -20,4 +20,5 @@
             </nav>
         </section>
     </header>
+    <main>
 
