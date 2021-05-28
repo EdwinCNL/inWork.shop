@@ -33,4 +33,5 @@ register_nav_menus(
         'footer-menu' => __('Footer Menu', 'theme')
 
     )
+
 );
