@@ -21,8 +21,8 @@
 </section>
 
 <?php //This is the Partners section?>
-<section class="section-container">
-
+<section class="section-container section-container__partners">
+    <?php include "include/partners.php" ?>
 </section>
 
 <?php get_footer(); ?>
