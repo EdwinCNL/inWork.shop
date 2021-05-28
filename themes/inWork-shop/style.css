@@ -13,6 +13,14 @@ main { width: 100%; max-width: 1120px; margin: auto; }
 
 .section-container__booker { display: flex; }
 
+.section-container__partners { display: flex; justify-content: center; }
+
+.section-container__partners-container { display: flex; }
+
+.section-container__partners-container .partners-container__row { display: flex; flex-direction: column; }
+
+.section-container__partners-container .partners-container__row .partners-images__container { display: flex; flex-direction: row; justify-content: center; }
+
 .nav__container-holder { position: relative; display: flex; justify-content: center; z-index: 1000; left: 0; top: 0; right: 0; height: 62px; }
 
 .nav__container { display: flex; position: fixed; flex-direction: row; justify-content: space-between; height: 62px; width: 100%; max-width: 1120px; }
