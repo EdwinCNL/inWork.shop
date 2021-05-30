@@ -21,3 +21,7 @@ node_modules/
 *.log
 *.sql
 *.sqlite
+themes/.DS_Store
+themes/inWork-shop/.DS_Store
+themes/inWork-shop/assets/.DS_Store
+themes/inWork-shop/assets/sass/.DS_Store
