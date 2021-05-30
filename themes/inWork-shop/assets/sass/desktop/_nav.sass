@@ -1,3 +1,14 @@
+//Reset user agent
+
+#menu-top-menu
+  display: block
+  list-style-type: none
+  margin-block-start: 0
+  margin-block-end: 0
+  margin-inline-start: 0
+  margin-inline-end: 0
+  padding-inline-start: 0
+
 // Top navigation
 .nav__container-holder
   position: relative
@@ -15,21 +26,44 @@
   flex-direction: row
   justify-content: space-between
   height: $nav-height
+  background-color: $white
   @include page-width()
   .nav__container-right
     right: 0
+    position: relative
+    height: $nav-height
+    .nav__burger
+      display: block
+      width: 32px
+      right: 0
+      margin-top: 24px
+    .nav__dropdown-container
+      position: absolute
+      width: 198px
+      right: 0
+      display: none
+      justify-content: center
+      background: white
+    .show_nav
+      display: flex
     ul
       display: flex
-      flex-direction: row
+      flex-direction: column
       margin-right: $page-margin
-      .page_item
+      list-style-type: none
+      li
         display: block
-        margin-left: 12px
+        padding: 12px 0
+        border-bottom: 1px solid black
+        width: 150px
+        background-color: $white
         a
           text-decoration: none
           line-height: 2
   .nav__container-left
     margin-left: $page-margin
+
+
 
 // Footer navigation
 #menu-footer-menu
