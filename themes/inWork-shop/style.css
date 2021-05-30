@@ -1,5 +1,13 @@
 /* Theme Name: inWork.shop Author: Edwin Cornelisse Author URI: www.edwincornelisse.nl Description: This theme is specifically build for the website inWork.shop. Version: 1.1 */
 /* Fixed styles for desktop and mobile. */
+@font-face { font-family: 'lato-light'; src: url("wp-content/themes/inWork-shop/assets/fonts/lato-light-webfont.woff2") format("woff2"), url("wp-content/themes/inWork-shop/assets/fonts/lato-light-webfont.woff") format("woff"); font-weight: normal; font-style: normal; }
+
+@font-face { font-family: 'Lato-regular'; src: url("wp-content/themes/inWork-shop/assets/fonts/lato-regular-webfont.woff2") format("woff2"), url("wp-content/themes/inWork-shop/assets/fonts/lato-regular-webfont.woff") format("woff"); font-weight: normal; font-style: normal; }
+
+@font-face { font-family: 'Lato-bold'; src: url("wp-content/themes/inWork-shop/assets/fonts/lato-bold-webfont.woff2") format("woff2"), url("wp-content/themes/inWork-shop/assets/fonts/lato-bold-webfont.woff") format("woff"); font-weight: normal; font-style: normal; }
+
+h1 { font-family: Lato-regular; }
+
 /* Desktop only styles. */
 body { margin: 0 !important; }
 
