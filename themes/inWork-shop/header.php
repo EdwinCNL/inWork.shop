@@ -10,6 +10,18 @@
     <?php wp_head(); ?>
 </head>
 <body>
+
+<?php
+$current_user = wp_get_current_user();
+if (!user_can( $current_user, 'administrator' )) { ?>
+    <div class="underconsturction__cover">
+        <div class="underconsturction__container">
+            <img src="<?php echo site_url() . "/wp-content/themes/inWork-shop/assets/images/" ?>logo-animation.gif">
+            <h2 style="font-family: Helvetica; text-align: center;">Ik ben momenteel aan het testen.</h2>
+        </div>
+    </div>
+<?php } ?>
+
     <header class="nav__container-holder">
         <section class="nav__container">
             <div class="nav__container-left">
