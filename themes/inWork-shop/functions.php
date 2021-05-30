@@ -4,6 +4,7 @@ function load_stylesheets()
 {
     if(wp_is_mobile())
         {
+            wp_register_style('stylesheet', get_template_directory_uri() . '/style.css', array(), false, 'all');
             wp_register_style('stylesheet', get_template_directory_uri() . '/style-mobile.css', array(), false, 'all');
         }
 
