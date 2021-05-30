@@ -25,10 +25,19 @@ if (!user_can( $current_user, 'administrator' )) { ?>
     <header class="nav__container-holder">
         <section class="nav__container">
             <div class="nav__container-left">
-                <a href="<?php get_home_url() ?>"><h1>LOGO</h1></a>
+                <a href="<?php get_home_url() ?>">
+                    <img src="<?php echo site_url() . "/wp-content/themes/inWork-shop/assets/images/" ?>inWorkshop-small.gif">
+                </a>
             </div>
             <nav class="nav__container-right">
-                <?php include "include/navigation.php" ?>
+                <div class="nav__burger" onclick="dropMenu()">
+                    <hr>
+                    <hr>
+                    <hr>
+                </div>
+                <div id="navDropdown" class="nav__dropdown-container">
+                    <?php include "include/navigation.php" ?>
+                </div>
             </nav>
         </section>
     </header>

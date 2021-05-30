@@ -111,3 +111,11 @@ function sliderDot(number) {
 
 }
 
+function dropMenu() {
+    let check = document.getElementById("navDropdown").classList.contains("show_nav");
+    if(check) {
+        document.getElementById("navDropdown").classList.remove("show_nav");
+    } else {
+        document.getElementById("navDropdown").classList.add("show_nav");
+    }
+}

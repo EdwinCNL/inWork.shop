@@ -29,17 +29,25 @@ main, footer { width: 100%; max-width: 1120px; margin: auto; }
 
 .section-container__footer .footer__container .footer__container-block { display: flex; flex: 1 0 33%; }
 
-.nav__container-holder { position: relative; display: flex; justify-content: center; z-index: 1000; left: 0; top: 0; right: 0; height: 62px; }
+#menu-top-menu { display: block; list-style-type: none; margin-block-start: 0; margin-block-end: 0; margin-inline-start: 0; margin-inline-end: 0; padding-inline-start: 0; }
 
-.nav__container { display: flex; position: fixed; flex-direction: row; justify-content: space-between; height: 62px; width: 100%; max-width: 1120px; }
+.nav__container-holder { position: relative; display: flex; justify-content: center; z-index: 1000; left: 0; top: 0; right: 0; height: 68px; }
 
-.nav__container .nav__container-right { right: 0; }
+.nav__container { display: flex; position: fixed; flex-direction: row; justify-content: space-between; height: 68px; background-color: #FFFFFF; width: 100%; max-width: 1120px; }
 
-.nav__container .nav__container-right ul { display: flex; flex-direction: row; margin-right: 16px; }
+.nav__container .nav__container-right { right: 0; position: relative; height: 68px; }
 
-.nav__container .nav__container-right ul .page_item { display: block; margin-left: 12px; }
+.nav__container .nav__container-right .nav__burger { display: block; width: 32px; right: 0; margin-top: 24px; }
 
-.nav__container .nav__container-right ul .page_item a { text-decoration: none; line-height: 2; }
+.nav__container .nav__container-right .nav__dropdown-container { position: absolute; width: 198px; right: 0; display: none; justify-content: center; background: white; }
+
+.nav__container .nav__container-right .show_nav { display: flex; }
+
+.nav__container .nav__container-right ul { display: flex; flex-direction: column; margin-right: 16px; list-style-type: none; }
+
+.nav__container .nav__container-right ul li { display: block; padding: 12px 0; border-bottom: 1px solid black; width: 150px; background-color: #FFFFFF; }
+
+.nav__container .nav__container-right ul li a { text-decoration: none; line-height: 2; }
 
 .nav__container .nav__container-left { margin-left: 16px; }
 
