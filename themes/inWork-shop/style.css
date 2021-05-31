@@ -8,6 +8,8 @@
 
 h1 { font-family: Lato-regular; }
 
+h2 { font-family: Lato-bold; }
+
 /* Desktop only styles. */
 body { margin: 0 !important; }
 
