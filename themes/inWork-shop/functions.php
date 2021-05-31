@@ -36,3 +36,11 @@ register_nav_menus(
     )
 
 );
+
+function admin_check()
+{
+    $current_user = wp_get_current_user();
+    if (user_can( $current_user, 'administrator' )) {
+        return true;
+    }
+}

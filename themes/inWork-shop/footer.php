@@ -1,3 +1,4 @@
+<?php if (admin_check()) { ?>
     <section class="section-container section-container__contact">
         <?php include "include/contact.php" ?>
     </section>
@@ -16,7 +17,7 @@
     </div>
 </footer>
 
-<?php wp_footer() ?>
+<?php } wp_footer() ?>
 
 </body>
 </html>
