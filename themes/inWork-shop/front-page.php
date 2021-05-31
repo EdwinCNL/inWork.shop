@@ -1,4 +1,5 @@
-<?php get_header(); ?>
+<?php get_header();
+if (admin_check()) { ?>
 
 <?php  //This is the Hero section?>
 <section class="section-container section-container__hero">
@@ -25,5 +26,5 @@
     <?php include "include/partners.php" ?>
 </section>
 
-<?php get_footer(); ?>
+<?php } get_footer(); ?>
 
