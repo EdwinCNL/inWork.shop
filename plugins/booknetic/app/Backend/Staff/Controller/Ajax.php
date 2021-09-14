@@ -61,7 +61,8 @@ class Ajax extends \BookneticApp\Providers\Ajax
 				'google_access_token'       =>  null,
 				'google_calendar_id'        =>  null,
 				'google_calendar_time_zone' =>  null,
-				'is_active'                 =>  null
+				'is_active'                 =>  null,
+                'company_name'              => "POPsCOOL"
 			];
 		}
 

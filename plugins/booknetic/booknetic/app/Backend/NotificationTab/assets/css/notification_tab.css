@@ -1,0 +1,26 @@
+.nav-item{
+    display: flex;
+}
+
+.nav-item i{
+    color: #828F9A;
+    padding-top: 12px;
+    font-size: 10px;
+    cursor: pointer;
+
+}
+
+.fs_notification_tab
+{
+    height: 44px;
+    background: #FFF;
+    color: #828F9A;
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    border: 1px solid #e3eaf3;
+    cursor: pointer;
+    -webkit-border-radius: 2px;
+    -moz-border-radius: 2px;
+    border-radius: 2px;
+    transition: all 0.3s ease-in 0s;
+}

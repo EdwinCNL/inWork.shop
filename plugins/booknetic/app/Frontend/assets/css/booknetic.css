@@ -205,11 +205,6 @@
 	width: 980px;
 	height: 600px;
 	background-color: #F5F7FA;
-
-	-webkit-box-shadow: 0 5px 40px 5px rgba(112,119,125,0.25);
-	-moz-box-shadow: 0 5px 40px 5px rgba(112,119,125,0.25);
-	box-shadow: 0 5px 40px 5px rgba(112,119,125,0.25);
-
 	display: flex;
 
 	-webkit-border-radius: 2px;
@@ -220,7 +215,7 @@
 .booknetic_appointment_steps
 {
 	width: 230px;
-	height: 100%;
+	height: 72px;
 	background-color: #292D32;
 	position: relative;
 
@@ -245,7 +240,7 @@
 	font-size: 12px;
 	font-weight: 500;
 	padding: 15px 30px;
-	display: none;
+	display: none !important;
 }
 .booknetic_appointment_steps_footer_txt1
 {
@@ -322,7 +317,7 @@
 .booknetic_appointment_container
 {
 	background: #f5f7fa;
-	width: calc(100% - 230px);
+	width: 100%;
 	position: relative;
 	height: 100%;
 }
@@ -1099,7 +1094,7 @@
 {
 	width: 100%;
 	display: flex;
-	justify-content: space-between;
+	justify-content: space-evenly;
 }
 
 .booknetic_date_time_area.booknetic_date_based_reservation

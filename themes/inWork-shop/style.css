@@ -27,7 +27,7 @@ main, footer { width: 100%; max-width: 1120px; margin: auto; }
 
 .section-container { width: 100%; border-bottom: 1px solid white; }
 
-.section-container__hero { height: 50vh; max-height: 414px; position: relative; display: flex; align-items: center; background-image: url("/wp-content/themes/inWork-shop/assets/images/inworkshop-hero-bg.png"); background-repeat: no-repeat; background-position: bottom; }
+.section-container__hero { height: 50vh; max-height: 350px; position: relative; display: flex; align-items: center; background-image: url("/wp-content/themes/inWork-shop/assets/images/inworkshop-hero-bg.png"); background-repeat: no-repeat; background-position: bottom; }
 
 .section-container__hero .section-container__slogan { margin-left: 10%; }
 
@@ -35,7 +35,15 @@ main, footer { width: 100%; max-width: 1120px; margin: auto; }
 
 .section-container__hero .hero__image-container .hero__image { background-image: url("/wp-content/themes/inWork-shop/assets/images/girl-with-pen.png"); position: absolute; background-size: contain; background-repeat: no-repeat; height: 370px; width: 230px; bottom: -13px; right: 14px; z-index: 10000; }
 
-.section-container__booker { display: flex; }
+.section-container__booker { display: flex; justify-content: center; margin-top: 24px; }
+
+#booknetic_theme_8 { box-shadow: none; flex-direction: column; }
+
+#booknetic_theme_8 .booknetic_appointment_steps { display: flex; width: 100%; justify-content: center; }
+
+#booknetic_theme_8 .booknetic_appointment_steps .booknetic_appointment_steps_body { display: flex; }
+
+#booknetic_theme_8 .booknetic_appointment_steps .booknetic_appointment_steps_body .booknetic_appointment_step_element { margin-left: 12px; }
 
 .section-container__partners { display: flex; justify-content: center; }
 
