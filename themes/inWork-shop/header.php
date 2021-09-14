@@ -11,11 +11,14 @@
 </head>
 <body>
 
-<?php if (!admin_check()) { ?>
+<?php if (!is_user_logged_in()) { ?>
     <div class="underconsturction__cover">
         <div class="underconsturction__container">
             <img src="<?php echo site_url() . "/wp-content/themes/inWork-shop/assets/images/" ?>logo-animation.gif">
             <h2 style="font-family: Helvetica; text-align: center;">Ik ben momenteel aan het testen.</h2>
+            <div style="min-width:560px; margin-top: 48px; text-align:center;">
+                <?php echo do_shortcode('[wp_login_form]'); ?>
+            </div>
         </div>
     </div>
 <?php } else {  ?>

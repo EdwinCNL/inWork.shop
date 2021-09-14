@@ -44,3 +44,12 @@ function admin_check()
         return true;
     }
 }
+
+function my_callbackUser()
+{
+    $url = "https://www.inwork.shop/wp-admin/admin.php?page=booknetic";
+    wp_redirect($url);
+    exit;
+}
+
+
