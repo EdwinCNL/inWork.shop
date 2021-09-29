@@ -111,11 +111,26 @@ function sliderDot(number) {
 
 }
 
-function dropMenu() {
-    let check = document.getElementById("navDropdown").classList.contains("show_nav");
-    if(check) {
-        document.getElementById("navDropdown").classList.remove("show_nav");
-    } else {
+// this functions is for the burger in the menu
+const menuBtn = document.getElementById("menuBurger");
+let menuOpen = false;
+menuBtn.addEventListener('click', () => {
+    if(!menuOpen) {
+        document.getElementById("menuBurger").classList.add('open');
         document.getElementById("navDropdown").classList.add("show_nav");
+        menuOpen = true;
+    } else {
+        document.getElementById("menuBurger").classList.remove('open');
+        document.getElementById("navDropdown").classList.remove('show_nav');
+        menuOpen = false;
     }
-}
+});
+
+window.addEventListener("scroll", () => {
+    const scrolled = window.scrollY;
+    if(scrolled >= 2) {
+        document.getElementById("navContainer").classList.add('blur');
+    } else {
+        document.getElementById("navContainer").classList.remove('blur');
+    }
+});
