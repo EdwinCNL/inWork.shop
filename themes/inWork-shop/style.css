@@ -67,9 +67,23 @@ main, footer { width: 100%; max-width: 1120px; margin: auto; }
 
 .nav__container .nav__container-right { right: 0; position: relative; height: 68px; }
 
-.nav__container .nav__container-right .nav__burger { display: block; width: 32px; right: 0; margin-top: 24px; }
+.nav__container .nav__container-right .nav__burger { display: block; width: 38px; right: 0; margin-top: 30px; position: relative; cursor: pointer; }
 
-.nav__container .nav__container-right .nav__dropdown-container { position: absolute; width: 198px; right: 0; display: none; justify-content: center; background: white; }
+.nav__container .nav__container-right .nav__burger .nav__burger-btn { width: 38px; height: 4px; background: #007BFF; border-radius: 2px; transition: all .5s ease-in-out; }
+
+.nav__container .nav__container-right .nav__burger .nav__burger-btn:before, .nav__container .nav__container-right .nav__burger .nav__burger-btn:after { content: ''; position: absolute; width: 38px; height: 4px; background: #007BFF; border-radius: 5px; transition: all .5s ease-in-out; }
+
+.nav__container .nav__container-right .nav__burger .nav__burger-btn:before { transform: translateY(-16px); }
+
+.nav__container .nav__container-right .nav__burger .nav__burger-btn:after { transform: translateY(16px); }
+
+.nav__container .nav__container-right .nav__burger.open .nav__burger-btn { transform: translateX(-50px); background: transparent; }
+
+.nav__container .nav__container-right .nav__burger.open .nav__burger-btn:before { -webkit-transform: rotate(45deg) translate(35px, -35px); -moz-transform: rotate(45deg) translate(35px, -35px); -ms-transform: rotate(45deg) translate(35px, -35px); -o-transform: rotate(45deg) translate(35px, -35px); transform: rotate(45deg) translate(35px, -35px); }
+
+.nav__container .nav__container-right .nav__burger.open .nav__burger-btn:after { -webkit-transform: rotate(-45deg) translate(35px, 35px); -moz-transform: rotate(-45deg) translate(35px, 35px); -ms-transform: rotate(-45deg) translate(35px, 35px); -o-transform: rotate(-45deg) translate(35px, 35px); transform: rotate(-45deg) translate(35px, 35px); }
+
+.nav__container .nav__container-right .nav__dropdown-container { position: absolute; width: 198px; right: 0; display: none; justify-content: center; background: white; top: 68px; }
 
 .nav__container .nav__container-right .show_nav { display: flex; }
 

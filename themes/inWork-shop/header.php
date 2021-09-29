@@ -14,7 +14,7 @@
 <?php if (!is_user_logged_in()) { ?>
     <div class="underconsturction__cover">
         <div class="underconsturction__container">
-            <img src="<?php echo site_url() . "/wp-content/themes/inWork-shop/assets/images/" ?>logo-animation.gif">
+            <img src="<?php echo site_url() . "/wp-content/themes/inWork-shop/assets/images/" ?>inWorkshop-logo.jpg">
             <h2 style="font-family: Helvetica; text-align: center;">Ik ben momenteel aan het testen.</h2>
             <div style="min-width:560px; margin-top: 48px; text-align:center;">
                 <?php echo do_shortcode('[wp_login_form]'); ?>
@@ -27,14 +27,12 @@
         <section class="nav__container">
             <div class="nav__container-left">
                 <a href="<?php get_home_url() ?>">
-                    <img src="<?php echo site_url() . "/wp-content/themes/inWork-shop/assets/images/" ?>inWorkshop-small.gif">
+                    <img src="<?php echo site_url() . "/wp-content/themes/inWork-shop/assets/images/" ?>inWorkshop-logo.png">
                 </a>
             </div>
             <nav class="nav__container-right">
-                <div class="nav__burger" onclick="dropMenu()">
-                    <hr>
-                    <hr>
-                    <hr>
+                <div id="menuBurger" class="nav__burger">
+                    <div class="nav__burger-btn"></div>
                 </div>
                 <div id="navDropdown" class="nav__dropdown-container">
                     <?php include "include/navigation.php" ?>
