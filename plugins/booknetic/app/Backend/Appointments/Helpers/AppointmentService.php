@@ -7,7 +7,9 @@ use BookneticApp\Backend\Appointments\Model\AppointmentCustomData;
 use BookneticApp\Backend\Appointments\Model\AppointmentCustomer;
 use BookneticApp\Backend\Appointments\Model\AppointmentExtra;
 use BookneticApp\Backend\Coupons\Model\Coupon;
+use BookneticApp\Backend\Customers\Model\Customer;
 use BookneticApp\Backend\Emailnotifications\Helpers\SendEmail;
+use BookneticApp\Backend\Giftcards\Model\Giftcard;
 use BookneticApp\Backend\Locations\Model\Location;
 use BookneticApp\Backend\Services\Model\Service;
 use BookneticApp\Backend\Services\Model\ServiceExtra;
@@ -21,12 +23,13 @@ use BookneticApp\Integrations\Zoom\ZoomService;
 use BookneticApp\Providers\Date;
 use BookneticApp\Providers\DB;
 use BookneticApp\Providers\Helper;
+use BookneticApp\Providers\Math;
 use BookneticApp\Providers\Permission;
 
 class AppointmentService
 {
 
-	public static function getRecurringDates(
+	public static function getRecurringDates (
 		$getServiceInfo,
 		$staff,
 		$time,
@@ -50,8 +53,8 @@ class AppointmentService
 		$timesheet = $day_offs['timesheet'];
 		$day_offs = $day_offs['day_offs'];
 
-		$startCursor = Date::epoch( $recurring_start_date );
-		$endDateEpoch = Date::epoch( $recurring_end_date );
+		$startCursor = Date::epoch( Date::reformatDateFromCustomFormat( $recurring_start_date ) );
+		$endDateEpoch = Date::epoch( Date::reformatDateFromCustomFormat( $recurring_end_date ) );
 
 		if( $recurringType == 'weekly' )
 		{
@@ -79,7 +82,7 @@ class AppointmentService
 					}
 				}
 
-				$startCursor += 24 * 60 * 60;
+				$startCursor = Date::epoch( $startCursor, '+1 days' );
 			}
 		}
 		else if( $recurringType == 'daily' )
@@ -111,7 +114,7 @@ class AppointmentService
 					$appointments[] = [ Date::dateSQL( $startCursor ), $time ];
 				}
 
-				$startCursor += $everyNdays * 24 * 60 * 60;
+				$startCursor = Date::epoch( $startCursor, '+' . $everyNdays . ' days' );
 			}
 		}
 		else if( $recurringType == 'monthly' )
@@ -158,7 +161,7 @@ class AppointmentService
 					}
 				}
 
-				$startCursor += 24 * 60 * 60;
+				$startCursor = Date::epoch( $startCursor, '+1 days' );
 			}
 		}
 
@@ -176,7 +179,7 @@ class AppointmentService
 			}
 			else if( $fullPeriodType == 'day' || $fullPeriodType == 'week' || $fullPeriodType == 'month' )
 			{
-				$checkDate = Date::epoch( $recurring_start_date, '+' . $fullPeriodValue . ' ' . $fullPeriodType ) - 24 * 60 * 60;
+				$checkDate = Date::epoch( Date::epoch( $recurring_start_date, '+' . $fullPeriodValue . ' ' . $fullPeriodType ), '-1 days' );
 
 				if( $checkDate != Date::epoch( $recurring_end_date ) )
 				{
@@ -206,11 +209,16 @@ class AppointmentService
 		$recurring_date_times,
 		$send_notifications = true,
 		$coupon_id = 0,
+		$giftcard_id = 0,
+		$spent_giftcard = 0,
 		$discount = 0,
 		$payment_method = 'local',
 		$deposit_full_amount = true,
 		$custom_fields = [],
-		$customFiles = []
+		$customFiles = [],
+		$calledFromBackend = true,
+        $client_timezone = '-',
+		$total_customer_count = 1
 	)
 	{
 		$getServiceInfo		= Service::get( $service );
@@ -304,7 +312,7 @@ class AppointmentService
 				Helper::response(false, bkntc__('Limited booking days is %d', [ (int)$available_days_for_booking ]) );
 			}
 
-			$selectedTimeSlotInfo = self::getTimeSlotInfo( $service, $extras, $staff, $appointmentDate, $appointmentTime );
+			$selectedTimeSlotInfo = self::getTimeSlotInfo( $service, $extras, $staff, $appointmentDate, $appointmentTime, true, 0, $calledFromBackend );
 
 			$appointments[$key][2] = true;
 			if( empty( $selectedTimeSlotInfo ) )
@@ -348,6 +356,9 @@ class AppointmentService
 		$extras_duration = self::calcExtrasDuration( $extras );
 
 		$recurringSubId = 0;
+
+		$payable_tax_sum = 0;
+
 		foreach ( $appointments AS $key => $appointment )
 		{
 			$appointmentDate		= $appointment[0];
@@ -386,6 +397,7 @@ class AppointmentService
 
 			$saveNotificationsInArray = [];
 			$pendingForPayment = true;
+
 			foreach ( $customers AS $customer )
 			{
 				AppointmentExtra::where('appointment_id', $id)->where('customer_id', $customer)->delete();
@@ -410,40 +422,59 @@ class AppointmentService
 					]);
 				}
 
-				$sumPrice = $price + $extras_amount - $discount;
+
+				$tax					= $getServiceInfo['tax'];
+				$tax_type				= $getServiceInfo['tax_type'];	
+
+				$tax_amount				= $tax_type == 'percent' ? ( ( ($price * $total_customer_count) + $extras_amount ) * $tax ) / 100  : $tax;
+
+				$sumPrice = ($price * $total_customer_count) + $extras_amount - $discount + $tax_amount;
+
+				$payable_tax = 0;
 
 				if( $payment_method == 'local' || ($mustPayOnlyFirst && $recurringSubId > 0) )
 				{
 					$payable_amount = 0;
+					$payable_tax    = 0;
 				}
-				else if( $deposit_full_amount && $deposit_can_pay_full_amount == 'on' )
+				else if( $payment_method == 'giftcard' || ($deposit_full_amount && $deposit_can_pay_full_amount == 'on') )
 				{
 					$payable_amount = $sumPrice;
+					$payable_tax    = $tax_amount;
 				}
-				else if( $deposit_type == 'price' )
-				{
-					$payable_amount = $deposit == $servicePrice ? $sumPrice : $deposit;
-				}
-				else
-				{
-					$payable_amount = $sumPrice * $deposit / 100;
-				}
+		        else if( $deposit_type == 'price' )
+		        {
+		            $payable_amount = $deposit == $servicePrice || $deposit == 0 ? $sumPrice : $deposit;
+		            $payable_tax    = $deposit == $servicePrice || $deposit == 0 ? $tax_amount : (( $sumPrice  - $deposit) / $sumPrice) * $tax_amount;
+		        }
+		        else
+		        {
+		            $payable_amount = $deposit == 0 ? $sumPrice :  $sumPrice * $deposit / 100;
+		            $payable_tax    = $tax_amount * $deposit / 100;
+		        }
 
 				$payable_amount_sum += $payable_amount;
+
+				$payable_tax_sum += $payable_tax;
 
 				AppointmentCustomer::insert([
 					'customer_id'			=>	$customer['id'],
 					'appointment_id'		=>	$id,
 					'number_of_customers'	=>	$customer['number'],
 					'status'				=>	$customer['status'],
-					'service_amount'		=>	$price,
+					'service_amount'		=>	$price * $total_customer_count,
 					'extras_amount'			=>	$extras_amount,
 					'discount'				=>	$discount,
 					'paid_amount'			=>	$payable_amount,
+					'tax_amount'			=>  $tax_amount,
 					'payment_method'		=>	$payment_method,
-					'payment_status'		=>	'pending',
+					'payment_status'		=>	$payment_method == 'giftcard' ? 'paid' : 'pending',
 					'coupon_id'				=>	$coupon_id,
-					'created_at'            =>  Date::dateTimeSQL()
+					'giftcard_id'			=>	$giftcard_id,
+					'giftcard_amount'		=>	$spent_giftcard,
+					'created_at'            =>  Date::dateTimeSQL(),
+					'locale'                =>  get_locale(),
+                    'client_timezone'       =>  $client_timezone
 				]);
 
 				$createdAppointments[ $id ][] = [DB::lastInsertedId() , $customer['id']];
@@ -480,7 +511,7 @@ class AppointmentService
 				}
 
 				// send email notifications...
-				if( $send_notifications && $recurringSubId == 0 && $customer['status'] != 'canceled' )
+				if( $send_notifications && $recurringSubId == 0 && $customer['status'] != 'waiting_for_payment' )
 				{
 					$saveNotificationsInArray[] = [
 						'action'    =>  'new_booking',
@@ -493,7 +524,7 @@ class AppointmentService
 			if( $isExistingAppointment )
 			{
 				// re-fix extras durations of appointment
-				DB::DB()->query( DB::DB()->prepare('UPDATE `'.DB::table('appointments').'` SET extras_duration=(SELECT SUM(duration) FROM `'.DB::table('appointment_extras').'` WHERE appointment_id=`'.DB::table('appointments').'`.id) WHERE id=%d', $id) );
+				DB::DB()->query( DB::DB()->prepare('UPDATE `'.DB::table('appointments').'` SET extras_duration=(SELECT SUM(duration*quantity) FROM `'.DB::table('appointment_extras').'` WHERE appointment_id=`'.DB::table('appointments').'`.id) WHERE id=%d', $id) );
 			}
 
 			if(
@@ -549,6 +580,7 @@ class AppointmentService
 		return [
 			'appointments'			=>	$createdAppointments,
 			'payable_amount_sum'	=>	$payable_amount_sum,
+			'payable_tax'		    =>  $payable_tax_sum,
 			'appointment_date_time'	=>	reset( $appointments )
 		];
 	}
@@ -584,6 +616,18 @@ class AppointmentService
 		{
 			DB::DB()->query(
 				DB::DB()->prepare(
+					"UPDATE `".DB::table('appointment_customers')."` SET `status`=%s WHERE `appointment_id` IN (SELECT `id` FROM `".DB::table('appointments')."` WHERE `id`=%d OR `recurring_id`=%d) AND `customer_id`=%d",
+					[
+						$appointmentStatus,
+						$appointmentId ,
+						$appointmentId ,
+						$customerId
+					]
+				)
+			);
+
+			DB::DB()->query(
+				DB::DB()->prepare(
 					"UPDATE `".DB::table('appointment_customers')."` SET `status`=%s, `payment_status`=IF( (`service_amount`+`extras_amount`-`discount`)=`paid_amount`, 'paid', 'paid_deposit') WHERE `id`=%d",
 					[
 						$appointmentStatus,
@@ -594,34 +638,83 @@ class AppointmentService
 		}
 
 		$getStaffInfo = Staff::get( $appointmentInfo['staff_id'] );
+		
 
-		if(
-			Helper::getOption('zoom_enable', 'off', false) == 'on'
-			&& !empty($getStaffInfo['zoom_user'])
-			&& $serviceInf['activate_zoom'] == 1
-		)
+		if( $serviceInf['is_recurring'] == 1 && $serviceInf['recurring_payment_type'] == 'full' )
 		{
-			$zoomUserData = json_decode( $getStaffInfo['zoom_user'], true );
-			if( is_array( $zoomUserData ) && isset( $zoomUserData['id'] ) && is_string( $zoomUserData['id'] ) )
+			$appointmentInfo = AppointmentCustomer::get($appointmentCustomerId);
+			
+			$datos = DB::DB()->get_results(
+				"SELECT * FROM " . DB::table('appointments') . " WHERE recurring_id = " . $appointmentInfo['appointment_id'],
+				ARRAY_A
+			);
+
+			if(
+				Helper::getOption('zoom_enable', 'off', false) == 'on'
+				&& !empty($getStaffInfo['zoom_user'])
+				&& $serviceInf['activate_zoom'] == 1
+			)
 			{
-				$zoomService = new ZoomService();
-				$zoomService->setAppointmentId( $appointmentId )->saveMeeting();
+				foreach ($datos as $dato)
+				{
+					$zoomService = new ZoomService();
+					$zoomService->setAppointmentId($dato['id'])->saveMeeting();
+				}
 			}
+
+			if (
+				Helper::getOption('google_calendar_enable', 'off', false) == 'on'
+				&& !empty($getStaffInfo['google_access_token'])
+				&& !empty($getStaffInfo['google_calendar_id'])
+			)
+			{
+
+				foreach ($datos as $dato)
+				{
+					$googleCalendar = new GoogleCalendarService();
+
+					$googleCalendar->setAccessToken($getStaffInfo['google_access_token']);
+
+					$googleCalendar->event()
+								   ->setCalendarId($getStaffInfo['google_calendar_id'])
+								   ->setAppointmentId($dato['id'])
+								   ->save();
+				}
+			}
+
 		}
-
-		if(
-			Helper::getOption('google_calendar_enable', 'off', false) == 'on'
-			&& !empty($getStaffInfo['google_access_token'])
-			&& !empty($getStaffInfo['google_calendar_id'])
-		)
+		else
 		{
-			$googleCalendar = new GoogleCalendarService();
+			if(
+				Helper::getOption('zoom_enable', 'off', false) == 'on'
+				&& !empty($getStaffInfo['zoom_user'])
+				&& $serviceInf['activate_zoom'] == 1
+			)
+			{
+				$zoomUserData = json_decode( $getStaffInfo['zoom_user'], true );
 
-			$googleCalendar->setAccessToken( $getStaffInfo['google_access_token'] );
-			$googleCalendar->event()
-				->setCalendarId( $getStaffInfo['google_calendar_id'] )
-				->setAppointmentId( $appointmentId )
-				->save();
+				if( is_array( $zoomUserData ) && isset( $zoomUserData['id'] ) && is_string( $zoomUserData['id'] ) )
+				{
+					$zoomService = new ZoomService();
+					$zoomService->setAppointmentId( $appointmentId )->saveMeeting();
+				}
+			}
+
+			if(
+				Helper::getOption('google_calendar_enable', 'off', false) == 'on'
+				&& !empty($getStaffInfo['google_access_token'])
+				&& !empty($getStaffInfo['google_calendar_id'])
+			)
+			{
+				$googleCalendar = new GoogleCalendarService();
+
+				$googleCalendar->setAccessToken( $getStaffInfo['google_access_token'] );
+
+				$googleCalendar->event()
+				               ->setCalendarId( $getStaffInfo['google_calendar_id'] )
+				               ->setAppointmentId( $appointmentId )
+				               ->save();
+			}
 		}
 
 		$sendMail = new SendEmail( 'new_booking' );
@@ -800,15 +893,17 @@ class AppointmentService
 		$date = Date::dateSQL( $date );
 		$time = Date::timeSQL( $time );
 
-		$selectedTimeSlotInfo = AppointmentService::getTimeSlotInfo( $service, $extras_arr, $staff, $date, $time, true, $appointmentCustomerInfo->appointment_id );
+		$selectedTimeSlotInfo = AppointmentService::getTimeSlotInfo( $service, $extras_arr, $staff, $date, $time, true, $appointmentCustomerInfo->appointment_id, false );
 
 		if( empty( $selectedTimeSlotInfo ) )
 		{
 			Helper::response(false, bkntc__('Please select a valid time! ( %s %s is busy! )', [$date, $time]));
 		}
 
+		$appointmentStatus = Helper::getOption('default_appointment_status', 'approved');
+
 		AppointmentCustomer::where( 'id', $appointment_id )->update([
-			'status'	=>	'approved'
+			'status'	=>	$appointmentStatus
 		]);
 
 		$isGroupAppointment = (AppointmentCustomer::where('appointment_id', $appointmentCustomerInfo->appointment_id)->count() > 1);
@@ -872,12 +967,12 @@ class AppointmentService
 
 			if( isset( $needToRecalculateExtrasDuration ) )
 			{
-				DB::DB()->query( DB::DB()->prepare('UPDATE `'.DB::table('appointments').'` SET extras_duration=(SELECT SUM(duration) FROM `'.DB::table('appointment_extras').'` WHERE appointment_id=`'.DB::table('appointments').'`.id) WHERE id=%d', $newAppointmentId) );
+				DB::DB()->query( DB::DB()->prepare('UPDATE `'.DB::table('appointments').'` SET extras_duration=(SELECT SUM(duration*quantity) FROM `'.DB::table('appointment_extras').'` WHERE appointment_id=`'.DB::table('appointments').'`.id) WHERE id=%d', $newAppointmentId) );
 			}
 
 			if( !isset( $deleteAppointment ) )
 			{
-				DB::DB()->query( DB::DB()->prepare('UPDATE `'.DB::table('appointments').'` SET extras_duration=(SELECT SUM(duration) FROM `'.DB::table('appointment_extras').'` WHERE appointment_id=`'.DB::table('appointments').'`.id) WHERE id=%d', $appointmentInfo->id) );
+				DB::DB()->query( DB::DB()->prepare('UPDATE `'.DB::table('appointments').'` SET extras_duration=(SELECT SUM(duration*quantity) FROM `'.DB::table('appointment_extras').'` WHERE appointment_id=`'.DB::table('appointments').'`.id) WHERE id=%d', $appointmentInfo->id) );
 			}
 		}
 
@@ -935,7 +1030,9 @@ class AppointmentService
 			Appointment::where('id', $appointmentCustomerInfo->appointment_id)->delete();
 		}
 
-		return true;
+		return [
+			'appointment_status'    =>  $appointmentStatus
+		];
 	}
 
 	public static function cancel( $appointment_id, $send_notifications = true )
@@ -1016,8 +1113,13 @@ class AppointmentService
 		return $duration_sum;
 	}
 
-	public static function getCalendar( $staff, $service, $location, $extras, $date_start, $date_end = null, $showExistingTimeSlots = true, $exclude_appointment_id = null, $allow_back_time = true, $checkGoogleCalendar = true )
+	public static function getCalendar( $staff, $service, $location, $extras, $date_start, $date_end = null, $showExistingTimeSlots = true, $exclude_appointment_id = null, $allow_back_time = true, $checkGoogleCalendar = true, $calledFromBookingPanel = false )
 	{
+		/**
+		 * Odenish edilmemish appointmentlerin statusunu cancel edek ki, orani da booking ede bilsin...
+		 */
+		self::cancelUnpaidAppointments();
+
 		if( $staff == -1 )
 		{
 			$staffIDs = self::staffByService( $service, $location );
@@ -1032,7 +1134,7 @@ class AppointmentService
 
 			foreach ( $staffIDs AS $staffID )
 			{
-				$perStaffCalendar = self::getCalendar( $staffID, $service, $location, $extras, $date_start, $date_end, $showExistingTimeSlots, $exclude_appointment_id, $allow_back_time, $checkGoogleCalendar );
+				$perStaffCalendar = self::getCalendar( $staffID, $service, $location, $extras, $date_start, $date_end, $showExistingTimeSlots, $exclude_appointment_id, $allow_back_time, $checkGoogleCalendar, true );
 
 				$timesheets[] = $perStaffCalendar['timesheet'];
 
@@ -1115,6 +1217,7 @@ class AppointmentService
 		];
 		$dateBasedService = $serviceInfo['duration'] >= 24*60;
 
+		// If booked from the Backend
 		if( !$allow_back_time )
 		{
 			$min_time_req_prior_booking = Helper::getOption('min_time_req_prior_booking', 0);
@@ -1127,19 +1230,38 @@ class AppointmentService
 			}
 		}
 
-		$specialDays = DB::DB()->get_results(
-			DB::DB()->prepare( 'SELECT `date`, timesheet FROM ' . DB::table('special_days') . ' WHERE `date`>=%s AND `date`<=%s AND (service_id=%d OR staff_id=%d)' . DB::tenantFilter(), [ $date_start, $date_end, $service, $staff ] ),
-			ARRAY_A
-		);
-		$specialDays = Helper::assocByKey( $specialDays, 'date', true );
+		// If is Backend and allowed for admins to add appointments outside working hours..
+		$allow_admins_to_book_outside_working_hours = Helper::getOption('allow_admins_to_book_outside_working_hours', 'off');
+		if( $allow_back_time && $allow_admins_to_book_outside_working_hours == 'on' && Permission::isAdministrator() )
+		{
+			$specialDays    = [];
+			$holidays       = [];
+			$timesheetStd   = [
+				["day_off" => 0, "start" => "00:00", "end" => "24:00", "breaks" =>[]],
+				["day_off" => 0, "start" => "00:00", "end" => "24:00", "breaks" =>[]],
+				["day_off" => 0, "start" => "00:00", "end" => "24:00", "breaks" =>[]],
+				["day_off" => 0, "start" => "00:00", "end" => "24:00", "breaks" =>[]],
+				["day_off" => 0, "start" => "00:00", "end" => "24:00", "breaks" =>[]],
+				["day_off" => 0, "start" => "00:00", "end" => "24:00", "breaks" =>[]],
+				["day_off" => 0, "start" => "00:00", "end" => "24:00", "breaks" =>[]]
+			];
+		}
+		else
+		{
+			$specialDays = DB::DB()->get_results(
+				DB::DB()->prepare( 'SELECT `date`, timesheet FROM ' . DB::table('special_days') . ' WHERE `date`>=%s AND `date`<=%s AND (service_id=%d OR staff_id=%d)' . DB::tenantFilter(), [ $date_start, $date_end, $service, $staff ] ),
+				ARRAY_A
+			);
+			$specialDays = Helper::assocByKey( $specialDays, 'date', true );
 
-		$holidays = DB::DB()->get_results(
-			DB::DB()->prepare( 'SELECT * FROM ' . DB::table('holidays') . ' WHERE `date`>=%s AND `date`<=%s AND (service_id=%d OR staff_id=%d OR (service_id IS NULL AND staff_id IS NULL))' . DB::tenantFilter(), [ $date_start, $date_end, $service, $staff ] ),
-			ARRAY_A
-		);
-		$holidays = Helper::assocByKey( $holidays, 'date' );
+			$holidays = DB::DB()->get_results(
+				DB::DB()->prepare( 'SELECT * FROM ' . DB::table('holidays') . ' WHERE `date`>=%s AND `date`<=%s AND (service_id=%d OR staff_id=%d OR (service_id IS NULL AND staff_id IS NULL))' . DB::tenantFilter(), [ $date_start, $date_end, $service, $staff ] ),
+				ARRAY_A
+			);
+			$holidays = Helper::assocByKey( $holidays, 'date' );
 
-		$timesheetStd = self::getTimeSheet( $service, $staff );
+			$timesheetStd = self::getTimeSheet( $service, $staff );
+		}
 
 		// get staff's appointments for selected date
 		$exclude_appointment_id_sql = is_numeric($exclude_appointment_id) && $exclude_appointment_id> 0 ? " AND a01.id<>'" . (int)$exclude_appointment_id. "' " : '';
@@ -1169,7 +1291,12 @@ class AppointmentService
 			$date_cusort_formatted = Date::dateSQL( $date_cursort );
 			$dayOfWeek = Date::format(  'w', $date_cursort );
 			$dayOfWeek = ($dayOfWeek == 0 ? 7 : $dayOfWeek) - 1;
-			$data['dates'][ $date_cusort_formatted ] = [];
+
+			if( !array_key_exists( $date_cusort_formatted, $data['dates'] ) )
+			{
+                $data['dates'][ $date_cusort_formatted ] = [];
+            }
+
 			$data['timesheet'][ $date_cusort_formatted ] = [
 				'start'     =>  '',
 				'end'       =>  '',
@@ -1226,9 +1353,9 @@ class AppointmentService
 			{
 				$tStart		= Date::epoch( $date_cusort_formatted . ' ' . $timesheetOfDay['start'] ) + $bufferBefore * 60;
 				$tEnd		= Date::epoch( $date_cusort_formatted . ' ' . $timesheetOfDay['end'] ) - ( $bufferAfter + $serviceDuration + $extrasDuration ) * 60;
-				if( Date::epoch( $timesheetOfDay['start'] ) > Date::epoch( $timesheetOfDay['end'] ) )
+				if( Date::epoch( $timesheetOfDay['start'] ) > Date::epoch( $timesheetOfDay['end'] ))
 				{
-					$tEnd += 24 * 60 * 60;
+					$tEnd = Date::epoch( $tEnd, '+1 days' );
 				}
 
 				$tBreaks	= $timesheetOfDay['breaks'];
@@ -1254,20 +1381,20 @@ class AppointmentService
 				$timeslotLength = 24*60;
 			}
 
-			$timeCursor = $tStart;
+            $timeCursor = $tStart;
 
 			while( $timeCursor <= $tEnd )
 			{
 				$fullTimeStart	= $timeCursor - $bufferBefore * 60;
 				$fullTimeEnd	= $fullTimeStart + ( $bufferBefore + $serviceDuration + $bufferAfter + $extrasDuration ) * 60;
 
-				$dateTimeFormatted = $date_cusort_formatted . ' ' . Date::timeSQL( $timeCursor );
+				$dateTimeFormatted = $date_cusort_formatted . ' ' . Date::timeSQL(  $timeCursor );
 
-				if( !$allow_back_time && Date::epoch( $dateTimeFormatted ) < (Date::epoch() + $min_time_req_prior_booking) )
-				{
-					$timeCursor += $timeslotLength * 60;
-					continue;
-				}
+                if( !$allow_back_time && Date::epoch( $dateTimeFormatted ) < (Date::epoch() + $min_time_req_prior_booking) )
+                {
+                    $timeCursor += $timeslotLength * 60;
+                    continue;
+                }
 
 				// check if is break?
 				$isBreakTime = false;
@@ -1277,7 +1404,7 @@ class AppointmentService
 					$breakEnd = Date::epoch( $date_cusort_formatted . ' ' . $break[1] );
 					if( Date::epoch( $break[0] ) > Date::epoch( $break[1] ) )
 					{
-						$breakEnd += 24 * 60 * 60;
+						$breakEnd = Date::epoch( $breakEnd, '+1 days' );
 					}
 
 					if(
@@ -1334,8 +1461,9 @@ class AppointmentService
 									$endTimeApp = $appointmentStart + ($localServiceDuration + $localExtrasDuration) * 60;
 								}
 
-								$data['dates'][ $date_cusort_formatted ][] = [
+								$data['dates'][ Date::dateSQL( $dateTimeFormatted, false, $calledFromBookingPanel ) ][] = [
 									'appointment_id'		=>	$appointmentInf['id'],
+                                    'date'                  =>  $date_cusort_formatted,
 									'start_time'			=>	Date::timeSQL( $appointmentInf['start_time'] ),
 									'end_time'				=>	Date::timeSQL( $endTimeApp ),
 									'start_time_format'		=>	Date::time( $appointmentInf['start_time'], false, true ),
@@ -1376,8 +1504,9 @@ class AppointmentService
 					$endTime = $timeCursor + ($serviceDuration + $extrasDuration) * 60;
 				}
 
-				$data['dates'][ $date_cusort_formatted ][] = [
+				$data['dates'][ Date::dateSQL( $dateTimeFormatted, false, $calledFromBookingPanel ) ][] = [
 					'appointment_id'		=>	0,
+                    'date'                  =>  $date_cusort_formatted,
 					'start_time'			=>	Date::timeSQL( $timeCursor ),
 					'end_time'				=>	Date::timeSQL( $endTime ),
 					'start_time_format'		=>	Date::time( $timeCursor, false, true ),
@@ -1394,15 +1523,47 @@ class AppointmentService
 			}
 		}
 
+		/*
+		 * If the method called from frontend, $calledFromBookingPanel will be "true" and "bool" data type ( === true )
+		 * If the method called by itself, then $calledFromBookingPanel will be "true" and "int" data type ( == true )
+		 */
+		if ( $calledFromBookingPanel === true )
+		{
+			$prevMonth = self::getCalendar( $staff, $service, $location, $extras, Date::dateSQL( 'now', 'last day of previous month' ), Date::dateSQL( 'now', 'last day of previous month' ), true, null, false, true, 1 );
+			$nextMonth = self::getCalendar( $staff, $service, $location, $extras, Date::dateSQL( 'now', 'first day of next month' ), Date::dateSQL( 'now', 'first day of next month' ), true, null, false, true, 1 );
+
+			if ( ! empty( $prevMonth ) )
+			{
+				foreach ( $prevMonth[ 'dates' ] as $date => $slots )
+				{
+					foreach ( $slots as $slot )
+					{
+						$data[ 'dates' ][ $date ][] = $slot;
+					}
+				}
+			}
+
+			if ( ! empty( $nextMonth ) )
+			{
+				foreach ( $nextMonth[ 'dates' ] as $date => $slots )
+				{
+					foreach ( $slots as $slot )
+					{
+						$data[ 'dates' ][ $date ][] = $slot;
+					}
+				}
+			}
+		}
+
 		return $data;
 	}
 
-	public static function getTimeSlotInfo( $service, $extras, $staff, $date, $time, $showExistingTimeSlots = true, $excludeAppointmentId = 0 )
+	public static function getTimeSlotInfo( $service, $extras, $staff, $date, $time, $showExistingTimeSlots = true, $excludeAppointmentId = 0, $calledFromBackend = true )
 	{
 		$selectedTimeSlotInfo = [];
 		$selectedTimeEpoch = Date::epoch( $time );
 
-		$getPossibleTimes = self::getCalendar( $staff, $service, 0, $extras, $date, $date, $showExistingTimeSlots, $excludeAppointmentId );
+		$getPossibleTimes = self::getCalendar( $staff, $service, 0, $extras, $date, $date, $showExistingTimeSlots, $excludeAppointmentId, $calledFromBackend );
 		$getPossibleTimes = $getPossibleTimes['dates'];
 
 		if( isset( $getPossibleTimes[ $date ] ) )
@@ -1605,7 +1766,7 @@ class AppointmentService
 				$disabled_days_of_week[ $curDayOfWeek ] = false;
 			}
 
-			$cursor += 24 * 3600;
+			$cursor = Date::epoch( $cursor, '+1 days' );
 		}
 
 		return [
@@ -1622,7 +1783,7 @@ class AppointmentService
 			return self::anyStaffTimeSheet( $serviceId, $location );
 		}
 
-		$query = 'SELECT `timesheet` FROM `' . DB::table('timesheet') . '` WHERE (`service_id` IS NULL AND `staff_id` IS NULL)' . DB::tenantFilter();
+		$query = 'SELECT `timesheet` FROM `' . DB::table('timesheet') . '` WHERE ( (`service_id` IS NULL AND `staff_id` IS NULL)';
 		$args = [];
 
 		if( $serviceId > 0 )
@@ -1637,7 +1798,7 @@ class AppointmentService
 			$args[] = $staffId;
 		}
 
-		$query .= ' ORDER BY staff_id DESC, service_id DESC LIMIT 0,1';
+		$query .= ' ) ' . DB::tenantFilter() . ' ORDER BY staff_id DESC, service_id DESC LIMIT 0,1';
 
 		if( !empty( $args ) )
 		{
@@ -1895,7 +2056,7 @@ class AppointmentService
 	public static function staffByService( $serviceId, $locationId, $sortByRule = false, $date = null )
 	{
 		$staffIDs = [];
-
+        $queryAppend = '';
 		if( $serviceId > 0 )
 		{
 			$queryArgs = [ $serviceId ];
@@ -1933,31 +2094,31 @@ class AppointmentService
 		return $staffIDs;
 	}
 
-	public static function getCouponInf( $service, $staff, $service_extras, $coupon )
+	public static function getCouponInf( $service, $staff, $service_extras, $coupon, $customer_data, $total_customer_count = 1)
 	{
 		$couponInf = Coupon::where('code', $coupon)->fetch();
 
 		if( !$couponInf )
 		{
-			return [ 'error' => bkntc__('Coupon not found!') ];
+			Helper::response( false, bkntc__('Coupon not found!') );
 		}
 
 		if( !empty( $couponInf['start_date'] ) && Date::epoch() < Date::epoch( $couponInf['start_date'] ) )
 		{
-			return [ 'error' => bkntc__('Coupon not found!') ];
+			Helper::response( false, bkntc__('Coupon not found!') );
 		}
 
 		if( !empty( $couponInf['end_date'] ) && Date::epoch() > Date::epoch( $couponInf['end_date'] ) )
 		{
-			return [ 'error' => bkntc__('Coupon not found!') ];
+			Helper::response( false, bkntc__('Coupon not found!') );
 		}
 
 		$servicesFilter = explode(',', $couponInf['services']);
-		$staffFilter = explode(',', $couponInf['staff']);
+		$staffFilter    = explode(',', $couponInf['staff']);
 
 		if( ( !empty( $couponInf['services'] ) && !in_array( (string)$service, $servicesFilter ) ) || ( !empty( $couponInf['staff'] ) && !in_array( (string)$staff, $staffFilter ) ) )
 		{
-			return [ 'error' => bkntc__('Coupon not found!') ];
+			Helper::response( false, bkntc__('Coupon not found!') );
 		}
 
 		if( !is_null($couponInf['usage_limit']) )
@@ -1966,7 +2127,48 @@ class AppointmentService
 
 			if( $couponInf['usage_limit'] <= $checkNumberOfUsage )
 			{
-				return [ 'error' => bkntc__('Coupon usage limit exceeded!') ];
+				Helper::response( false, bkntc__('Coupon usage limit exceeded!') );
+			}
+		}
+
+		if( $couponInf['once_per_customer'] == 1 )
+		{
+			// Check customer Info...
+			$repeatCustomer = false;
+			$wpUserId = Permission::userId();
+
+			if( $wpUserId > 0 )
+			{
+				$checkCustomerExists = Customer::where('user_id', $wpUserId)->fetch();
+				if(
+					$checkCustomerExists
+					&& !( !empty( $checkCustomerExists->email ) && $checkCustomerExists->email != $customer_data['email'] )
+					&& !( !empty( $checkCustomerExists->phone_number ) && $checkCustomerExists->phone_number != $customer_data['phone'] )
+				)
+				{
+					$repeatCustomer = true;
+					$customerId = $checkCustomerExists->id;
+				}
+			}
+
+			if( !$repeatCustomer && !( empty( $customer_data['phone'] ) && empty( $customer_data['email'] ) ) )
+			{
+				$checkCustomerExists = Customer::where('email', $customer_data['email'])->where('phone_number', $customer_data['phone'])->fetch();
+				if( $checkCustomerExists )
+				{
+					$repeatCustomer = true;
+					$customerId = $checkCustomerExists->id;
+				}
+			}
+
+			if( $repeatCustomer && $customerId > 0 )
+			{
+				$checkIfCustomerHasUsedTheCoupon = AppointmentCustomer::where('customer_id', $customerId)->where('coupon_id', $couponInf->id)->count();
+
+				if( $checkIfCustomerHasUsedTheCoupon > 0 )
+				{
+					Helper::response( false, bkntc__('Coupon usage limit exceeded!') );
+				}
 			}
 		}
 
@@ -1987,7 +2189,28 @@ class AppointmentService
 			}
 		}
 
-		$sumPrice = $extras_price + $serviceInf['price'];
+		$servicePrice   = $serviceInf->price;
+		$deposit        = $serviceInf->deposit;
+		$depositType    = $serviceInf->deposit_type;
+		if( $staff > 0 )
+		{
+			$serviceStaffInf = ServiceStaff::where('service_id', $service)->where('staff_id', $staff)->fetch();
+			if( $serviceStaffInf->price != -1 )
+			{
+				$servicePrice   = $serviceStaffInf->price;
+				$deposit        = $serviceStaffInf->deposit;
+				$depositType    = $serviceStaffInf->deposit_type;
+			}
+		}
+
+		$sumPriceForOnePerson   = $extras_price + $servicePrice;
+		$sumPrice 			    = $servicePrice * $total_customer_count + $extras_price;
+
+
+		$tax					= $serviceInf['tax'];
+		$tax_type				= $serviceInf['tax_type'];
+		$tax_amount				= $tax_type == 'percent' ? ( $sumPrice * $tax ) / 100  : $tax;
+		
 		$discountPrice = 0;
 
 		if( $couponInf['discount_type'] == 'price' )
@@ -2007,9 +2230,31 @@ class AppointmentService
 		}
 		else
 		{
-			$discountPrice = Helper::floor( ( $couponInf['discount'] > 100 ? 100 : ( $couponInf['discount'] < 0 ? 0 : $couponInf['discount'] ) ) * $sumPrice / 100 );
+			$discountPrice = Math::floor( ( $couponInf['discount'] > 100 ? 100 : ( $couponInf['discount'] < 0 ? 0 : $couponInf['discount'] ) ) * $sumPriceForOnePerson / 100 );
 			$sumPrice -= $discountPrice;
-			$discount = $couponInf['discount'] . '% ( ' . Helper::price($discountPrice) . ' )';
+			$discount = Helper::price($sumPriceForOnePerson) . ' * ' . Math::floor( $couponInf['discount'] ) . '% ( ' . Helper::price($discountPrice) . ' )';
+		}
+
+		$sumPrice = Math::floor( $sumPrice );
+		$sumPrice += $tax_amount;
+
+		// Calc Deposit price...
+		$hasDeposit = ($depositType == 'price' && $servicePrice != $deposit) || ($depositType == 'percent' && $deposit!=100);
+
+		$depositPrice   = $sumPrice;
+		$depositTxt     = '';
+		if( $hasDeposit )
+		{
+			if( $depositType == 'price' )
+			{
+				$depositPrice   = $deposit > $sumPrice ? $sumPrice : $deposit;
+				$depositTxt     = Helper::price( $depositPrice );
+			}
+			else
+			{
+				$depositPrice   = Math::floor( $sumPrice * $deposit / 100 );
+				$depositTxt     = $deposit . '% , ' . Helper::price( $depositPrice );
+			}
 		}
 
 		return [
@@ -2017,7 +2262,106 @@ class AppointmentService
 			'discount_price'	=>	$discountPrice,
 			'discount'			=>	$discount,
 			'sum'				=>	Helper::price( $sumPrice ),
-			'sum_price'			=>	$sumPrice
+			'sum_price'			=>	$sumPrice,
+			'deposit_price'     =>  $depositPrice,
+			'deposit_txt'       =>  $depositTxt
+		];
+	}
+
+	public static function getGiftcardInf( $service, $staff, $service_extras, $giftcard, $discount, $total_customer_count = 1)
+	{
+		$giftcardInf = Giftcard::where('code', $giftcard)->fetch();
+
+		if( !$giftcardInf )
+		{
+			Helper::response( false, bkntc__('Giftcard not found!') );
+		}
+
+		$servicesFilter = explode(',', $giftcardInf['services']);
+		$staffFilter    = explode(',', $giftcardInf['staff']);
+
+		if( ( !empty( $giftcardInf['services'] ) && !in_array( (string)$service, $servicesFilter ) ) || ( !empty( $giftcardInf['staff'] ) && !in_array( (string)$staff, $staffFilter ) ) )
+		{
+			Helper::response( false, bkntc__('Giftcard not found!') );
+		}
+
+		$serviceInf = Service::get( $service );
+
+		$extras_price = 0;
+		foreach ( $service_extras AS $extra_id => $quantity )
+		{
+			if( !(is_numeric($quantity) && $quantity > 0) )
+				continue;
+
+			$extra_inf = ServiceExtra::where('service_id', $service)->where('id', $extra_id)->fetch();
+
+			if( $extra_inf && $extra_inf['max_quantity'] >= $quantity )
+			{
+				$extras_price += $extra_inf['price'] * $quantity;
+			}
+		}
+
+		$servicePrice   = $serviceInf->price;
+		$deposit        = $serviceInf->deposit;
+		$depositType    = $serviceInf->deposit_type;
+		if( $staff > 0 )
+		{
+			$serviceStaffInf = ServiceStaff::where('service_id', $service)->where('staff_id', $staff)->fetch();
+			if( $serviceStaffInf->price != -1 )
+			{
+				$servicePrice   = $serviceStaffInf->price;
+				$deposit        = $serviceStaffInf->deposit;
+				$depositType    = $serviceStaffInf->deposit_type;
+			}
+		}
+
+		$sumPrice               = ($servicePrice * $total_customer_count) + $extras_price - $discount;
+		$sumPriceForOnePerson   = $extras_price + $servicePrice - $discount;
+
+
+		$tax					= $serviceInf['tax'];
+		$tax_type				= $serviceInf['tax_type'];
+		$tax_amount				= $tax_type == 'percent' ? ( $sumPrice * $tax ) / 100  : $tax;
+
+		$totalSpent = AppointmentCustomer::where('giftcard_id', $giftcardInf['id'])->sum('giftcard_amount');
+
+		if( is_null( $totalSpent ) )
+		{
+			$totalSpent = 0;
+		}
+
+		$balance = $giftcardInf['amount'] - $totalSpent;
+
+		if( $balance <= 0 )
+		{
+			Helper::response( false, bkntc__('Giftcard balance is not enough!') );
+		}
+
+		$leftoverAmount = $balance - $sumPrice;
+
+		if($leftoverAmount <= 0)
+		{
+			$leftoverAmount *= -1;
+			$sum = $leftoverAmount;
+			$spent = $balance;
+		}
+		else
+		{
+			$leftoverAmount = 0;
+			$sum = $leftoverAmount;
+			$spent = $sumPrice;
+		}
+
+		$sum += $tax_amount;
+
+		return [
+			'id'			=> (int)$giftcardInf['id'],
+			'sum' 			=> Helper::price( $sum ),
+			'sum_price'		=> $sum,
+			'balance'		=> $balance,
+			'printBalance'	=> Helper::price( $balance ),
+			'spent'			=> $spent,
+			'printSpent'	=> Helper::price( $spent )
 		];
 	}
 
@@ -2054,7 +2398,7 @@ class AppointmentService
 
 	public static function checkStaffAvailability( $service, $extras, $staff, $date, $time )
 	{
-		$selectedTimeSlotInfo = self::getTimeSlotInfo( $service, $extras, $staff, $date, $time );
+		$selectedTimeSlotInfo = self::getTimeSlotInfo( $service, $extras, $staff, $date, $time, true, 0, false );
 
 		if( empty( $selectedTimeSlotInfo ) )
 		{
@@ -2130,6 +2474,116 @@ class AppointmentService
 		}
 
 		return $sortedList;
+	}
+
+	/**
+	 * Mushterilere odenish etmeleri uchun 10 deqiqe vaxt verilir.
+	 * 10 deqiqe erzinde sechdiyi timeslot busy olacaq ki, odenish zamani diger mushteri bu timeslotu seche bilmesin.
+	 * Eger 10 deqiqeden chox kechib ve odenish helede olunmayibsa o zaman avtomatik bu appointmente cancel statusu verir.
+	 */
+	public static function cancelUnpaidAppointments()
+	{
+		$timeLimit          = Helper::getOption( 'max_time_limit_for_payment', '10' );
+		$compareTimestamp   = Date::dateTimeSQL('-' . $timeLimit . ' minutes');
+
+		DB::DB()->query(
+			DB::DB()->prepare('UPDATE `'.DB::table('appointment_customers').'` SET `status`=\'canceled\' WHERE `status`=\'waiting_for_payment\' AND `created_at`<%s', [ $compareTimestamp ])
+		);
+	}
+
+
+
+
+	public static function timeslot_customer_count( $service_id, $staff_id, $date, $time)
+	{
+
+		$timeslot_info = DB::DB()->get_results(
+			DB::DB()->prepare( 'SELECT SUM( ac.number_of_customers ) sum FROM ' 
+								. DB::table('appointment_customers') . ' ac INNER JOIN ' 
+								. DB::table('appointments') . ' a ON a.id = ac.appointment_id WHERE a.`date`=%s AND a.`start_time`=%s AND a.service_id = %d AND a.staff_id = %d AND (ac.status = %s OR ac.status = %s) ' 
+								. DB::tenantFilter(), [ $date, $time . ':00', $service_id, $staff_id, 'approved', 'pending' ] ),
+			ARRAY_A
+		);
+
+		return isset($timeslot_info[0]['sum']) ? (int)$timeslot_info[0]['sum'] : 0;
+	}
+
+
+
+	public static function timeslot_capacity_is_available( $service_id, $staff_id, $date, $time, $brought_people_count )
+	{
+		$serviceInf = Service::get( $service_id );
+
+		if ( !$serviceInf )
+		{
+			return false;
+		}
+
+		$service_max_capacity = $serviceInf['max_capacity'];
+		$service_min_capacity = $serviceInf['min_capacity'];
+
+		if( $staff_id < 0 || empty($staff_id) )
+		{
+			$service_staff_ids = self::staffByService($service_id, null);
+
+			$err_message = 'Error';
+
+			if( count($service_staff_ids) > 0 )
+			{
+				foreach( $service_staff_ids as $service_staff_id )
+				{
+					$available_customers_for_slot =  self::timeslot_customer_count( $service_id, $service_staff_id, $date, $time );
+
+					if( $service_max_capacity >= ( $available_customers_for_slot + $brought_people_count + 1 ) && $service_min_capacity <= ($available_customers_for_slot + $brought_people_count + 1))
+					{
+						return [
+							'status'    => true,
+							'message'   => ''
+						];
+					}
+					else if( $service_max_capacity < ( $available_customers_for_slot + $brought_people_count + 1 ) )
+					{
+						$err_message = bkntc__('Selected date and time have not enough capacity');
+					}
+					else 
+					{
+						$err_message = bkntc__( 'This service requires minimum %d customers', [ $serviceInf['min_capacity'] ] );
+					}
+				}
+
+			}
+
+			return [
+				'status'    => false,
+				'message'   => $err_message
+			];
+
+		}
+
+
+		$available_customers_for_slot =  self::timeslot_customer_count( $service_id, $staff_id, $date, $time );
+
+		if( $service_max_capacity < ( $available_customers_for_slot + $brought_people_count + 1 ) )
+		{
+			return [
+				'status'    => false,
+				'message'   => bkntc__('Selected date and time have not enough capacity')
+			];
+		}
+		else if( $service_min_capacity > ($available_customers_for_slot + $brought_people_count + 1) )
+		{
+			return [
+				'status'    => false,
+				'message'   => bkntc__( 'This service requires minimum %d customers', [ $serviceInf['min_capacity'] ] )
+			];
+		}
+
+		
+		return [
+			'status'    => true,
+			'message'   => ''
+		];
+
 	}
 
 }

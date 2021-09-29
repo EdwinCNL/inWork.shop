@@ -38,6 +38,7 @@ defined( 'ABSPATH' ) or die();
 
 				<div id="integrations_zoom_settings_area">
 
+					<?php if( ! Helper::isSaaSVersion() || Helper::getOption('zoom_integration_method', 'oauth', false) == 'jwt' ):?>
 					<div class="form-row">
 						<div class="form-group col-md-6">
 							<label for="input_zoom_api_key"><?php print bkntc__('API Key')?>: <span class="required-star">*</span></label>
@@ -48,6 +49,23 @@ defined( 'ABSPATH' ) or die();
 							<label for="input_zoom_api_secret"><?php print bkntc__('API Secret')?>: <span class="required-star">*</span></label>
 							<input class="form-control" id="input_zoom_api_secret" value="<?php print htmlspecialchars( Helper::getOption('zoom_api_secret', '') )?>">
 						</div>
+					</div>
+					<?php else:?>
+					<div class="form-row">
+						<div class="form-group col-md-12">
+						<button type="button" id="connect_zoom" class="btn btn-primary btn-lg<?php print (!empty( $parameters['zoom_data'] )? ' hidden' : '')?>"><?php print bkntc__('CLICK TO CONNECT ZOOM ACCOUNT')?></button>
+
+						<?php if( !empty( $parameters['zoom_data'] ) ):?>
+							<div id="disconnect_zoom_area">
+								<div class="alert alert-success"><?php print bkntc__('Zoom account ( %s ) has been connected successfully.', [ esc_html( $parameters['zoom_data']['user_email'] ) ])?></div>
+								<button type="button" class="btn btn-danger btn-lg" id="disconnect_zoom"><?php print bkntc__('DISCONNECT')?></button>
+							</div>
+						<?php endif;?>
+						</div>
+					</div>
+					<?php endif;?>
+
+					<div class="form-row">
 
 						<div class="form-group col-md-12">
 							<label for="input_zoom_meeting_title"><?php print bkntc__('Meeting topic')?>: <span class="required-star">*</span></label>

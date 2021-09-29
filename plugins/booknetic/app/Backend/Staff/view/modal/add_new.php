@@ -14,8 +14,8 @@ function breakTpl( $start = '', $end = '', $display = false )
 		<div class="form-group col-md-9">
 			<label for="input_duration" class="breaks-label"><?php print bkntc__('Breaks')?></label>
 			<div class="input-group">
-				<div class="col-md-6 p-0 m-0"><select class="form-control break_start" placeholder="<?php print bkntc__('Break start')?>"><option selected><?php print $start?></option></select></div>
-				<div class="col-md-6 p-0 m-0"><select class="form-control break_end" placeholder="<?php print bkntc__('Break end')?>"><option selected><?php print $end?></option></select></div>
+				<div class="col-md-6 p-0 m-0"><select class="form-control break_start" placeholder="<?php print bkntc__('Break start')?>"><option selected><?php print ! empty( $start ) ? Date::time( $start ) : ''; ?></option></select></div>
+				<div class="col-md-6 p-0 m-0"><select class="form-control break_end" placeholder="<?php print bkntc__('Break end')?>"><option selected><?php print ! empty( $end ) ? Date::time( $end ) : ''; ?></option></select></div>
 			</div>
 		</div>
 
@@ -59,10 +59,10 @@ function specialDayTpl( $id = 0, $date = '', $timesheet = '' )
 			<div class="form-group col-md-6">
 				<div class="input-group">
 					<div class="col-md-6 p-0 m-0">
-						<select class="form-control input_special_day_start" placeholder="<?php print bkntc__('Start time')?>"><option selected><?php print $startTime?></option></select>
+						<select class="form-control input_special_day_start" placeholder="<?php print bkntc__('Start time')?>"><option selected><?php print ! empty( $startTime ) ? Date::time( $startTime ) : ''; ?></option></select>
 					</div>
 					<div class="col-md-6 p-0 m-0">
-						<select class="form-control input_special_day_end" placeholder="<?php print bkntc__('End time')?>"><option selected><?php print $endTime?></option></select>
+						<select class="form-control input_special_day_end" placeholder="<?php print bkntc__('End time')?>"><option selected><?php print ! empty( $endTime ) ? Date::time( $endTime ) : ''; ?></option></select>
 					</div>
 				</div>
 			</div>
@@ -114,9 +114,14 @@ function specialDayTpl( $id = 0, $date = '', $timesheet = '' )
 				<div class="tab-pane active" id="tab_staff_details">
 
 					<div class="form-row">
-						<div class="form-group col-md-12">
+						<div class="form-group col-md-6">
 							<label for="input_name"><?php print bkntc__('Full Name')?> <span class="required-star">*</span></label>
 							<input type="text" class="form-control" id="input_name" value="<?php print htmlspecialchars($parameters['staff']['name'])?>">
+						</div>
+
+						<div class="form-group col-md-6">
+							<label for="input_name"><?php print bkntc__('Profession')?></label>
+							<input type="text" class="form-control" id="input_profession" value="<?php print htmlspecialchars($parameters['staff']['profession'])?>">
 						</div>
 					</div>
 
@@ -259,6 +264,8 @@ function specialDayTpl( $id = 0, $date = '', $timesheet = '' )
 						Helper::getOption('zoom_enable', 'off', false) == 'on'
 						&& (
 							!Helper::isSaaSVersion() || !empty( Helper::getOption('zoom_user_data', []) )
+                            ||  (Helper::getOption('zoom_api_key', '', true) !=''
+                                && Helper::getOption('zoom_api_secret', '', true) !='')
 						)
 					)
 					{
@@ -318,10 +325,10 @@ function specialDayTpl( $id = 0, $date = '', $timesheet = '' )
 									<label for="input_duration" class="timesheet-label"><?php print ($dayNum+1) . '. ' . $weekDay . ( $dayNum == 0 ? '<span class="copy_time_to_all"  data-toggle="tooltip" data-placement="top" title="' . bkntc__('Copy to all') . '"><i class="far fa-copy"></i></span>' : '' ) ?></label>
 									<div class="input-group">
 										<div class="col-md-6 p-0 m-0">
-											<select id="input_timesheet_<?php print ($dayNum+1)?>_start" class="form-control" placeholder="<?php print bkntc__('Start time')?>"><option selected><?php print htmlspecialchars($editInfo['start'])?></option></select>
+											<select id="input_timesheet_<?php print ($dayNum+1)?>_start" class="form-control" placeholder="<?php print bkntc__('Start time')?>"><option selected><?php print ! empty( $editInfo['start'] ) ? Date::time( $editInfo['start'] ) : ''; ?></option></select>
 										</div>
 										<div class="col-md-6 p-0 m-0">
-											<select id="input_timesheet_<?php print ($dayNum+1)?>_end" class="form-control" placeholder="<?php print bkntc__('End time')?>"><option selected><?php print htmlspecialchars($editInfo['end'])?></option></select>
+											<select id="input_timesheet_<?php print ($dayNum+1)?>_end" class="form-control" placeholder="<?php print bkntc__('End time')?>"><option selected><?php print ! empty( $editInfo['end'] ) ? Date::time( $editInfo['end'] ) : ''; ?></option></select>
 										</div>
 									</div>
 								</div>

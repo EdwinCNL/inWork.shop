@@ -25,7 +25,7 @@ defined( 'ABSPATH' ) or die();
 
 <div id="choose_plan_window">
 	<div class="close_choose_plan_window_btn"><img src="<?php print Helper::icon('cross.svg')?>"></div>
-	<div class="choose_plan_title"><?php print bkntc__('Choos a plan')?></div>
+	<div class="choose_plan_title"><?php print bkntc__('Choose a plan')?></div>
 	<div class="choose_plan_subtitle"><?php print bkntc__('Upgrade your account')?></div>
 
 	<div class="choose_plan_payment_cycle">

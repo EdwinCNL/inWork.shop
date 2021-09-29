@@ -3,6 +3,7 @@ namespace BookneticApp\Frontend\view;
 
 use BookneticApp\Providers\Helper;
 use BookneticApp\Providers\Date;
+use BookneticApp\Providers\Math;
 
 defined( 'ABSPATH' ) or die();
 
@@ -25,26 +26,32 @@ defined( 'ABSPATH' ) or die();
 			<div class="form-row">
 				<div class="form-group col-md-6">
 					<label for="input_service_amount"><?php print bkntc__('Service amount')?> <span class="required-star">*</span></label>
-					<input class="form-control" id="input_service_amount" value="<?php print Helper::floor($parameters['payment']['service_amount'])?>" placeholder="0">
+					<input class="form-control" id="input_service_amount" value="<?php print Math::floor($parameters['payment']['service_amount'])?>" placeholder="0">
 				</div>
 				<div class="form-group col-md-6">
 					<label for="input_extras_amount"><?php print bkntc__('Extras amount')?> <span class="required-star">*</span></label>
-					<input class="form-control" id="input_extras_amount" value="<?php print Helper::floor($parameters['payment']['extras_amount'])?>" placeholder="0">
+					<input class="form-control" id="input_extras_amount" value="<?php print Math::floor($parameters['payment']['extras_amount'])?>" placeholder="0">
 				</div>
 			</div>
 
 			<div class="form-row">
 				<div class="form-group col-md-6">
 					<label for="input_discount"><?php print bkntc__('Discount')?> <span class="required-star">*</span></label>
-					<input class="form-control" id="input_discount" value="<?php print Helper::floor($parameters['payment']['discount'])?>" placeholder="0">
+					<input class="form-control" id="input_discount" value="<?php print Math::floor($parameters['payment']['discount'])?>" placeholder="0">
 				</div>
 				<div class="form-group col-md-6">
-					<label for="input_paid_amount"><?php print bkntc__('Paid amount')?> <span class="required-star">*</span></label>
-					<input class="form-control" id="input_paid_amount" value="<?php print Helper::floor($parameters['payment']['paid_amount'])?>" placeholder="0">
+					<label for="input_discount"><?php print bkntc__('Tax amount')?> <span class="required-star">*</span></label>
+					<input class="form-control" id="input_tax_amount" value="<?php print Math::floor($parameters['payment']['tax_amount'])?>" placeholder="0">
 				</div>
+				
 			</div>
 
 			<div class="form-row">
+				<div class="form-group col-md-6">
+					<label for="input_paid_amount"><?php print bkntc__('Paid amount')?> <span class="required-star">*</span></label>
+					<input class="form-control" id="input_paid_amount" value="<?php print Math::floor($parameters['payment']['paid_amount'])?>" placeholder="0">
+				</div>
+
 				<div class="form-group col-md-6">
 					<label for="input_payment_status"><?php print bkntc__('Payment status')?> <span class="required-star">*</span></label>
 					<select class="form-control" id="input_payment_status">

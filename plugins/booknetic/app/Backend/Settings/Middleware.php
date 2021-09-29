@@ -11,7 +11,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 
 	public static function handle()
 	{
-		if( Helper::isSaaSVersion() && Permission::tenantInf()->getPermission( 'settings' ) === 'off' )
+		if( Helper::isSaaSVersion() && Permission::getPermission( 'settings' ) === 'off' )
 		{
 			return false;
 		}
@@ -24,7 +24,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 		// add menu...
 		$this->createMenu(bkntc__('Settings'))
 			->setIcon('fa fa-cog')
-			->setOrder(16)
+			->setOrder(18)
 			->show();
 
 		if( Helper::_get('download') == 1 )

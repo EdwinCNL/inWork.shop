@@ -45,7 +45,7 @@
     },
     "autoload": {
         "psr-4": {
-            "GuzzleHttp\\": "src/"
+            "Booknetic_GuzzleHttp\\": "src/"
         },
         "files": [
             "src/functions_include.php"
@@ -53,7 +53,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "GuzzleHttp\\Tests\\": "tests/"
+            "Booknetic_GuzzleHttp\\Tests\\": "tests/"
         }
     }
 }

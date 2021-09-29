@@ -73,6 +73,20 @@ defined( 'ABSPATH' ) or die();
 
 				<div class="form-row">
 					<div class="form-group col-md-6">
+						<label for="input_max_time_limit_for_payment"><?php print bkntc__('How long to wait for payment')?>: <i class="far fa-question-circle do_tooltip" data-content="<?php print bkntc__('Newly booked appointment default status will be "Waiting for payment" in the defined timeframe.')?>"></i></label>
+						<select class="form-control" id="input_max_time_limit_for_payment">
+							<?php
+							foreach ( [10,30,60,1440,10080,43200] AS $minute )
+							{
+								?>
+								<option value="<?php print $minute?>"<?php print Helper::getOption('max_time_limit_for_payment', '10')==$minute ? ' selected':''?>><?php print Helper::secFormat($minute*60)?></option>
+								<?php
+							}
+							?>
+						</select>
+					</div>
+					<div class="form-group col-md-6">
+						<label>&nbsp;</label>
 						<div class="form-control-checkbox">
 							<label for="input_deposit_can_pay_full_amount"><?php print bkntc__('Customer can pay full amount')?>:</label>
 							<div class="fs_onoffswitch">

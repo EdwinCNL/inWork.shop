@@ -15,6 +15,7 @@ use BookneticApp\Providers\Backend;
 use BookneticApp\Providers\Date;
 use BookneticApp\Providers\DB;
 use BookneticApp\Providers\Helper;
+use BookneticApp\Providers\Math;
 use BookneticApp\Providers\Permission;
 use BookneticApp\Providers\Session;
 
@@ -52,6 +53,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			$staffInfo = [
 				'id'                        =>  null,
 				'name'                      =>  null,
+				'profession'                =>  null,
 				'user_id'                   =>  null,
 				'email'                     =>  null,
 				'phone_number'              =>  null,
@@ -61,8 +63,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 				'google_access_token'       =>  null,
 				'google_calendar_id'        =>  null,
 				'google_calendar_time_zone' =>  null,
-				'is_active'                 =>  null,
-                'company_name'              => "POPsCOOL"
+				'is_active'                 =>  null
 			];
 		}
 
@@ -109,6 +110,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		$id						= Helper::_post('id', '0', 'integer');
 		$wp_user				= Helper::_post('wp_user', '0', 'integer');
 		$name					= Helper::_post('name', '', 'string');
+		$profession				= Helper::_post('profession', '', 'string');
 		$phone					= Helper::_post('phone', '', 'string');
 		$email					= Helper::_post('email', '', 'email');
 		$allow_staff_to_login	= Helper::_post('allow_staff_to_login', '0', 'int', ['0', '1']);
@@ -349,6 +351,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		$sqlData = [
 			'user_id'		=>	$wp_user,
 			'name'			=>	$name,
+			'profession'	=>	$profession,
 			'phone_number'	=>	$phone,
 			'email'			=>	$isEdit && $getOldInf->user_id > 0 && !Permission::isAdministrator() ? $getOldInf->email : $email,
 			'about'			=>	$note,
@@ -403,8 +406,8 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			ServiceStaff::insert([
 				'staff_id'      =>  $id,
 				'service_id'    =>  $serviceId,
-				'price'			=>	Helper::floor(-1),
-				'deposit'		=>	Helper::floor(-1),
+				'price'			=>	Math::floor(-1),
+				'deposit'		=>	Math::floor(-1),
 				'deposit_type'	=>	'percent'
 			]);
 		}
@@ -681,9 +684,14 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		$data = [];
 		foreach ( $users AS $user )
 		{
+			$text = $user['first_name'] . ' ' . $user['last_name'] . ' ( ' . $user['email'] . ' )';
+
+			if( !empty( $search ) && mb_strpos( $text, $search, 0, 'UTF-8' ) === false )
+				continue;
+
 			$data[] = [
-				'id'		=>	htmlspecialchars( $user['id'] ),
-				'text'		=>	htmlspecialchars( $user['first_name'] . ' ' . $user['last_name'] . ' ( ' . $user['email'] . ' )' )
+				'id'		=>	esc_html( $user['id'] ),
+				'text'		=>	esc_html( $text )
 			];
 		}
 

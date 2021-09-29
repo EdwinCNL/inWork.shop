@@ -5,6 +5,7 @@ namespace BookneticApp\Backend\Settings\Controller;
 use BookneticApp\Backend\Appointments\Model\Holiday;
 use BookneticApp\Backend\Appointments\Model\Timesheet;
 use BookneticApp\Backend\Settings\Helpers\BackupService;
+use BookneticApp\Integrations\WooCommerce\WCPaymentGateways;
 use BookneticApp\Integrations\WooCommerce\WooCommerceService;
 use BookneticApp\Backend\Locations\Model\Location;
 use BookneticApp\Backend\Services\Model\Service;
@@ -49,9 +50,20 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			$settings_modules[] = 'integrations_google_login';
 			$settings_modules[] = 'customer_panel';
 		}
-		else if( Helper::getOption('zoom_enable', 'off', false) === 'on' )
+		else
 		{
-			$settings_modules[] = 'connect_zoom';
+			if( Helper::getOption('zoom_enable', 'off', false) === 'on' )
+			{
+				$settings_modules[] = 'integrations_zoom';
+			}
+			if( Helper::getOption('allow_tenants_to_set_email_sender', 'off', false) == 'on' && Permission::getPermission( 'email_settings' ) == 'on' )
+			{
+				$settings_modules[] = 'email';
+			}
+            if( Helper::getOption('customer_panel_enable', 'off',false)=='on' )
+            {
+                $settings_modules[] = 'customer_panel';
+            }
 		}
 
 		$view = Helper::_post('view', '', 'string', $settings_modules);
@@ -66,7 +78,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		if( $view == 'business_hours' )
 		{
 			$timesheet = Timesheet::where('service_id', 'is', null)->where('staff_id', 'is', null)->fetch();
-			$paramaters['timesheet'] = json_decode($timesheet->timesheet, true);
+			$paramaters['timesheet'] = json_decode(isset($timesheet->timesheet) ? $timesheet->timesheet : '', true);
 		}
 		else if( $view == 'holidays' )
 		{
@@ -233,30 +245,37 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			$getConfirmationNumber = DB::DB()->get_row('SELECT `AUTO_INCREMENT` FROM  `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_SCHEMA`=database() AND `TABLE_NAME`=\''.DB::table('appointment_customers').'\'', ARRAY_A);
 			$paramaters['confirmation_number'] = (int)$getConfirmationNumber['AUTO_INCREMENT'];
 		}
-
+		else if( $view == 'integrations_zoom' && Helper::isSaaSVersion() )
+		{
+			$paramaters['zoom_data'] = Helper::getOption('zoom_user_data', []);
+		}
 
 		$this->modalView($view . '_settings', $paramaters);
 	}
 
 	public function save_general_settings()
 	{
-		$timeslot_length					= Helper::_post('timeslot_length', '5', 'int');
-		$default_appointment_status			= Helper::_post('default_appointment_status', 'approved', 'string', ['approved', 'pending']);
-		$slot_length_as_service_duration	= Helper::_post('slot_length_as_service_duration', '0', 'int', [0, 1]);
-		$min_time_req_prior_booking			= Helper::_post('min_time_req_prior_booking', '0', 'int');
-		$available_days_for_booking			= Helper::_post('available_days_for_booking', '365', 'int');
-		$week_starts_on						= Helper::_post('week_starts_on', 'sunday', 'string', ['sunday', 'monday']);
-		$date_format						= Helper::_post('date_format', '', 'string');
-		$time_format						= Helper::_post('time_format', '', 'string');
-		$google_maps_api_key				= Helper::_post('google_maps_api_key', '', 'string');
-		$client_timezone_enable				= Helper::_post('client_timezone_enable', 'off', 'string', ['on', 'off']);
-		$google_recaptcha				    = Helper::_post('google_recaptcha', 'off', 'string', ['on', 'off']);
-		$google_recaptcha_site_key			= Helper::_post('google_recaptcha_site_key', '', 'string');
-		$google_recaptcha_secret_key		= Helper::_post('google_recaptcha_secret_key', '', 'string');
-		$remove_branding				    = Helper::_post('remove_branding', 'off', 'string', ['on', 'off']);
-		$timezone		                    = Helper::_post('timezone', '', 'string');
+		$timeslot_length					                    = Helper::_post('timeslot_length', '5', 'int');
+		$default_appointment_status			                    = Helper::_post('default_appointment_status', 'approved', 'string', ['approved', 'pending']);
+		$slot_length_as_service_duration	                    = Helper::_post('slot_length_as_service_duration', '0', 'int', [0, 1]);
+		$min_time_req_prior_booking			                    = Helper::_post('min_time_req_prior_booking', '0', 'int');
+		$available_days_for_booking			                    = Helper::_post('available_days_for_booking', '365', 'int');
+		$week_starts_on						                    = Helper::_post('week_starts_on', 'sunday', 'string', ['sunday', 'monday']);
+		$date_format						                    = Helper::_post('date_format', '', 'string');
+		$time_format						                    = Helper::_post('time_format', '', 'string');
+		$google_maps_api_key				                    = Helper::_post('google_maps_api_key', '', 'string');
+		$client_timezone_enable				                    = Helper::_post('client_timezone_enable', 'off', 'string', ['on', 'off']);
+		$google_recaptcha				                        = Helper::_post('google_recaptcha', 'off', 'string', ['on', 'off']);
+		$google_recaptcha_site_key			                    = Helper::_post('google_recaptcha_site_key', '', 'string');
+        $allow_admins_to_book_outside_working_hours		        = Helper::_post('allow_admins_to_book_outside_working_hours', 'off', 'string', ['on', 'off']);
+        $only_registered_users_can_book		                    = Helper::_post('only_registered_users_can_book', 'off', 'string', ['on', 'off']);
+		$google_recaptcha_secret_key		                    = Helper::_post('google_recaptcha_secret_key', '', 'string');
+		$remove_branding				                        = Helper::_post('remove_branding', 'off', 'string', ['on', 'off']);
+		$timezone		                                        = Helper::_post('timezone', '', 'string');
 
 		Helper::setOption('timeslot_length', $timeslot_length);
+		Helper::setOption('allow_admins_to_book_outside_working_hours', $allow_admins_to_book_outside_working_hours);
+		Helper::setOption('only_registered_users_can_book', $only_registered_users_can_book);
 		Helper::setOption('default_appointment_status', $default_appointment_status);
 		Helper::setOption('slot_length_as_service_duration', $slot_length_as_service_duration);
 		Helper::setOption('min_time_req_prior_booking', $min_time_req_prior_booking);
@@ -298,7 +317,9 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		$skip_extras_step_if_need			= Helper::_post('skip_extras_step_if_need', 'on', 'string', ['on', 'off']);
 		$disable_payment_options			= Helper::_post('disable_payment_options', 'off', 'string', ['on', 'off']);
 		$hide_coupon_section				= Helper::_post('hide_coupon_section', 'off', 'string', ['on', 'off']);
+		$hide_giftcard_section				= Helper::_post('hide_giftcard_section', 'off', 'string', ['on', 'off']);
 		$hide_discount_row				    = Helper::_post('hide_discount_row', 'off', 'string', ['on', 'off']);
+		$hide_gift_discount_row				= Helper::_post('hide_gift_discount_row', 'off', 'string', ['on', 'off']);
 		$hide_price_section				    = Helper::_post('hide_price_section', 'off', 'string', ['on', 'off']);
 		$hide_add_to_google_calendar_btn	= Helper::_post('hide_add_to_google_calendar_btn', 'off', 'string', ['on', 'off']);
 		$hide_start_new_booking_btn			= Helper::_post('hide_start_new_booking_btn', 'off', 'string', ['on', 'off']);
@@ -404,7 +425,9 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		Helper::setOption('separate_first_and_last_name', $separate_first_and_last_name);
 		Helper::setOption('disable_payment_options', $disable_payment_options);
 		Helper::setOption('hide_coupon_section', $hide_coupon_section);
+		Helper::setOption('hide_giftcard_section', $hide_giftcard_section);
 		Helper::setOption('hide_discount_row', $hide_discount_row);
+		Helper::setOption('hide_gift_discount_row', $hide_gift_discount_row);
 		Helper::setOption('hide_price_section', $hide_price_section);
 		Helper::setOption('hide_add_to_google_calendar_btn', $hide_add_to_google_calendar_btn);
 		Helper::setOption('hide_start_new_booking_btn', $hide_start_new_booking_btn);
@@ -464,6 +487,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		$currency_symbol					= Helper::_post('currency_symbol', '', 'string');
 		$price_number_format				= Helper::_post('price_number_format', '1', 'int');
 		$price_number_of_decimals			= Helper::_post('price_number_of_decimals', '2', 'int');
+		$max_time_limit_for_payment			= Helper::_post('max_time_limit_for_payment', '10', 'int');
 		$deposit_can_pay_full_amount		= Helper::_post('deposit_can_pay_full_amount', 'on', 'string', ['on', 'off']);
 
 		$currencyInf = Helper::currencies( $currency );
@@ -478,6 +502,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		Helper::setOption('currency_symbol', $currency_symbol);
 		Helper::setOption('price_number_format', $price_number_format);
 		Helper::setOption('price_number_of_decimals', $price_number_of_decimals);
+		Helper::setOption('max_time_limit_for_payment', $max_time_limit_for_payment);
 		Helper::setOption('deposit_can_pay_full_amount', $deposit_can_pay_full_amount);
 
 		Helper::response(true);
@@ -485,21 +510,24 @@ class Ajax extends \BookneticApp\Providers\Ajax
 
 	public function save_payment_gateways_settings()
 	{
-		$paypal_enable				= Helper::_post('paypal_enable', 'off', 'string', ['on', 'off']);
-		$stripe_enable				= Helper::_post('stripe_enable', 'off', 'string', ['on', 'off']);
-		$local_enable				= Helper::_post('local_enable', 'on', 'string', ['on', 'off']);
-		$woocommerce_enable			= Helper::_post('woocommerce_enable', 'off', 'string', ['on', 'off']);
+		$paypal_enable				    = Helper::_post('paypal_enable', 'off', 'string', ['on', 'off']);
+		$stripe_enable				    = Helper::_post('stripe_enable', 'off', 'string', ['on', 'off']);
+		$local_enable				    = Helper::_post('local_enable', 'on', 'string', ['on', 'off']);
+		$woocommerce_enable			    = Helper::_post('woocommerce_enable', 'off', 'string', ['on', 'off']);
 
-		$paypal_client_id			= Helper::_post('paypal_client_id', '', 'string');
-		$paypal_client_secret		= Helper::_post('paypal_client_secret', '', 'string');
-		$paypal_mode				= Helper::_post('paypal_mode', 'sandbox', 'string', ['sandbox', 'live']);
+		$paypal_client_id			    = Helper::_post('paypal_client_id', '', 'string');
+		$paypal_client_secret		    = Helper::_post('paypal_client_secret', '', 'string');
+		$paypal_mode				    = Helper::_post('paypal_mode', 'sandbox', 'string', ['sandbox', 'live']);
 
-		$stripe_client_id			= Helper::_post('stripe_client_id', '', 'string');
-		$stripe_client_secret		= Helper::_post('stripe_client_secret', '', 'string');
+		$stripe_client_id			    = Helper::_post('stripe_client_id', '', 'string');
+		$stripe_client_secret		    = Helper::_post('stripe_client_secret', '', 'string');
 
-		$woocommerde_order_details	= Helper::_post('woocommerde_order_details', '', 'string');
-		$woocommerce_rediret_to	    = Helper::_post('woocommerce_rediret_to', 'cart', 'string', ['cart', 'checkout']);
-		$payment_gateways_arr		= Helper::_post('payment_gateways_order', '', 'string');
+		$woocommerce_skip_confirm_step	= Helper::_post('woocommerce_skip_confirm_step', 'on', 'string', ['on', 'off']);
+		$woocommerde_order_details	    = Helper::_post('woocommerde_order_details', '', 'string');
+		$woocommerce_rediret_to	        = Helper::_post('woocommerce_rediret_to', 'cart', 'string', ['cart', 'checkout']);
+
+		$payment_gateways_arr		    = Helper::_post('payment_gateways_order', '', 'string');
+		$wc_payment_gateways_arr	    = Helper::_post('wc_payment_gateways', '', 'string');
 
 		$payment_gateways = [];
 		$payment_gateways_arr = json_decode( $payment_gateways_arr, true );
@@ -508,24 +536,23 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			Helper::response( false );
 		}
 
-		$payment_gateways_by_order = [];
 		$allowed_payment_gateways = ['stripe', 'paypal', 'local'];
-		if( ! Helper::isSaaSVersion() )
+
+		if( !Helper::isSaaSVersion() || Helper::getOption('allow_to_use_woocommerce_integration', 'off', false) != 'off' )
 		{
 			$allowed_payment_gateways[] = 'woocommerce';
 		}
 
 		foreach ($payment_gateways_arr AS $ordr => $gateway)
 		{
-			if( is_string( $gateway ) && in_array( $gateway, ['stripe', 'paypal', 'local', 'woocommerce'] ) )
+			if( is_string( $gateway ) && in_array( $gateway, $allowed_payment_gateways )  )
 			{
-				if( isset($payment_gateways_by_order[$gateway]) )
+				if( in_array( $gateway, $payment_gateways ) )
 				{
 					Helper::response( false );
 				}
 
 				$payment_gateways[] = $gateway;
-				$payment_gateways_by_order[$gateway] = $ordr;
 			}
 			else
 			{
@@ -541,6 +568,11 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		if( $woocommerce_enable == 'on' && ( $paypal_enable == 'on' || $stripe_enable == 'on' || $local_enable == 'on' ) )
 		{
 			Helper::response( false );
+		}
+
+		if ( $woocommerce_enable === 'on' && ! class_exists( 'woocommerce' ) )
+		{
+			Helper::response( false, bkntc__('Other payment cannot be activated. Please contact the service provider.') );
 		}
 
 		if( $woocommerce_enable == 'off' && $paypal_enable == 'off' && $stripe_enable == 'off' && $local_enable == 'off' )
@@ -560,6 +592,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		Helper::setOption('paypal_client_secret', $paypal_client_secret);
 		Helper::setOption('paypal_mode', $paypal_mode);
 
+		Helper::setOption('woocommerce_skip_confirm_step', $woocommerce_skip_confirm_step);
 		Helper::setOption('woocommerde_order_details', $woocommerde_order_details);
 		Helper::setOption('woocommerce_rediret_to', $woocommerce_rediret_to);
 
@@ -569,6 +602,22 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		{
 			// Check Booknetic product. If not exist, create it..
 			WooCommerceService::bookneticProduct();
+		}
+
+		if( Helper::isSaaSVersion() )
+		{
+			$wc_payment_gateways_arr = json_decode( $wc_payment_gateways_arr, true );
+
+			$wcHelperService = new WCPaymentGateways();
+			$wcHelperService->startCollectiongUpdatedOptions();
+
+			foreach ( $wc_payment_gateways_arr AS $wc_payment_gateway_id => $wc_pg_status )
+			{
+				$wcHelperService->changePaymentGatewayStatus( $wc_payment_gateway_id, $wc_pg_status );
+			}
+
+			$wcHelperService->stopCollectiongUpdatedOptions();
+			$wcHelperService->saveCollectedOptions();
 		}
 
 		Helper::response(true);
@@ -607,7 +656,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 
 			$ws_day_off	= $dayInfo['day_off'];
 			$ws_start	= $ws_day_off ? '' : Date::timeSQL( $dayInfo['start'] );
-			$ws_end		= $ws_day_off ? '' : Date::timeSQL( $dayInfo['end'] );
+			$ws_end		= $ws_day_off ? '' : ( $dayInfo['end'] == "24:00" ? "24:00": Date::timeSQL( $dayInfo['end'] ) );
 			$ws_breaks	= $ws_day_off ? [] : $dayInfo['breaks'];
 
 			$ws_breaks_new = [];
@@ -685,12 +734,13 @@ class Ajax extends \BookneticApp\Providers\Ajax
 
 	public function save_company_settings()
 	{
-		$company_name		= Helper::_post('company_name', '', 'string');
-		$company_address	= Helper::_post('company_address', '', 'string');
-		$company_phone		= Helper::_post('company_phone', '', 'string');
-		$company_website	= Helper::_post('company_website', '', 'string');
+		$company_name		            = Helper::_post('company_name', '', 'string');
+		$company_address	            = Helper::_post('company_address', '', 'string');
+		$company_phone		            = Helper::_post('company_phone', '', 'string');
+		$company_website	            = Helper::_post('company_website', '', 'string');
+		$display_logo_on_booking_panel	= Helper::_post('display_logo_on_booking_panel', 'off', 'string', ['on', 'off']);
 
-		$company_image		= '';
+		$company_image = '';
 
 		if( isset($_FILES['company_image']) && is_string($_FILES['company_image']['tmp_name']) )
 		{
@@ -721,6 +771,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		Helper::setOption('company_address', $company_address);
 		Helper::setOption('company_phone', $company_phone);
 		Helper::setOption('company_website', $company_website);
+		Helper::setOption('display_logo_on_booking_panel', $display_logo_on_booking_panel);
 
 		if( $company_image != '' )
 		{
@@ -732,7 +783,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 
 	public function save_email_settings()
 	{
-		if( Helper::isSaaSVersion() )
+		if( Helper::isSaaSVersion() && !( Helper::getOption('allow_tenants_to_set_email_sender', 'off', false) == 'on' && Permission::getPermission( 'email_settings' ) == 'on' ) )
 		{
 			Helper::response( false );
 		}
@@ -746,7 +797,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		$sender_email		= Helper::_post('sender_email', '', 'string');
 		$sender_name		= Helper::_post('sender_name', '', 'string');
 
-		if( $mail_gateway != 'smtp' )
+		if( $mail_gateway != 'smtp' || Helper::isSaaSVersion() )
 		{
 			$smtp_hostname		= '';
 			$smtp_port			= '';
@@ -764,18 +815,22 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			Helper::response(false, bkntc__('Please type the sender name field!'));
 		}
 
-		if( empty( $sender_email ) || !filter_var($sender_email, FILTER_VALIDATE_EMAIL) )
+		if( ! Helper::isSaaSVersion() )
 		{
-			Helper::response(false, bkntc__('Please type the sender email field!'));
+			if( empty( $sender_email ) || !filter_var($sender_email, FILTER_VALIDATE_EMAIL) )
+			{
+				Helper::response(false, bkntc__('Please type the sender email field!'));
+			}
+
+			Helper::setOption('mail_gateway', $mail_gateway);
+			Helper::setOption('smtp_hostname', $smtp_hostname);
+			Helper::setOption('smtp_port', $smtp_port);
+			Helper::setOption('smtp_secure', $smtp_secure);
+			Helper::setOption('smtp_username', $smtp_username);
+			Helper::setOption('smtp_password', $smtp_password);
+			Helper::setOption('sender_email', $sender_email);
 		}
 
-		Helper::setOption('mail_gateway', $mail_gateway);
-		Helper::setOption('smtp_hostname', $smtp_hostname);
-		Helper::setOption('smtp_port', $smtp_port);
-		Helper::setOption('smtp_secure', $smtp_secure);
-		Helper::setOption('smtp_username', $smtp_username);
-		Helper::setOption('smtp_password', $smtp_password);
-		Helper::setOption('sender_email', $sender_email);
 		Helper::setOption('sender_name', $sender_name);
 
 		Helper::response(true);
@@ -841,29 +896,31 @@ class Ajax extends \BookneticApp\Providers\Ajax
 
 	public function save_customer_panel_settings()
 	{
-		if( Helper::isSaaSVersion() )
+		if( !Helper::isSaaSVersion() )
 		{
-			Helper::response( false );
-		}
+            $customer_panel_enable					                = Helper::_post('customer_panel_enable', 'off', 'string', ['on', 'off']);
+            $customer_panel_page_id					                = Helper::_post('customer_panel_page_id', '', 'int');
+            Helper::setOption('customer_panel_enable', $customer_panel_enable);
+            Helper::setOption('customer_panel_page_id', $customer_panel_page_id);
 
-		$customer_panel_enable					= Helper::_post('customer_panel_enable', 'off', 'string', ['on', 'off']);
-		$customer_panel_page_id					= Helper::_post('customer_panel_page_id', '', 'int');
-		$customer_panel_allow_reschedule		= Helper::_post('customer_panel_allow_reschedule', 'on', 'string', ['on', 'off']);
-		$customer_panel_allow_cancel			= Helper::_post('customer_panel_allow_cancel', 'on', 'string', ['on', 'off']);
-		$customer_panel_allow_delete_account	= Helper::_post('customer_panel_allow_delete_account', 'on', 'string', ['on', 'off']);
+        }
 
-		Helper::setOption('customer_panel_enable', $customer_panel_enable);
-		Helper::setOption('customer_panel_page_id', $customer_panel_page_id);
+		$customer_panel_allow_reschedule		                = Helper::_post('customer_panel_allow_reschedule', 'on', 'string', ['on', 'off']);
+		$customer_panel_allow_cancel			                = Helper::_post('customer_panel_allow_cancel', 'on', 'string', ['on', 'off']);
+		$customer_panel_allow_delete_account	                = Helper::_post('customer_panel_allow_delete_account', 'on', 'string', ['on', 'off']);
+		$time_restriction_to_make_changes_on_appointments		= Helper::_post('time_restriction_to_make_changes_on_appointments', '5', 'int');
+
 		Helper::setOption('customer_panel_allow_reschedule', $customer_panel_allow_reschedule);
 		Helper::setOption('customer_panel_allow_cancel', $customer_panel_allow_cancel);
 		Helper::setOption('customer_panel_allow_delete_account', $customer_panel_allow_delete_account);
+		Helper::setOption('time_restriction_to_make_changes_on_appointments', $time_restriction_to_make_changes_on_appointments);
 
 		Helper::response(true);
 	}
 
 	public function save_integrations_zoom_settings()
 	{
-		if( Helper::isSaaSVersion() )
+		if( Helper::isSaaSVersion() && Helper::getOption('zoom_enable', 'off', false) == 'off' )
 		{
 			Helper::response( false );
 		}
@@ -875,14 +932,26 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		$zoom_meeting_agenda	    = Helper::_post('zoom_meeting_agenda', '', 'string');
 		$zoom_set_random_password	= Helper::_post('zoom_set_random_password', 'on', 'string', ['on', 'off']);
 
-		if( $zoom_enable == 'on' && ( empty($zoom_api_key) || empty($zoom_api_secret) || empty($zoom_meeting_title) || empty($zoom_meeting_agenda) ) )
+		if( $zoom_enable == 'on' )
 		{
-			Helper::response(false, bkntc__('Please fill in all required fields correctly!'));
+			if( empty($zoom_meeting_title) || empty($zoom_meeting_agenda) )
+			{
+				Helper::response(false, bkntc__('Please fill in all required fields correctly!'));
+			}
+
+			if( Helper::getOption('zoom_integration_method', 'oauth', false) == 'jwt' && ( empty($zoom_api_key) || empty($zoom_api_secret) ) )
+			{
+				Helper::response(false, bkntc__('Please fill in all required fields correctly!'));
+			}
+		}
+
+		if( Helper::getOption('zoom_integration_method', 'oauth', false) == 'jwt' || !Helper::isSaaSVersion() )
+		{
+			Helper::setOption('zoom_api_key', $zoom_api_key);
+			Helper::setOption('zoom_api_secret', $zoom_api_secret);
 		}
 
 		Helper::setOption('zoom_enable', $zoom_enable);
-		Helper::setOption('zoom_api_key', $zoom_api_key);
-		Helper::setOption('zoom_api_secret', $zoom_api_secret);
 		Helper::setOption('zoom_meeting_title', $zoom_meeting_title);
 		Helper::setOption('zoom_meeting_agenda', $zoom_meeting_agenda);
 		Helper::setOption('zoom_set_random_password', $zoom_set_random_password);

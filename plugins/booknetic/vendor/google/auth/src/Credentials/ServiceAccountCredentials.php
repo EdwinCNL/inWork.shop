@@ -39,8 +39,8 @@ use InvalidArgumentException;
  *
  *   use Google\Auth\Credentials\ServiceAccountCredentials;
  *   use Google\Auth\Middleware\AuthTokenMiddleware;
- *   use GuzzleHttp\Client;
- *   use GuzzleHttp\HandlerStack;
+ *   use Booknetic_GuzzleHttp\Client;
+ *   use Booknetic_GuzzleHttp\HandlerStack;
  *
  *   $sa = new ServiceAccountCredentials(
  *       'https://www.googleapis.com/auth/taskqueue',

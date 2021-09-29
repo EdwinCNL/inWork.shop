@@ -208,6 +208,10 @@
 
 @media only screen and (max-width: 1200px)
 {
+	.settings-main-container
+	{
+		overflow: unset;
+	}
 	.settings-floating-button {
 		display: block;
 		position: fixed;
@@ -361,4 +365,43 @@
 	padding-left: 40px;
 	padding-right: 40px;
 	padding-top: 30px;
+}
+
+.rtl .settings-chart, .rtl .settings-light-portlet, .rtl .settings_submenus > div, .rtl .sc-title-div, .rtl .sc-description
+{
+	text-align: right;
+}
+
+.rtl .settings-chart > .settings-icon
+{
+	margin-left: unset;
+	margin-right: 40px;
+}
+
+.rtl .sc-bars-cls
+{
+	float: right;
+}
+
+.rtl .settings-chart > .settings-description {
+	color: #828F9A;
+	font-size: 14px;
+	padding-left: 20px;
+	padding-right: 40px;
+}
+
+.rtl .settings_submenus > div:after
+{
+	right: unset;
+	border-left-width: 0;
+
+	left: -4px;
+	border-right-width: 6px;
+	border-right-color: #ADBFC7;
+}
+
+.rtl .settings_submenus > .selected_sub_menu:after
+{
+	border-left-color: unset;
+	border-right-color: #6C70DD;
 }

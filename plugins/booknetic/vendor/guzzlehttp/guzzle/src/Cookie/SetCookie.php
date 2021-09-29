@@ -1,5 +1,5 @@
 <?php
-namespace GuzzleHttp\Cookie;
+namespace Booknetic_GuzzleHttp\Cookie;
 
 /**
  * Set-Cookie object

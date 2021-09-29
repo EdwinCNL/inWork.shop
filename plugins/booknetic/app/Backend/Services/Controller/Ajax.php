@@ -16,6 +16,7 @@ use BookneticApp\Providers\Backend;
 use BookneticApp\Providers\Date;
 use BookneticApp\Providers\DB;
 use BookneticApp\Providers\Helper;
+use BookneticApp\Providers\Math;
 use BookneticApp\Providers\Permission;
 
 class Ajax extends \BookneticApp\Providers\Ajax
@@ -60,6 +61,9 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			$serviceInfo	= [
 				'id'                        =>  null,
 				'name'                      =>  null,
+				'price'                     =>  null,
+				'tax'                       =>  null,
+				'tax_type'                  =>  null,
 				'price'                     =>  null,
 				'category_id'               =>  null,
 				'is_visible'                =>  null,
@@ -108,10 +112,18 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			'category'					=>	$categoryId,
 			'special_days'				=>	$specialDays,
 			'extras'					=>	$extras,
-			'timesheet'					=>	json_decode($timesheet['timesheet'], true),
-			'has_specific_timesheet'	=>	$timesheet['service_id'] > 0
+			'timesheet'					=>	json_decode(isset($timesheet['timesheet']) ? $timesheet['timesheet'] : '[]', true),
+			'has_specific_timesheet'	=>	isset($timesheet['timesheet']) && $timesheet['service_id'] > 0
 		]);
 	}
+
+    public function add_new_category()
+    {
+        $categories	= ServiceCategory::fetchAll();
+        $this->modalView('add_new_category', [
+            'categories' =>	$categories,
+        ]);
+    }
 
 	public function category_delete()
 	{
@@ -173,9 +185,9 @@ class Ajax extends \BookneticApp\Providers\Ajax
 
 	public function category_save()
 	{
-		$id		= Helper::_post('id', '0', 'integer');
+		$id		= Helper::_post('id', 0, 'integer');
 		$name	= Helper::_post('name', '', 'string');
-		$parent	= Helper::_post('parent_id', null, 'integer');
+		$parent	= Helper::_post('parent_id', '0', 'integer');
 
 		if( empty( $name ) || ( $id == 0 && is_null($parent) ) )
 		{
@@ -220,9 +232,13 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		$timeslot_length		=	Helper::_post('timeslot_length', '0', 'int');
 
 		$price					=	Helper::_post('price', null, 'float');
+		$tax		 			=	Helper::_post('tax', null, 'float');
+		$tax_type				=	Helper::_post('tax_type', null, 'string', ['percent', 'price']);
 		$deposit				=	Helper::_post('deposit', null, 'float');
 		$deposit_type			=	Helper::_post('deposit_type', null, 'string', ['percent', 'price']);
 		$hide_price			    =	Helper::_post('hide_price', '0', 'int', ['1']);
+
+		error_log($tax);
 
 		$buffer_before			=	Helper::_post('buffer_before', '0', 'int');
 		$buffer_after			=	Helper::_post('buffer_after', '0', 'int');
@@ -269,7 +285,6 @@ class Ajax extends \BookneticApp\Providers\Ajax
 
 		if( $repeatable )
 		{
-
 			if( $fixed_full_period && ( empty( $full_period_type ) || empty( $full_period_value ) ) )
 			{
 				Helper::response(false, bkntc__('Please fill "Full period" field!'));
@@ -351,7 +366,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			}
 		}
 
-		$checkIfNameExist = Service::where('name', $name)->where('category_id')->where('id', '!=', $id)->fetch();
+		$checkIfNameExist = Service::where('name', $name)->where('category_id', $category)->where('id', '!=', $id)->fetch();
 
 		if( $checkIfNameExist )
 		{
@@ -383,15 +398,15 @@ class Ajax extends \BookneticApp\Providers\Ajax
 				}
 
 				$newEmployeesList[(int)$employeeInf[0]] = [
-					Helper::floor( $employeeInf[1] ),
-					Helper::floor( $employeeInf[2] ),
+					Math::floor( $employeeInf[1] ),
+					Math::floor( $employeeInf[2] ),
 					$employeeInf[3]
 				];
 			}
 		}
 
-		$price = Helper::floor( $price );
-		$deposit = Helper::floor( $deposit );
+		$price = Math::floor( $price );
+		$deposit = Math::floor( $deposit );
 
 		$image = '';
 
@@ -415,6 +430,8 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			'name'						=>	$name,
 
 			'price'						=>	$price,
+			'tax'						=>	$tax,
+			'tax_type'					=>	$tax_type,
 			'deposit'					=>	$deposit,
 			'deposit_type'				=>	$deposit_type,
 			'hide_price'				=>	$hide_price,
@@ -627,7 +644,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			Helper::response(false, bkntc__('Max quantity can not be zero!'));
 		}
 
-		$price = Helper::floor( $price );
+		$price = Math::floor( $price );
 
 		$image = '';
 
@@ -718,6 +735,62 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		Helper::response(true);
 	}
 
+	public function copy_extras()
+	{
+		$val 		= Helper::_post('val', '', 'int');
+		$extraId 	= Helper::_post('extraId', '', 'int');
+
+		$extra = ServiceExtra::where('id', $extraId)->fetch();
+
+		$sqlData = [
+			'name'				=>	$extra['name'],
+			'price'				=>	$extra['price'],
+			'hide_price'		=>	$extra['hide_price'],
+			'duration'			=>	$extra['duration'],
+			'hide_duration'		=>	$extra['hide_duration'],
+			'is_active'			=>	$extra['is_active'],
+			'max_quantity'		=>	$extra['max_quantity'],
+			'image'				=>	$extra['image']
+		];
+
+		if($val == 1){
+
+			$category = Service::select(['category_id'])->where('id', $extra['service_id'])->fetch();
+			$services = Service::select(['id'])->where('category_id', $category['category_id'])->fetchAll();
+
+			if(	is_null($category) || is_null($services)){
+
+				Helper::response(false, bkntc__('There is no category or service attached with this extra!'));
+			}
+
+			foreach ($services as $service) {
+
+				$inserted = ServiceExtra::where('service_id', $service['id'])->where('name', $sqlData['name'])->fetchAll();
+			
+				if( empty($inserted)){
+					$sqlData['service_id'] = $service['id'];
+					ServiceExtra::insert($sqlData);
+				}
+			}
+
+		}else{
+			
+			$services = Service::fetchAll();
+			
+			foreach($services as $service){
+
+				$inserted = ServiceExtra::where('service_id', $service['id'])->where('name', $sqlData['name'])->fetchAll();
+				
+				if( empty($inserted)){
+					$sqlData['service_id'] = $service['id'];
+					ServiceExtra::insert($sqlData);
+				}
+			}
+		}
+		
+		Helper::response(true, ['msg' => bkntc__('Success!')]);
+	}
+
 	public function hide_extra()
 	{
 		$id		=	Helper::_post('id', '0', 'int');
@@ -751,7 +824,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 
 		Helper::response(true, [
 			'name'			=>	esc_html( $extraInf['name'] ),
-			'price'			=>	Helper::floor( $extraInf['price'] ),
+			'price'			=>	Math::floor( $extraInf['price'] ),
 			'hide_price'	=>	(int)$extraInf['hide_price'],
 			'duration'		=>	(int)$extraInf['duration'],
 			'duration_txt'	=>	Helper::secFormat( (int)$extraInf['duration'] * 60 ),
@@ -779,12 +852,19 @@ class Ajax extends \BookneticApp\Providers\Ajax
 
 		$timeslotLength = Helper::getOption('timeslot_length', 5);
 
-		$tEnd = Date::epoch('23:59:59');
+		$tEnd = Date::epoch('00:00:00', '+1 days');
 		$timeCursor = Date::epoch('00:00:00');
 		$data = [];
 		while( $timeCursor <= $tEnd )
 		{
-			$timeText = Date::timeSQL( $timeCursor );
+			$timeId = Date::timeSQL( $timeCursor );
+			$timeText = Date::time( $timeCursor );
+
+			if( $timeCursor == $tEnd && $timeId = "00:00" )
+            {
+                $timeText = "24:00";
+                $timeId = "24:00";
+            }
 
 			$timeCursor += $timeslotLength * 60;
 
@@ -795,7 +875,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			}
 
 			$data[] = [
-				'id'	=>	$timeText,
+				'id'	=>	$timeId,
 				'text'	=>	$timeText
 			];
 		}
@@ -810,7 +890,8 @@ class Ajax extends \BookneticApp\Providers\Ajax
 
 		$timeslotLength = Helper::getOption('timeslot_length', 5);
 
-		$tEnd = 7 * 24 * 3600;
+		// $tEnd = 7 * 24 * 3600;
+		$tEnd = 31 * 24 * 3600;
 		$timeCursor = 0;
 		$data = [];
 		while( $timeCursor <= $tEnd )

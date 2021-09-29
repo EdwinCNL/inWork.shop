@@ -10,6 +10,7 @@ use BookneticApp\Backend\Staff\Model\Staff;
 use BookneticApp\Providers\Date;
 use BookneticApp\Providers\DB;
 use BookneticApp\Providers\Helper;
+use BookneticApp\Backend\Appointments\Model\AppointmentExtra;
 
 class GoogleCalendarEvent
 {
@@ -180,10 +181,12 @@ class GoogleCalendarEvent
 			'{appointment_status}',
 			'{appointment_service_price}',
 			'{appointment_extras_price}',
+			'{appointment_extras_list}',
 			'{appointment_discount_price}',
 			'{appointment_sum_price}',
 			'{appointment_paid_price}',
 			'{appointment_payment_method}',
+			'{appointment_tax_amount}',
 
 			'{service_name}',
 			'{service_price}',
@@ -223,7 +226,7 @@ class GoogleCalendarEvent
 			'{zoom_meeting_url}',
 			'{zoom_meeting_password}'
 		], [
-			$this->appointmentCustomerInf('id'),
+			$this->appointmentId,
 			Date::datee( $this->appointmentInf['date'] ),
 			Date::dateTime($this->appointmentInf['date'] . ' ' . $this->appointmentInf['start_time'] ),
 			Date::time( $this->appointmentInf['date'] . ' ' . $this->appointmentInf['start_time'] ),
@@ -235,10 +238,12 @@ class GoogleCalendarEvent
 			$this->appointmentCustomerInf('status', false),
 			Helper::price( $this->appointmentCustomerInf('service_amount', false, 0) ),
 			Helper::price( $this->appointmentCustomerInf('extras_amount', false, 0) ),
+			$this->extraServicesList(),
 			Helper::price( $this->appointmentCustomerInf('discount', false, 0) ),
 			Helper::price( $this->appointmentCustomerInf('service_amount', false, 0) + $this->appointmentCustomerInf('extras_amount', false, 0) - $this->appointmentCustomerInf('discount', false, 0) ),
 			Helper::price( $this->appointmentCustomerInf('paid_amount', false, 0) ),
 			Helper::paymentMethod( $this->appointmentCustomerInf('payment_method', false) ),
+			Helper::price( $this->appointmentCustomerInf('tax_amount', false, 0) ),
 
 			$this->serviceInf['name'],
 			Helper::price( $this->serviceInf['price'] ),
@@ -320,7 +325,7 @@ class GoogleCalendarEvent
 
 		if( !$customData )
 		{
-			return $this->appointmentId . ':' . $this->appointmentCustomerInf( 'customer_id', false, 0 ) . ':' . $cf_id;
+			return '';
 		}
 
 		if( $customData['type'] == 'file' )
@@ -402,6 +407,22 @@ class GoogleCalendarEvent
 		{
 			return '';
 		}
+	}
+
+
+
+
+	private function extraServicesList()
+	{
+		$extraServices = AppointmentExtra::where('appointment_id', $this->appointmentId)->where('customer_id', $this->appointmentCustomerInf('id', false , ''))->fetchAll();
+		$listStr = '';
+
+		foreach ( $extraServices AS $extraInf )
+		{
+			$listStr .= $extraInf->extra()->fetch()->name . ( $extraInf->quantity > 1 ? ' x' . $extraInf->quantity : '' ) . ' - ' . Helper::price( $extraInf->price * $extraInf->quantity ) . '<br/>';
+		}
+
+		return $listStr;
 	}
 
 

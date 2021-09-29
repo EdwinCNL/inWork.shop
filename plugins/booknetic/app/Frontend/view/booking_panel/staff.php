@@ -39,6 +39,11 @@ foreach ( $parameters['staff'] AS $eq => $staffInf ) :
 		<div class="booknetic_card_title">
 			<div><?php print esc_html($staffInf['name'])?></div>
 			<div class="booknetic_card_description">
+
+				<?php if( !empty($staffInf['profession']) ) : ?>
+					<div class="booknetic_staff_profession"><?php print esc_html($staffInf['profession'])?></div>
+				<?php endif; ?>
+
 				<?php if( $footer_text_option == '1' || $footer_text_option == '2' ) : ?>
 					<div><?php print esc_html($staffInf['email'])?></div>
 				<?php endif; ?>
@@ -46,6 +51,7 @@ foreach ( $parameters['staff'] AS $eq => $staffInf ) :
 				<?php if( $footer_text_option == '1' || $footer_text_option == '3' ) : ?>
 					<div><?php print esc_html($staffInf['phone_number'])?></div>
 				<?php endif; ?>
+
 			</div>
 		</div>
 	</div>

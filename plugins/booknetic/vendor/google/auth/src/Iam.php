@@ -19,7 +19,7 @@ namespace Google\Auth;
 
 use Google\Auth\HttpHandler\HttpClientCache;
 use Google\Auth\HttpHandler\HttpHandlerFactory;
-use GuzzleHttp\Psr7;
+use Booknetic_GuzzleHttp\Psr7;
 
 /**
  * Tools for using the IAM API.

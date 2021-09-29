@@ -92,6 +92,7 @@
 		{
 			var wp_user					= $('#input_wp_user').val(),
 				name					= $("#input_name").val(),
+				profession					= $("#input_profession").val(),
 				phone					= $("#input_phone").val(),
 				email					= $("#input_email").val(),
 				allow_staff_to_login	= $("#input_allow_staff_to_login").is(':checked') ? 1 : 0,
@@ -194,6 +195,7 @@
 			data.append('id', $(".fs-modal #add_new_JS").data('staff-id'));
 			data.append('wp_user', wp_user);
 			data.append('name', name);
+			data.append('profession', profession);
 			data.append('phone', phone);
 			data.append('email', email);
 			data.append('allow_staff_to_login', allow_staff_to_login);
@@ -336,6 +338,7 @@
 
 		$('#input_wp_user').select2({
 			theme: 'bootstrap',
+			placeholder: booknetic.__('select'),
 			allowClear: true
 		});
 

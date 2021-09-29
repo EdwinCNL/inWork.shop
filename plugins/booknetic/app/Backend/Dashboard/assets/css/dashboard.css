@@ -264,3 +264,15 @@
 	background: transparent;
 
 }
+
+.rtl .statistic-boxes
+{
+	text-align: right;
+}
+
+
+.rtl .box-icon-div
+{
+	left: unset;
+	right: 20px;
+}

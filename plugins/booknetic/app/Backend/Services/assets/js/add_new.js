@@ -126,6 +126,26 @@
 					});
 				});
 			});
+		}).on('click', '.copy_to_parent_services', function()
+		{
+			var extraRow	= $(this).closest('.extra_row'),
+				extraId		= extraRow.data('id');
+
+			booknetic.ajax('copy_extras', {val: 1, extraId: extraId}, function(res)
+			{
+				booknetic.toast(res.msg);
+			});
+			
+		}).on('click', '.copy_to_all_services', function()
+		{
+			var extraRow	= $(this).closest('.extra_row'),
+				extraId		= extraRow.data('id');
+
+			booknetic.ajax('copy_extras', {val: 0, extraId: extraId}, function(res)
+			{
+				booknetic.toast(res.msg);
+			});
+			
 		}).on('click', '.hide_extra', function()
 		{
 			var extraRow	= $(this).closest('.extra_row'),
@@ -360,6 +380,8 @@
 				timeslot_length			= $(".fs-modal #input_time_slot_length").val(),
 
 				price					= $(".fs-modal #input_price").val(),
+				tax					    = $(".fs-modal #input_tax").val(),
+				tax_type				= $(".fs-modal #input_tax_type").val(),
 				deposit					= $(".fs-modal #input_deposit").val(),
 				deposit_type			= $(".fs-modal #input_deposit_type").val(),
 				hide_price			    = $(".fs-modal #input_hide_price").is(':checked') ? 1 : 0,
@@ -486,6 +508,8 @@
 			data.append('timeslot_length', timeslot_length);
 
 			data.append('price', price);
+			data.append('tax', tax);
+			data.append('tax_type', tax_type);
 			data.append('deposit', deposit);
 			data.append('deposit_type', deposit_type);
 			data.append('hide_price', hide_price);

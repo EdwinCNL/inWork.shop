@@ -84,7 +84,7 @@ function printTree( $parentId, &$categories, &$staff, $class = 'vertical' )
 	<div class="m_head_title float-left"><?php print bkntc__('Services')?> <span class="badge badge-warning row_count" id="services_count_badge"><?php print $parameters['number_of_services']?></span></div>
 	<div class="m_head_actions float-right">
 
-		<a href="?page=booknetic&module=services&view=list" class="btn btn-lg btn-primary tooltip-it float-left" data-placement="bottom" data-title="<?php print bkntc__('LIST VIEW')?>"><i class="fa fa-list"></i></a>
+		<a href="?page=booknetic&module=services&view=list" class="btn btn-lg btn-primary float-left" >LIST VIEW</a>
 		<button type="button" class="btn btn-lg btn-light goto-center tooltip-it" data-placement="bottom" data-title="<?php print bkntc__('Go to center')?>"><i class="fa fa-location-arrow"></i></button>
 
 		<div class="d-inline">

@@ -18,6 +18,8 @@
 			booknetic.loadModal('info', {'id': rid});
 		});
 
+			
+
 	});
 
 })(jQuery);

@@ -5,7 +5,6 @@ use BookneticApp\Providers\Helper;
 use BookneticApp\Providers\Date;
 
 defined( 'ABSPATH' ) or die();
-
 ?>
 
 <link href='<?php print Helper::assets('css/calendar.css', 'Calendar')?>' rel='stylesheet' />

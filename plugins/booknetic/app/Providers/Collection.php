@@ -23,7 +23,7 @@ class Collection implements \ArrayAccess, \JsonSerializable
 	 * Collection constructor.
 	 * @param array $array
 	 */
-	public function __construct( $array, $model )
+	public function __construct( $array = false, $model = null )
 	{
 		$this->container = $array;
 		$this->model = $model;

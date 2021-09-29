@@ -30,10 +30,12 @@ defined( 'ABSPATH' ) or die();
 			<div class="fsn_shorttags_element">{appointment_status}</div>
 			<div class="fsn_shorttags_element">{appointment_service_price}</div>
 			<div class="fsn_shorttags_element">{appointment_extras_price}</div>
+			<div class="fsn_shorttags_element">{appointment_extras_list}</div>
 			<div class="fsn_shorttags_element">{appointment_discount_price}</div>
 			<div class="fsn_shorttags_element">{appointment_sum_price}</div>
 			<div class="fsn_shorttags_element">{appointment_paid_price}</div>
 			<div class="fsn_shorttags_element">{appointment_payment_method}</div>
+			<div class="fsn_shorttags_element">{appointment_tax_amount}</div>
 			<div class="fsn_shorttags_element">{appointment_custom_field_<span class="custom_field_key_class">ID</span>} <i class="far fa-question-circle" data-load-modal="Emailnotifications.help_to_find_custom_field_id"></i></div>
 
 			<div class="text-primary mt-4"><?php print bkntc__('Service Info')?>:</div>

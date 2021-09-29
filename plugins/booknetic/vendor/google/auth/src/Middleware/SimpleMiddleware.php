@@ -17,7 +17,7 @@
 
 namespace Google\Auth\Middleware;
 
-use GuzzleHttp\Psr7;
+use Booknetic_GuzzleHttp\Psr7;
 use Psr\Http\Message\RequestInterface;
 
 /**
@@ -54,8 +54,8 @@ class SimpleMiddleware
      * Updates the request query with the developer key if auth is set to simple.
      *
      *   use Google\Auth\Middleware\SimpleMiddleware;
-     *   use GuzzleHttp\Client;
-     *   use GuzzleHttp\HandlerStack;
+     *   use Booknetic_GuzzleHttp\Client;
+     *   use Booknetic_GuzzleHttp\HandlerStack;
      *
      *   $my_key = 'is not the same as yours';
      *   $middleware = new SimpleMiddleware(['key' => $my_key]);

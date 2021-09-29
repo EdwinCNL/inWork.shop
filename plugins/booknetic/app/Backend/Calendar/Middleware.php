@@ -10,7 +10,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 
 	public static function handle()
 	{
-		if( Helper::isSaaSVersion() && Permission::tenantInf()->getPermission( 'calendar' ) === 'off' )
+		if( Helper::isSaaSVersion() && Permission::getPermission( 'calendar' ) === 'off' )
 		{
 			return false;
 		}
@@ -23,7 +23,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 		// add menu...
 		$this->createMenu(bkntc__('Calendar'))
 			->setIcon('fa fa-calendar-check')
-			->setOrder(3)
+			->setOrder(4)
 			->show();
 
 

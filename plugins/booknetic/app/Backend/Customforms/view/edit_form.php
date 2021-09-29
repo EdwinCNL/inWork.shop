@@ -56,7 +56,7 @@ $formInputTpls = [
 
 	<div class="col-xl-3 col-md-6 col-lg-5 p-3 pr-md-1">
 		<div class="fs_portlet">
-			<div class="fs_portlet_title"><?php print bkntc__('SAVE FORM')?>Elements</div>
+			<div class="fs_portlet_title"><?php print bkntc__('Elements')?></div>
 			<div class="fs_portlet_content p-0">
 
 				<div class="row m-0 p-0">

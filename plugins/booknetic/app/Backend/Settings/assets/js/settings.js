@@ -83,9 +83,22 @@
 			});
 		});
 
-		if( $('#settingsJS').data('goto') && $('.settings-chart[data-view="'+$('#settingsJS').data('goto')+'"]').length )
+		if( $('#settingsJS').data('goto') )
 		{
-			$('.settings-chart[data-view="'+$('#settingsJS').data('goto')+'"]').click();
+			let goto = $('#settingsJS').data('goto');
+
+			if( $('.settings-chart[data-view="'+goto+'"]').length )
+			{
+				$('.settings-chart[data-view="'+goto+'"]').click();
+			}
+			else if( $('.settings_submenus div[data-view="'+goto+'"]').length ) // is sub menu
+			{
+				$('.settings_submenus div[data-view="'+goto+'"]').click();
+
+				let parent_view_name = $('.settings_submenus div[data-view="'+goto+'"]').closest('.settings_menu').data('view');
+
+				$('.settings-chart[data-view="'+parent_view_name+'"]').click();
+			}
 		}
 
 	});

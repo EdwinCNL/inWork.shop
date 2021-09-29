@@ -15,6 +15,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 	{
 		$id			= Helper::_post('id', 0, 'int');
 		$name		= Helper::_post('name', '', 'string');
+		$custom_css	= Helper::_post('custom_css', '', 'string');
 		$height		= Helper::_post('height', '', 'int');
 		$fontfamily	= Helper::_post('fontfamily', '', 'string');
 		$colors		= Helper::_post('colors', '', 'string');
@@ -65,6 +66,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		{
 			Appearance::where('id', $id)->update([
 				'name'	        =>	$name,
+				'custom_css'	=>	$custom_css,
 				'colors'        =>	$colors,
 				'height'        =>  $height,
 				'fontfamily'    =>  $fontfamily
@@ -76,6 +78,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		{
 			Appearance::insert([
 				'name'		    =>	$name,
+                'custom_css'	=>	$custom_css,
 				'colors'	    =>	$colors,
 				'height'        =>  $height,
 				'fontfamily'    =>  $fontfamily

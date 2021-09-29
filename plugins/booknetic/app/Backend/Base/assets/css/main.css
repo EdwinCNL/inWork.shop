@@ -291,6 +291,15 @@ hr
 	padding: 40px;
 }
 
+.language-chooser-bar-in-menu
+{
+	margin: 15px 32px -10px;
+	color: #FFF;
+}
+.language-chooser-bar-in-menu .language-switcher-select
+{
+	box-shadow: none !important;
+}
 .top_side_menu > .language-chooser-bar
 {
 	float: right;
@@ -1440,7 +1449,7 @@ input[type="radio"] ~ label, input[type="checkbox"] ~ label
 
 
 
-.appointment-status-pending
+.appointment-status-pending,.appointment-status-waiting_for_payment
 {
 	display: block;
 
@@ -1462,7 +1471,7 @@ input[type="radio"] ~ label, input[type="checkbox"] ~ label
 	margin-left: 30px;
 }
 
-.appointment-status-pending:after
+.appointment-status-pending:after, .appointment-status-waiting_for_payment:after
 {
 	content: "\f017";
 	font-weight: 400;
@@ -1672,7 +1681,7 @@ input[type="radio"] ~ label, input[type="checkbox"] ~ label
 	background: #FFF;
 	left: 260px;
 	bottom: 0;
-	z-index: 110;
+	z-index: 98;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -1854,6 +1863,7 @@ input[type="radio"] ~ label, input[type="checkbox"] ~ label
 	overflow: hidden;
 	cursor: pointer;
 	height: 20px;
+    width: 38px;
 	padding: 0;
 	line-height: 20px;
 	border-radius: 30px;
@@ -2169,7 +2179,12 @@ input[type="radio"] ~ label, input[type="checkbox"] ~ label
 		padding-right: 20px !important;
 	}
 
-
+	.fs-modal-content
+	{
+		width: calc(100% - 78px) !important;
+		max-width: calc(100% - 78px) !important;
+		min-width: calc(100% - 78px) !important;
+	}
 
 }
 
@@ -2234,10 +2249,6 @@ input[type="radio"] ~ label, input[type="checkbox"] ~ label
 	-o-transition: width 500ms ease-out;
 	-webkit-transition: width 500ms ease-out;
 	transition: width 500ms ease-out
-}
-#booknetic_progress.booknetic_progress_done
-{
-	opacity: 0
 }
 #booknetic_progress dd,#booknetic_progress dt
 {
@@ -2572,7 +2583,7 @@ input[type="radio"] ~ label, input[type="checkbox"] ~ label
 }
 
 
-@media only screen and (max-width: 768px)
+@media only screen and (max-width: 767px)
 {
 	.left_side_menu
 	{
@@ -2593,9 +2604,21 @@ input[type="radio"] ~ label, input[type="checkbox"] ~ label
 	{
 		padding-left: 0;
 	}
+
+
+	html .rtl .top_side_menu
+	{
+		padding-left: 0;
+		padding-right: 0;
+	}
+
 	.main_wrapper
 	{
 		padding-left: 0;
+	}
+	.rtl .main_wrapper
+	{
+		padding-right: 0!important;
 	}
 	.m_bottom_fixed
 	{
@@ -2620,6 +2643,11 @@ input[type="radio"] ~ label, input[type="checkbox"] ~ label
 		float: none !important;
 		margin-top: 10px;
 	}
+	.rtl .m_header .m_head_actions
+	{
+		float: none !important;
+		margin-top: 10px;
+	}
 	.m_head_actions > *
 	{
 		display: block;
@@ -2634,6 +2662,8 @@ input[type="radio"] ~ label, input[type="checkbox"] ~ label
 	.fs-modal-content
 	{
 		width: 100% !important;
+		max-width: 100% !important;
+		min-width: 100% !important;
 		margin-top: 15px;
 		height: calc(100% - 13px) !important;
 	}
@@ -2778,6 +2808,106 @@ input[type="radio"] ~ label, input[type="checkbox"] ~ label
 	color: #fc427b;
 }
 
+.rtl .left_side_menu
+{
+	text-align: right;
+}
+.rtl .main_wrapper
+{
+	padding-left: 0;
+	padding-right: 260px;
+}
+.rtl .m_head_title
+{
+	float: right!important;
+	text-align: right;
+}
+.rtl .m_head_actions
+{
+	float: left!important;
+}
+.rtl .fs-modal .fs-modal-content
+{
+	right: unset;
+	left: 0;
+}
+.rtl .form-row > .col, .rtl .form-row > [class*="col-"]
+{
+	text-align: right;
+}
+.rtl .fs-modal .footer_left_action
+{
+	left: unset;
+	right: 40px;
+}
+.rtl .form-control[type="file"] ~ .form-control
+{
+	text-align: left;
+}
+
+.rtl input[type="radio"] ~ label, .rtl input[type="checkbox"] ~ label
+{
+	padding-left: unset;
+}
+
+.rtl .fs_portlet
+{
+	text-align: right;
+}
+
+.rtl .top_side_menu
+{
+	padding-left: unset;
+	padding-right: 260px;
+}
+
+.rtl .top_side_menu > .t_m_left
+{
+	float: right;
+	margin-right: 40px;
+}
+
+.rtl .top_side_menu > .t_m_right
+{
+	float: left;
+}
+
+.rtl .top_side_menu > .t_m_right > .user_visit_card
+{
+	right: unset;
+	left: 40px;
+}
+
+.rtl .user_visit_card > .user_visit_details
+{
+	padding-left: unset;
+	padding-right: 13px;
+}
+
+.rtl .dropdown-item, .rtl .user_visit_card
+{
+	text-align: right;
+}
+
+.rtl .appointment-status-pending, .rtl .appointment-status-canceled, .rtl .appointment-status-approved
+{
+	margin-left: unset;
+	margin-right: 30px;
+}
 
 
+.rtl .data_table_search_panel .search_input
+{
+	padding-right: 55px;
+	padding-left: unset;
+}
 
+.rtl .input-icon > i
+{
+	left: unset;
+	right: 20px;
+}
+
+.left_side_menu > .l_m_head {
+	display: none;
+}

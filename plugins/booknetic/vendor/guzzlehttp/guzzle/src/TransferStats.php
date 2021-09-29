@@ -1,5 +1,5 @@
 <?php
-namespace GuzzleHttp;
+namespace Booknetic_GuzzleHttp;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;

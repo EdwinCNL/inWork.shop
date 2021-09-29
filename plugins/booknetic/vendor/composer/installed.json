@@ -412,7 +412,7 @@
         "installation-source": "dist",
         "autoload": {
             "psr-4": {
-                "GuzzleHttp\\": "src/"
+                "Booknetic_GuzzleHttp\\": "src/"
             },
             "files": [
                 "src/functions_include.php"
@@ -472,7 +472,7 @@
         "installation-source": "dist",
         "autoload": {
             "psr-4": {
-                "GuzzleHttp\\Promise\\": "src/"
+                "Booknetic_GuzzleHttp\\Promise\\": "src/"
             },
             "files": [
                 "src/functions_include.php"
@@ -534,7 +534,7 @@
         "installation-source": "dist",
         "autoload": {
             "psr-4": {
-                "GuzzleHttp\\Psr7\\": "src/"
+                "Booknetic_GuzzleHttp\\Psr7\\": "src/"
             },
             "files": [
                 "src/functions_include.php"

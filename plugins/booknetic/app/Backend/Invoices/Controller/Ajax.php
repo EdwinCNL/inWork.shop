@@ -42,4 +42,10 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		]);
 	}
 
+    public function help_to_find_custom_field_id()
+    {
+        $fields = DB::DB()->get_results( 'SELECT `id`, `type`, (SELECT `name` FROM `' . DB::table('forms') . '` tb2 WHERE tb2.id=tb1.form_id) AS `form_name`, label FROM `' . DB::table('form_inputs') . '` tb1 WHERE form_id IN (SELECT id FROM `'.DB::table('forms').'`'.DB::tenantFilter('WHERE').') ORDER BY form_id, order_number', ARRAY_A );
+        $this->modalView('help_to_find_custom_field_id', [ 'fields' => $fields ] );
+    }
+
 }

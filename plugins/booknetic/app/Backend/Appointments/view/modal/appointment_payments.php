@@ -3,6 +3,7 @@ namespace BookneticApp\Frontend\view;
 
 use BookneticApp\Providers\Helper;
 use BookneticApp\Providers\Date;
+use BookneticApp\Providers\Math;
 
 defined( 'ABSPATH' ) or die();
 ?>
@@ -58,6 +59,7 @@ defined( 'ABSPATH' ) or die();
 								<th><?php print bkntc__('CUSTOMER')?></th>
 								<th class="text-center"><?php print bkntc__('SUM AMOUNT')?></th>
 								<th class="text-center"><?php print bkntc__('DISCOUNT')?></th>
+								<th class="text-center"><?php print bkntc__('GIFTCARD')?></th>
 								<th class="text-center"><?php print bkntc__('PAID')?></th>
 								<th class="text-center"><?php print bkntc__('DUE')?></th>
 								<th class="text-center"><?php print bkntc__('STATUS')?></th>
@@ -70,17 +72,20 @@ defined( 'ABSPATH' ) or die();
 
 						foreach( $parameters['payments'] AS $payment )
 						{
-							$service_amount	= Helper::floor( $payment['service_amount'] );
-							$extras_amount	= Helper::floor( $payment['extras_amount'] );
-							$discount		= Helper::floor( $payment['discount'] );
-							$paid_amount	= Helper::floor( $payment['paid_amount'] );
+							$service_amount	= Math::floor( $payment['service_amount'] );
+							$extras_amount	= Math::floor( $payment['extras_amount'] );
+							$discount		= Math::floor( $payment['discount'] );
+							$giftcard		= Math::floor( $payment['giftcard_amount'] );
+							$paid_amount	= Math::floor( $payment['paid_amount'] );
+							$tax_amount	= Math::floor( $payment['tax_amount'] );
 
-							$due_amount		= $service_amount + $extras_amount - $discount - $paid_amount;
+							$due_amount		= $service_amount + $extras_amount + $tax_amount - $discount - $paid_amount - $giftcard;
 
 							print '<tr data-customer-id="' . (int)$payment['customer_id'] . '" data-id="' . (int)$payment['id'] . '">';
 							print '<td>' . Helper::profileCard($payment['customer_name'], $payment['customer_image'], $payment['customer_email'], 'Customers') . '</td>';
-							print '<td align="center">' . Helper::price( $service_amount + $extras_amount ) . '</td>';
+							print '<td align="center">' . Helper::price( $service_amount + $extras_amount + $tax_amount ) . '</td>';
 							print '<td align="center">' . Helper::price( $discount ) . '</td>';
+							print '<td align="center">' . Helper::price( $giftcard ) . '</td>';
 							print '<td align="center">' . Helper::price( $paid_amount ) . '</td>';
 							print '<td align="center">' . Helper::price( $due_amount ) . '</td>';
 							print '<td align="center"><span class="payment-status-' . htmlspecialchars($payment['payment_status']) . '"></span></td>';

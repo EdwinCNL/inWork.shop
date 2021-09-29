@@ -3,6 +3,7 @@ namespace BookneticApp\Frontend\view;
 
 use BookneticApp\Providers\Helper;
 use BookneticApp\Providers\Date;
+use BookneticApp\Providers\Permission;
 
 defined( 'ABSPATH' ) or die();
 
@@ -31,6 +32,7 @@ $msg = Helper::_get('msg', '', 'string');
 
 			<div class="service_categories_list">
 
+				<?php if( ! Helper::isSaaSVersion() || Permission::getPermission( 'general_settings' ) == 'on' ):?>
 				<div class="settings_menu" data-view="general">
 					<div class="sc-bars-cls"><img src="<?php print Helper::icon('general-settings.svg', 'Settings')?>"></div>
 					<div class="sc-title">
@@ -38,7 +40,9 @@ $msg = Helper::_get('msg', '', 'string');
 						<div class="sc-description"><?php print bkntc__('You can customize general settings about booking from here')?></div>
 					</div>
 				</div>
+				<?php endif;?>
 
+				<?php if( ! Helper::isSaaSVersion() || Permission::getPermission( 'booking_steps_settings' ) == 'on' || Permission::getPermission( 'labels_settings' ) == 'on' ):?>
 				<div class="settings_menu" data-view="booking_panel_steps">
 					<div class="sc-bars-cls"><img src="<?php print Helper::icon('booking-steps-settings.svg', 'Settings')?>"></div>
 					<div class="sc-title">
@@ -49,14 +53,20 @@ $msg = Helper::_get('msg', '', 'string');
 					<div class="clearfix"></div>
 
 					<div class="settings_submenus">
+						<?php if( ! Helper::isSaaSVersion() || Permission::getPermission( 'booking_steps_settings' ) == 'on' ):?>
 						<div data-view="booking_panel_steps"><?php print bkntc__('Booking Steps')?></div>
-						<?php if( !Helper::isSaaSVersion() ):?>
+						<?php endif;?>
+						<?php if( ! Helper::isSaaSVersion() || Helper::getOption('customer_panel_enable', 'off',false)=='on' ):?>
 							<div data-view="customer_panel"><?php print bkntc__('Customer Panel')?></div>
 						<?php endif;?>
+						<?php if( ! Helper::isSaaSVersion() || Permission::getPermission( 'labels_settings' ) == 'on' ):?>
 						<div data-view="booking_panel_labels"><?php print bkntc__('Labels')?></div>
+						<?php endif;?>
 					</div>
 				</div>
+				<?php endif;?>
 
+				<?php if( ! Helper::isSaaSVersion() || Permission::getPermission( 'general_payment_settings' ) == 'on' || Permission::getPermission( 'payment_methods_settings' ) == 'on' ):?>
 				<div class="settings_menu" data-view="payments">
 					<div class="sc-bars-cls"><img src="<?php print Helper::icon('payments-settings.svg', 'Settings')?>"></div>
 					<div class="sc-title">
@@ -67,11 +77,17 @@ $msg = Helper::_get('msg', '', 'string');
 					<div class="clearfix"></div>
 
 					<div class="settings_submenus">
+						<?php if( ! Helper::isSaaSVersion() || Permission::getPermission( 'general_payment_settings' ) == 'on' ):?>
 						<div data-view="payments"><?php print bkntc__('General')?></div>
+						<?php endif;?>
+						<?php if( ! Helper::isSaaSVersion() || Permission::getPermission( 'payment_methods_settings' ) == 'on' ):?>
 						<div data-view="payment_gateways"><?php print bkntc__('Payment methods')?></div>
+						<?php endif;?>
 					</div>
 				</div>
+				<?php endif;?>
 
+				<?php if( ! Helper::isSaaSVersion() || Permission::getPermission( 'company_details_settings' ) == 'on' ):?>
 				<div class="settings_menu" data-view="company">
 					<div class="sc-bars-cls"><img src="<?php print Helper::icon('company-settings.svg', 'Settings')?>"></div>
 					<div class="sc-title">
@@ -79,7 +95,9 @@ $msg = Helper::_get('msg', '', 'string');
 						<div class="sc-description"><?php print bkntc__('Enter your company name, logo, address, phone number, website from here')?></div>
 					</div>
 				</div>
+				<?php endif;?>
 
+				<?php if( ! Helper::isSaaSVersion() || Permission::getPermission( 'business_hours_settings' ) == 'on' ):?>
 				<div class="settings_menu" data-view="business_hours">
 					<div class="sc-bars-cls"><img src="<?php print Helper::icon('business-hours-settings.svg', 'Settings')?>"></div>
 					<div class="sc-title">
@@ -87,16 +105,19 @@ $msg = Helper::_get('msg', '', 'string');
 						<div class="sc-description"><?php print bkntc__('You will be able to co-ordinate your company\'s overall work schedule')?></div>
 					</div>
 				</div>
+				<?php endif;?>
 
+				<?php if( ! Helper::isSaaSVersion() || Permission::getPermission( 'holidays_settings' ) == 'on' ):?>
 				<div class="settings_menu" data-view="holidays">
 					<div class="sc-bars-cls"><img src="<?php print Helper::icon('holidays-settings.svg', 'Settings')?>"></div>
 					<div class="sc-title">
 						<div class="sc-title-div"><?php print bkntc__('Holidays')?></div>
-						<div class="sc-description"><?php print bkntc__('You can easily set with selecting special days, holidays over the calendar')?></div>
+						<div class="sc-description"><?php print bkntc__('You can select dates that you are unavailable or on holiday')?></div>
 					</div>
 				</div>
+				<?php endif;?>
 
-				<?php if( ! Helper::isSaaSVersion() ): ?>
+				<?php if( ! Helper::isSaaSVersion() || ( Helper::getOption('allow_tenants_to_set_email_sender', 'off', false) == 'on' && Permission::getPermission( 'email_settings' ) == 'on' ) ):?>
 					<div class="settings_menu" data-view="email">
 						<div class="sc-bars-cls"><img src="<?php print Helper::icon('email-settings.svg', 'Settings')?>"></div>
 						<div class="sc-title">
@@ -104,6 +125,9 @@ $msg = Helper::_get('msg', '', 'string');
 							<div class="sc-description"><?php print bkntc__('You must set this settings for email notifications')?></div>
 						</div>
 					</div>
+				<?php endif;?>
+
+				<?php if( ! Helper::isSaaSVersion() ): ?>
 
 					<div class="settings_menu" data-view="integrations_zoom">
 						<div class="sc-bars-cls"><img src="<?php print Helper::icon('integrations-settings.svg', 'Settings')?>"></div>
@@ -128,8 +152,8 @@ $msg = Helper::_get('msg', '', 'string');
 							<div class="sc-description"><?php print bkntc__('You can export all Booknetic data and import from here.')?></div>
 						</div>
 					</div>
-				<?php elseif( Helper::getOption('zoom_enable', 'off', false) === 'on' ): ?>
-					<div class="settings_menu" data-view="connect_zoom">
+				<?php elseif( Helper::getOption('zoom_enable', 'off', false) === 'on' && Permission::getPermission('zoom') == 'on' ): ?>
+					<div class="settings_menu" data-view="integrations_zoom">
 						<div class="sc-bars-cls"><img src="<?php print Helper::icon('integrations-settings.svg', 'Settings')?>"></div>
 						<div class="sc-title">
 							<div class="sc-title-div"><?php print bkntc__('Integration with Zoom')?></div>
@@ -147,6 +171,8 @@ $msg = Helper::_get('msg', '', 'string');
 	<div class="col-md-12 settings-main-menu">
 		<div>
 			<div class="row">
+
+				<?php if( ! Helper::isSaaSVersion() || Permission::getPermission( 'general_settings' ) == 'on' ):?>
 				<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
 					<div class="settings-chart" data-view="general">
 						<div class="settings-icon"><img src="<?php print Helper::icon('general-settings.svg', 'Settings')?>"></div>
@@ -154,6 +180,9 @@ $msg = Helper::_get('msg', '', 'string');
 						<div class="settings-description"><?php print bkntc__('You can customize general settings about booking from here')?></div>
 					</div>
 				</div>
+				<?php endif;?>
+
+				<?php if( ! Helper::isSaaSVersion() || Permission::getPermission( 'booking_steps_settings' ) == 'on' || Permission::getPermission( 'labels_settings' ) == 'on' ):?>
 				<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
 					<div class="settings-chart" data-view="booking_panel_steps">
 						<div class="settings-icon"><img src="<?php print Helper::icon('booking-steps-settings.svg', 'Settings')?>"></div>
@@ -161,6 +190,9 @@ $msg = Helper::_get('msg', '', 'string');
 						<div class="settings-description"><?php print bkntc__('You can customize booking and customer panel and change labels from here')?></div>
 					</div>
 				</div>
+				<?php endif;?>
+
+				<?php if( ! Helper::isSaaSVersion() || Permission::getPermission( 'general_payment_settings' ) == 'on' || Permission::getPermission( 'payment_methods_settings' ) == 'on' ):?>
 				<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
 					<div class="settings-chart" data-view="payments">
 						<div class="settings-icon"><img src="<?php print Helper::icon('payments-settings.svg', 'Settings')?>"></div>
@@ -168,6 +200,9 @@ $msg = Helper::_get('msg', '', 'string');
 						<div class="settings-description"><?php print bkntc__('Currency, price format , general settings about payment , paypal, stripe and so on')?></div>
 					</div>
 				</div>
+				<?php endif;?>
+
+				<?php if( ! Helper::isSaaSVersion() || Permission::getPermission( 'company_details_settings' ) == 'on' ):?>
 				<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
 					<div class="settings-chart" data-view="company">
 						<div class="settings-icon"><img src="<?php print Helper::icon('company-settings.svg', 'Settings')?>"></div>
@@ -175,6 +210,9 @@ $msg = Helper::_get('msg', '', 'string');
 						<div class="settings-description"><?php print bkntc__('Enter your company name, logo, address, phone number, website from here')?></div>
 					</div>
 				</div>
+				<?php endif;?>
+
+				<?php if( ! Helper::isSaaSVersion() || Permission::getPermission( 'business_hours_settings' ) == 'on' ):?>
 				<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
 					<div class="settings-chart" data-view="business_hours">
 						<div class="settings-icon"><img src="<?php print Helper::icon('business-hours-settings.svg', 'Settings')?>"></div>
@@ -182,6 +220,9 @@ $msg = Helper::_get('msg', '', 'string');
 						<div class="settings-description"><?php print bkntc__('You will be able to co-ordinate your company\'s overall work schedule')?></div>
 					</div>
 				</div>
+				<?php endif;?>
+
+				<?php if( ! Helper::isSaaSVersion() || Permission::getPermission( 'holidays_settings' ) == 'on' ):?>
 				<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
 					<div class="settings-chart" data-view="holidays">
 						<div class="settings-icon"><img src="<?php print Helper::icon('holidays-settings.svg', 'Settings')?>"></div>
@@ -189,15 +230,19 @@ $msg = Helper::_get('msg', '', 'string');
 						<div class="settings-description"><?php print bkntc__('You can easily set with selecting special days, holidays over the calendar')?></div>
 					</div>
 				</div>
+				<?php endif;?>
+
+				<?php if( ! Helper::isSaaSVersion() || ( Helper::getOption('allow_tenants_to_set_email_sender', 'off', false) == 'on' && Permission::getPermission( 'email_settings' ) == 'on' ) ):?>
+				<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
+					<div class="settings-chart" data-view="email">
+						<div class="settings-icon"><img src="<?php print Helper::icon('email-settings.svg', 'Settings')?>"></div>
+						<div class="settings-title"><?php print bkntc__('Email settings')?></div>
+						<div class="settings-description"><?php print bkntc__('You must set this settings for email notifications')?></div>
+					</div>
+				</div>
+				<?php endif;?>
 
 				<?php if( ! Helper::isSaaSVersion() ): ?>
-					<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-						<div class="settings-chart" data-view="email">
-							<div class="settings-icon"><img src="<?php print Helper::icon('email-settings.svg', 'Settings')?>"></div>
-							<div class="settings-title"><?php print bkntc__('Email settings')?></div>
-							<div class="settings-description"><?php print bkntc__('You must set this settings for email notifications')?></div>
-						</div>
-					</div>
 					<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
 						<div class="settings-chart" data-view="integrations_zoom">
 							<div class="settings-icon"><img src="<?php print Helper::icon('integrations-settings.svg', 'Settings')?>"></div>
@@ -212,9 +257,9 @@ $msg = Helper::_get('msg', '', 'string');
 							<div class="settings-description"><?php print bkntc__('You can export all Booknetic data and import from here.')?></div>
 						</div>
 					</div>
-				<?php elseif( Helper::getOption('zoom_enable', 'off', false) === 'on' ):?>
+				<?php elseif( Helper::getOption('zoom_enable', 'off', false) === 'on' && Permission::getPermission('zoom') == 'on' ):?>
 					<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
-						<div class="settings-chart" data-view="connect_zoom">
+						<div class="settings-chart" data-view="integrations_zoom">
 							<div class="settings-icon"><img src="<?php print Helper::icon('integrations-settings.svg', 'Settings')?>"></div>
 							<div class="settings-title"><?php print bkntc__('Integration with Zoom')?></div>
 							<div class="settings-description"><?php print bkntc__('You can change settings for zoom integration from here.')?></div>

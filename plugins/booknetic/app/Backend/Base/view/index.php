@@ -19,9 +19,12 @@ $localization = [
 
 	// Appointments
 	'select'						=> bkntc__('Select...'),
+	'searching'						=> bkntc__('Searching...'),
 	'firstly_select_service'		=> bkntc__('Please firstly choose a service!'),
 	'fill_all_required'				=> bkntc__('Please fill in all required fields correctly!'),
 	'timeslot_is_not_available'		=> bkntc__('This time slot is not available!'),
+    // Customers
+    'Deleted'                       => bkntc__('Deleted'),
 
 	// Base
 	'are_you_sure_want_to_delete'	=> bkntc__('Are you sure you want to delete?'),
@@ -30,8 +33,10 @@ $localization = [
 	'cancel'                        => bkntc__('CANCEL'),
 	'dear_user'                     => bkntc__('Dear user'),
 
+
 	// calendar
 	'group_appointment'				=> bkntc__('Group appointment'),
+	'new_appointment'				=> bkntc__('NEW APPOINTMENT'),
 
 	// Customforms
 	'select_services'				=> bkntc__('Select services...'),
@@ -39,6 +44,13 @@ $localization = [
 
 	// Dashboard
 	'loading'					    => bkntc__('Loading...'),
+	'Apply'					        => bkntc__('Apply'),
+	'Cancel'					    => bkntc__('Cancel'),
+	'From'					        => bkntc__('From'),
+	'To'					        => bkntc__('To'),
+
+    // Reports
+	'appointment_count'					        => bkntc__('Appointment count'),
 
 	// Notifications
 	'fill_form_correctly'			=> bkntc__('Fill the form correctly!'),
@@ -56,6 +68,8 @@ $localization = [
 	'delete_service'				=> bkntc__('Are you sure you want to delete this service?'),
 	'delete_category'				=> bkntc__('Are you sure you want to delete this category?'),
 	'category_name'					=> bkntc__('Category name'),
+    'add_category'			        => bkntc__('ADD CATEGORY'),
+    'save'			                => bkntc__('SAVE'),
 
 	// months
 	'January'               		=> bkntc__('January'),
@@ -79,14 +93,19 @@ $localization = [
 	'Fri'                   		=> bkntc__('Fri'),
 	'Sat'                   		=> bkntc__('Sat'),
 	'Sun'                   		=> bkntc__('Sun'),
+
+	'session_has_expired'           => bkntc__('Your session has expired. Please refresh the page and try again.'),
+	'graphic_view'                  => bkntc__('Graphic view'),
 ];
 
 $servicesIsOk       = Service::count() > 0;
 $businessHoursIsOk  = Timesheet::where('service_id', 'is', null)->where('staff_id', 'is', null)->count() > 0;
 $companyDetailsIsOk = Helper::getOption('company_name', '') != '';
 
+$isRtl = Helper::is_rtl_language(0, true, Session::get('active_language', get_locale()));
+
 ?>
-<html>
+<html <?php print $isRtl?'dir="rtl"':''; ?>>
 <head>
 	<title><?php print esc_html( Helper::getOption('backend_title', 'Booknetic', false) )?></title>
 	<meta charset="utf-8">
@@ -127,7 +146,7 @@ $companyDetailsIsOk = Helper::getOption('company_name', '') != '';
 	</script>
 
 </head>
-<body class="minimized_left_menu-">
+<body class="<?php print $isRtl?'rtl ':''; ?>minimized_left_menu-">
 
 	<div id="booknetic_progress" class="booknetic_progress_waiting booknetic_progress_done"><dt></dt><dd></dd></div>
 
@@ -136,6 +155,26 @@ $companyDetailsIsOk = Helper::getOption('company_name', '') != '';
 		<div class="l_m_head">
 			<img src="<?php print Helper::profileImage( Helper::getOption('whitelabel_logo', 'logo', false), 'Base')?>" class="head_logo_xl">
 			<img src="<?php print Helper::profileImage( Helper::getOption('whitelabel_logo_sm', 'logo-sm', false), 'Base')?>" class="head_logo_sm">
+		</div>
+
+		<div class="d-md-none language-chooser-bar-in-menu">
+			<?php if(
+				Helper::isSaaSVersion() &&
+				Helper::getOption('enable_language_switcher', 'off', false) == 'on' &&
+				count( Helper::getOption('active_languages', [], false) ) > 1
+			):?>
+				<div class="language-chooser-bar">
+					<div class="language-chooser" data-toggle="dropdown" aria-haspopup="false" aria-expanded="false">
+						<span><?php print esc_html( LocalizationService::getLanguageName( Session::get('active_language', get_locale()) ) )?></span>
+						<i class="fa fa-angle-down"></i>
+					</div>
+					<div class="dropdown-menu dropdown-menu-right row-actions-area language-switcher-select">
+						<?php foreach ( Helper::getOption('active_languages', [], false) AS $active_language ):?>
+							<div data-language-key="<?php print esc_html( $active_language )?>" class="dropdown-item info_action_btn"><?php print esc_html( LocalizationService::getLanguageName( $active_language ) )?></div>
+						<?php endforeach;?>
+					</div>
+				</div>
+			<?php endif;?>
 		</div>
 
 		<ul class="l_m_nav">
@@ -172,6 +211,15 @@ $companyDetailsIsOk = Helper::getOption('company_name', '') != '';
 					</a>
 					<?php
 				}
+				else
+				{
+					?>
+					<a href="#" class="l_m_nav_item_link share_your_page_btn">
+						<i class="l_m_nav_item_icon fa fa-share"></i>
+						<span class="l_m_nav_item_text"><?php print bkntc__('Share your page ')?></span>
+					</a>
+					<?php
+				}
 				?>
 			</li>
 
@@ -181,11 +229,18 @@ $companyDetailsIsOk = Helper::getOption('company_name', '') != '';
 
 	<div class="top_side_menu">
 		<div class="t_m_left">
+			
 			<?php
-			if( !Helper::isSaaSVersion() )
+			if(current_user_can('administrator'))
 			{
 				?>
 				<button class="btn btn-default btn-lg d-md-block d-none" type="button" id="back_to_wordpress_btn"><img src="<?php print Helper::icon('back.svg')?>" class="pr-2"> <span><?php print bkntc__('WORDPRESS')?></span></button>
+				<?php
+			}
+			else
+			{
+				?>
+
 				<?php
 			}
 			?>
@@ -206,7 +261,7 @@ $companyDetailsIsOk = Helper::getOption('company_name', '') != '';
 					<?php } ?>
 
 					<?php if( Helper::isSaaSVersion() ): ?>
-					<a href="#" class="dropdown-item share_your_page_btn"><i class="fa fa-share"></i> <?php print bkntc__('Share you page')?></a>
+					<a href="#" class="dropdown-item share_your_page_btn"><i class="fa fa-share"></i> <?php print bkntc__('Share your page')?></a>
 					<?php endif; ?>
 
 					<hr class="mt-2 mb-2"/>
@@ -219,12 +274,12 @@ $companyDetailsIsOk = Helper::getOption('company_name', '') != '';
 			Helper::getOption('enable_language_switcher', 'off', false) == 'on' &&
 			count( Helper::getOption('active_languages', [], false) ) > 1
 		):?>
-			<div class="language-chooser-bar">
+			<div class="language-chooser-bar d-md-flex d-none">
 				<div class="language-chooser" data-toggle="dropdown" aria-haspopup="false" aria-expanded="false">
 					<span><?php print esc_html( LocalizationService::getLanguageName( Session::get('active_language', get_locale()) ) )?></span>
 					<i class="fa fa-angle-down"></i>
 				</div>
-				<div class="dropdown-menu dropdown-menu-right row-actions-area" id="language-switcher-select">
+				<div class="dropdown-menu dropdown-menu-right row-actions-area language-switcher-select">
 					<?php foreach ( Helper::getOption('active_languages', [], false) AS $active_language ):?>
 						<div data-language-key="<?php print esc_html( $active_language )?>" class="dropdown-item info_action_btn"><?php print esc_html( LocalizationService::getLanguageName( $active_language ) )?></div>
 					<?php endforeach;?>

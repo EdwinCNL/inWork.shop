@@ -1,8 +1,8 @@
 <?php
-namespace GuzzleHttp;
+namespace Booknetic_GuzzleHttp;
 
-use GuzzleHttp\Promise\PromiseInterface;
-use GuzzleHttp\Psr7;
+use Booknetic_GuzzleHttp\Promise\PromiseInterface;
+use Booknetic_GuzzleHttp\Psr7;
 use Psr\Http\Message\RequestInterface;
 
 /**

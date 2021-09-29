@@ -10,7 +10,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 
 	public static function handle()
 	{
-		if( Helper::isSaaSVersion() && Permission::tenantInf()->getPermission( 'locations' ) === 'off' )
+		if( Helper::isSaaSVersion() && Permission::getPermission( 'locations' ) === 'off' )
 		{
 			return false;
 		}
@@ -23,7 +23,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 		// add menu...
 		$this->createMenu(bkntc__('Locations'))
 			->setIcon('fa fa-location-arrow')
-			->setOrder(10)
+			->setOrder(9)
 			->show();
 
 

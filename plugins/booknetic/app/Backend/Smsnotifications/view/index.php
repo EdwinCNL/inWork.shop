@@ -21,7 +21,9 @@ $notificationNames = [
 ?>
 
 <script src="<?php print Helper::assets('js/notifications.js', 'Smsnotifications')?>" id="notifications-script" data-notifications="<?php print htmlspecialchars(json_encode($parameters['notifications']))?>"></script>
+<script src="<?php print Helper::assets('js/notification_tab.js', 'NotificationTab')?>"></script>
 <link rel='stylesheet' href='<?php print Helper::assets('css/notifications.css', 'Smsnotifications')?>' type='text/css'>
+<link rel='stylesheet' href='<?php print Helper::assets('css/notification_tab.css', 'NotificationTab')?>' type='text/css'>
 
 <?php if( Helper::isSaaSVersion() ):?>
 	<?php $allowedLimit = Permission::tenantInf()->checkNotificationLimits('sms', false);?>
@@ -29,7 +31,7 @@ $notificationNames = [
 		<div class="alert alert-<?php print ( $allowedLimit[0] ? 'success' : 'danger' )?>">
 			<span><?php print bkntc__('Your monthly balance is %s/%s.', [ $allowedLimit[1], ($allowedLimit[2] == -1 ? '∞' : $allowedLimit[2]) ])?></span>
 			<div>
-				<button type="button" class="btn btn-secondary" id="upgrade_plan_btn"><?php print bkntc__('UPGRADE PLAN')?></button>
+				<a href="?page=booknetic&module=billing&upgrade=1" class="btn btn-secondary" id="upgrade_plan_btn"><?php print bkntc__('UPGRADE PLAN')?></a>
 			</div>
 		</div>
 	</div>
@@ -46,8 +48,37 @@ $notificationNames = [
 <div class="fs_separator"></div>
 
 <div class="row m-4">
+    <div class="col-xl-12 col-md-12 col-lg-12 pr-md-1">
+        <ul class="nav nav-tabs nav-light">
 
-	<div class="col-xl-3 col-md-6 col-lg-5 p-3 pr-md-1">
+            <li class="nav-item"><a class="nav-link <?php if ($parameters['tab_id'] == '0' or $parameters['tab_id'] == '') print 'active'?>"  href="?page=booknetic&module=smsnotifications"><?php print bkntc__('DEFAULT')?></a></li>
+            <?php
+
+            foreach ($parameters['tabs'] as $tab)
+            {
+                $active = '';
+                if($parameters['tab_id'] == $tab['id'])
+                {
+                    $active = 'active';
+                }
+                print '<li class="nav-item">
+                            <a class="nav-link '.$active.'" href="?page=booknetic&module=smsnotifications&tab_id='.(int) $tab['id'].'">'.esc_html($tab['name']).'</a>
+                            <span data-toggle="dropdown"><i class="fa fa-ellipsis-h"></i></span>
+                            <div class="dropdown-menu row-actions-area mt-4">
+                                <button data-tabEdit="edit" data-tab_id="'.(int) $tab['id'].'" class="dropdown-item edit_action_btn" type="button">'.bkntc__('Edit').'</button>
+                                <button data-tab="delete" data-tab_id="'.(int) $tab['id'].'" class="dropdown-item delete_action_btn" type="button">'.bkntc__('Delete').'</button>
+                            </div>
+                       </li>';
+            }
+            ?>
+            <li class="nav-item"><a class="nav-link" href="#" id="add_tab_btn"  data-module="smsnotifications"><i class="fa fa-plus pt-1 text-success"></i></a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="row m-4">
+
+	<div class="col-xl-3 col-md-6 col-lg-5 p-3 pr-md-1" data-tab="<?php  if ($parameters['tab_id']) print $parameters['tab_id'];?>">
 		<div class="fs_notifications_list fs_portlet">
 
 			<ul class="nav nav-tabs nav-light">
@@ -146,6 +177,7 @@ $notificationNames = [
 				</div>
 
 				<div class="form-row hidden remineder_warning">
+					<?php if( ! Helper::isSaaSVersion() ):?>
 					<div class="form-group col-md-12 ">
 						<div class="alert alert-warning font-size-14">
 							<div class="mb-1"><?php print bkntc__('To send reminders on time, you need to configure the following cron task:')?></div>
@@ -153,6 +185,7 @@ $notificationNames = [
 							<code class="font-size-12 d-block mt-2 text-secondary"><i class="fa fa-exclamation-triangle"></i> <?php print bkntc__('Every 15 minutes')?> ( */15 * * * * ) </code>
 						</div>
 					</div>
+					<?php endif;?>
 				</div>
 			</div>
 		</div>
@@ -181,7 +214,10 @@ $notificationNames = [
 				<div class="fsn_shorttags_element">{appointment_sum_price}</div>
 				<div class="fsn_shorttags_element">{appointment_paid_price}</div>
 				<div class="fsn_shorttags_element">{appointment_payment_method}</div>
+				<div class="fsn_shorttags_element">{appointment_tax_amount}</div>
 				<div class="fsn_shorttags_element">{appointment_custom_field_<span class="custom_field_key_class">ID</span>} <i class="far fa-question-circle" data-load-modal="help_to_find_custom_field_id"></i></div>
+                <div class="fsn_shorttags_element">{appointment_created_date}</div>
+                <div class="fsn_shorttags_element">{appointment_created_time}</div>
 
 				<div class="text-primary mt-4"><?php print bkntc__('Service Info')?>:</div>
 

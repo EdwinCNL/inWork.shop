@@ -72,8 +72,9 @@
 			var top = parseInt($( "#categories_tree" ).css('top').replace('px', '')) - 70;
 
 			$( "#categories_tree" ).stop().animate({'top': top + 'px'}, 200);
-		}).on('click', '#categories_tree .remove_node', function()
+		}).on('mouseup', '#categories_tree .remove_node', function(e)
 		{
+			if (e.which != 1) return false;
 			var li		= $(this).closest('li'),
 				id		= li.data('id'),
 				ul		= li.parent('ul'),
@@ -106,8 +107,9 @@
 				});
 			});
 
-		}).on('click', '#categories_tree .cancel_node', function()
+		}).on('mouseup', '#categories_tree .cancel_node', function(e)
 		{
+			if (e.which != 1) return false;
 			var li	= $(this).closest('li'),
 				id	= li.data('id'),
 				ul	= li.parent('ul');
@@ -117,8 +119,9 @@
 			if( ul.children('li').length === 0 )
 				ul.remove();
 
-		}).on('click', '#categories_tree .save_node', function()
+		}).on('mouseup', '#categories_tree .save_node', function(e)
 		{
+			if (e.which != 1) return false;
 			var li		= $(this).closest('li'),
 				id		= li.data('id') || 0,
 				parent	= li.parent().closest('li').data('id'),
@@ -142,8 +145,9 @@
 				}
 			});
 
-		}).on('click', '#categories_tree .edit_node', function()
+		}).on('mouseup', '#categories_tree .edit_node', function(e)
 		{
+			if (e.which != 1) return false;
 			var li		= $(this).closest('li'),
 				type	= li.data('type'),
 				id		= li.data('id') || 0;
@@ -172,8 +176,9 @@
 				id	= li.data('id');
 
 			booknetic.loadModal('add_new', {'type': 'simple', 'category_id': 0});
-		}).on('click', '#categories_tree .add_new_node', function( e )
+		}).on('mouseup', '#categories_tree .add_new_node', function( e )
 		{
+			if (e.which != 1) return false;
 			var li			= $(this).closest('li'),
 				id			= li.data('id'),
 				childType	= li.find(' > ul > li[data-type]').length > 0 ? li.find(' > ul > li[data-type]').data('type') : '';
@@ -219,7 +224,10 @@
 
 		mapCenter( 0 );
 
-		$( "#categories_tree" ).draggable().animate( {opacity: 1}, 200 );
+		$( "#categories_tree" ).draggable(
+			{cancel:'.add_new_node, .edit_node, .save_node, .cancel_node, .remove_node'}
+		).animate( {opacity: 1}, 200 );
+		//$( ".add_new_node" ).draggable( { cancel: true }  );
 
 		$('.tooltip-it').tooltip();
 

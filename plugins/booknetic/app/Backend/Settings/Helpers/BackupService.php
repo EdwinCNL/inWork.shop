@@ -53,7 +53,9 @@ class BackupService
 			return;
 		}
 
-		header("Content-type: application/zip");
+		ob_end_clean();
+
+		header("Content-type: application/octet-stream");
 		header("Content-Disposition: attachment; filename=\"Happy-Data.Booknetic\"");
 		header("Content-length: " . filesize($file));
 		header("Pragma: no-cache");
@@ -97,12 +99,12 @@ class BackupService
 
 		if ( $zip->open( $file_path ) !== true )
 		{
-			Helper::response( false, bkntc__('Unable to read the backup file!') );
+			Helper::response( false, bkntc__('Unable to read the backup file!1') );
 		}
 
 		if( $zip->locateName('sql/options.json') === false || $zip->locateName('sql/tables.json') === false )
 		{
-			Helper::response( false, bkntc__('Unable to read the backup file!') );
+			Helper::response( false, bkntc__('Unable to read the backup file!2') );
 		}
 
 		set_time_limit( 0 );

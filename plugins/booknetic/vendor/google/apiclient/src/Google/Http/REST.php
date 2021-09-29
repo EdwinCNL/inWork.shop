@@ -16,9 +16,9 @@
  */
 
 use Google\Auth\HttpHandler\HttpHandlerFactory;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Psr7\Response;
+use Booknetic_GuzzleHttp\ClientInterface;
+use Booknetic_GuzzleHttp\Exception\RequestException;
+use Booknetic_GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -80,7 +80,7 @@ class Google_Http_REST
 
       $response = $e->getResponse();
       // specific checking for Guzzle 5: convert to PSR7 response
-      if ($response instanceof \GuzzleHttp\Message\ResponseInterface) {
+      if ($response instanceof \Booknetic_GuzzleHttp\Message\ResponseInterface) {
         $response = new Response(
             $response->getStatusCode(),
             $response->getHeaders() ?: [],

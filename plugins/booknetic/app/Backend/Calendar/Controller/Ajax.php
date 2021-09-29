@@ -84,7 +84,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 				'start_time'			=>	Date::time( $dataInfo['start_time'] ),
 				'end_time'				=>	Date::time( Date::epoch($dataInfo['start_time']) + ($dataInfo['duration'] + $dataInfo['extras_duration']) * 60 ),
 				'start'					=>	Date::dateSQL( $dataInfo['date'] ) . 'T' . Date::format( 'H:i:s', $dataInfo['start_time'] ),
-				'end'					=>	Date::dateSQL( $dataInfo['date'], "+{$additionalDays} days" ) . 'T' . Date::format( 'H:i:s', Date::epoch( $dataInfo['start_time'] ) + $dataInfo['service_duration'] * 60 ),
+				'end'                   =>  Date::format( 'Y-m-d\TH:i:s', Date::epoch( $dataInfo['date'] . ' ' . $dataInfo['start_time'] ) + ( $dataInfo[ 'duration' ] + $dataInfo[ 'extras_duration' ] ) * 60 ),
 				'customer'				=>	$customer,
 				'customers_count'		=>	$customersCount,
 				'status'				=>	Helper::appointmentStatus( $status )

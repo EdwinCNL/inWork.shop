@@ -22,9 +22,9 @@ class CronJob
 		$cronjobLastRun = Helper::getOption('cron_job_runned_on', 0, false);
 		$cronjobLastRun = is_numeric( $cronjobLastRun ) ? $cronjobLastRun : 0;
 
-		$runTasksEvery = 30; //sec.
+		$runTasksEvery = 60; //sec.
 
-		if( defined( 'DOING_CRON' ) )
+		if( defined( 'DOING_CRON' ) && ( Date::epoch() - $cronjobLastRun ) > $runTasksEvery )
 		{
 			Helper::setOption('cron_job_runned_on', Date::epoch(), false, false);
 

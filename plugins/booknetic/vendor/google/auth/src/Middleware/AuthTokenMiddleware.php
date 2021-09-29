@@ -71,8 +71,8 @@ class AuthTokenMiddleware
      *
      *   use Google\Auth\Middleware\AuthTokenMiddleware;
      *   use Google\Auth\OAuth2;
-     *   use GuzzleHttp\Client;
-     *   use GuzzleHttp\HandlerStack;
+     *   use Booknetic_GuzzleHttp\Client;
+     *   use Booknetic_GuzzleHttp\HandlerStack;
      *
      *   $config = [..<oauth config param>.];
      *   $oauth2 = new OAuth2($config)

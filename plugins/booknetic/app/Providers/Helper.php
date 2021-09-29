@@ -7,15 +7,6 @@ use BookneticApp\Backend\Services\Model\ServiceCategory;
 class Helper
 {
 
-	public static function floor( $number, $scale = 2 )
-	{
-		if( !is_numeric( $number ) )
-			$number = 0;
-
-		$mult = pow(10, $scale);
-		return ($number * $mult) / $mult;
-	}
-
 	public static function secFormat( $seconds )
 	{
 		$weeks = floor($seconds /  ( 60 * 60 * 24 * 7 ) );
@@ -34,16 +25,68 @@ class Helper
 
 		$seconds = $seconds % 60;
 
-		$result = rtrim(
-			( $weeks > 0 ? $weeks . bkntc__('w').' ' : '' ) .
-			( $days > 0 ? $days . bkntc__('d').' ' : '' ) .
-			( $hours > 0 ? $hours . bkntc__('h').' ' : '' ) .
-			( $minutes > 0 ? $minutes . bkntc__('m').' ' : '' ) .
-			( $seconds > 0 ? $seconds . bkntc__('s').' ' : '' )
-		);
+		if($weeks == 0)
+        {
+            $result = rtrim(
+                ( $weeks > 0 ? $weeks . bkntc__('w').' ' : '' ) .
+                ( $days > 0 ? $days . bkntc__('d').' ' : '' ) .
+                ( $hours > 0 ? $hours . bkntc__('h').' ' : '' ) .
+                ( $minutes > 0 ? $minutes . bkntc__('m').' ' : '' ) .
+                ( $seconds > 0 ? $seconds . bkntc__('s').' ' : '' )
+            );
+        }
+		else if($days)
+        {
+            $days += 7 * $weeks;
+            $result = rtrim($days > 0 ? $days . bkntc__('d').' ' : '');
+        }
+		else if($weeks)
+        {
+            $result = rtrim($weeks > 0 ? $weeks . bkntc__('w').' ' : '');
+        }
 
 		return empty( $result ) ? '0' : $result;
 	}
+
+    public static function secFormatWithName( $seconds )
+    {
+        $weeks = floor($seconds /  ( 60 * 60 * 24 * 7 ) );
+
+        $seconds = $seconds % ( 60 * 60 * 24 * 7 );
+
+        $days = floor($seconds /  ( 60 * 60 * 24 ) );
+
+        $seconds = $seconds % ( 60 * 60 * 24 );
+
+        $hours = floor($seconds /  ( 60 * 60 ) );
+
+        $seconds = $seconds % ( 60 * 60 );
+
+        $minutes = floor($seconds / 60 );
+
+        $seconds = $seconds % 60;
+
+        if($weeks == 0) {
+            $result = rtrim(
+                ($weeks > 0 ? $weeks . ' ' . ($weeks == 1 ? bkntc__('week') : bkntc__('weeks')) . ' ' : '') .
+                ($days > 0 ? $days . ' ' . ($days == 1 ? bkntc__('day') : bkntc__('days')) . ' ' : '') .
+                ($hours > 0 ? $hours . ' ' . ($hours == 1 ? bkntc__('hour') : bkntc__('hours')) . ' ' : '') .
+                ($minutes > 0 ? $minutes . ' ' . ($minutes == 1 ? bkntc__('minute') : bkntc__('minutes')) . ' ' : '') .
+                ($seconds > 0 ? $seconds . ' ' . ($seconds == 1 ? bkntc__('second') : bkntc__('seconds')) . ' ' : '')
+            );
+        }
+        else if($days)
+        {
+            $days += 7 * $weeks;
+            $result = rtrim($days > 0 ? $days . ' ' . ($days == 1 ? bkntc__('day') : bkntc__('days')) . ' ' : '');
+        }
+        else if($weeks)
+        {
+            $result = rtrim($weeks > 0 ? $weeks . ' ' . ($weeks == 1 ? bkntc__('week') : bkntc__('weeks')) . ' ' : '');
+        }
+
+        return empty( $result ) ? '0' : $result;
+    }
 
 	public static function response($status , $arr = [] )
 	{
@@ -99,7 +142,7 @@ class Helper
 			}
 			else if($check_type == 'str' || $check_type == 'string')
 			{
-				$res = is_string( $res ) ? stripslashes_deep((string)$res) : $default;
+				$res = is_string( $res ) ? trim( stripslashes_deep((string)$res) ) : $default;
 			}
 			else if($check_type == 'arr' || $check_type == 'array')
 			{
@@ -111,7 +154,7 @@ class Helper
 			}
 			else if($check_type == 'email')
 			{
-				$res = is_string( $res ) && filter_var($res, FILTER_VALIDATE_EMAIL) !== false ? (string)$res : $default;
+				$res = is_string( $res ) && filter_var($res, FILTER_VALIDATE_EMAIL) !== false ? trim( (string)$res ) : $default;
 			}
 		}
 
@@ -135,7 +178,7 @@ class Helper
 			}
 			else if($check_type == 'str' || $check_type == 'string')
 			{
-				$res = is_string( $res ) ? (string)$res : $default;
+				$res = is_string( $res ) ? trim( (string)$res ) : $default;
 			}
 			else if($check_type == 'arr' || $check_type == 'array')
 			{
@@ -167,7 +210,7 @@ class Helper
 			}
 			else if($check_type == 'str' || $check_type == 'string')
 			{
-				$res = is_string( $res ) ? (string)$res : $default;
+				$res = is_string( $res ) ? trim( (string)$res ) : $default;
 			}
 			else if($check_type == 'arr' || $check_type == 'array')
 			{
@@ -224,7 +267,7 @@ class Helper
 	{
 		if( preg_match('/\.(js|css)$/i', $url) )
 		{
-			$url .= '?v=' . self::getVersion() . uniqid();
+			$url .= '?v=' . self::getVersion();
 		}
 
 		if( $module == 'front-end' )
@@ -308,31 +351,54 @@ class Helper
 				$prefix .= 't' . $tenant . '_';
 			}
 
-			if( $optionName == 'stripe_enable' && Permission::tenantId() > 0 && Permission::tenantInf()->getPermission('stripe') == 'off' )
+			if( $optionName == 'stripe_enable' && Permission::tenantId() > 0 && Permission::getPermission('stripe') == 'off' )
 			{
 				return 'off';
 			}
-			else if( $optionName == 'paypal_enable' && Permission::tenantId() > 0 && Permission::tenantInf()->getPermission('paypal') == 'off' )
+			else if( $optionName == 'paypal_enable' && Permission::tenantId() > 0 && Permission::getPermission('paypal') == 'off' )
 			{
 				return 'off';
 			}
-			else if( $optionName == 'zoom_enable' && Permission::tenantId() > 0 && Permission::tenantInf()->getPermission('zoom') == 'off' )
+			else if( $optionName == 'hide_coupon_section' && Permission::tenantId() > 0 && Permission::getPermission('coupons') == 'off' )
+			{
+				return 'on';
+			}
+			else if( $optionName == 'hide_giftcard_section' && Permission::tenantId() > 0 && Permission::getPermission('giftcards') != 'on' )
+			{
+				return 'on';
+			}
+			else if( $optionName == 'display_logo_on_booking_panel' && Permission::tenantId() > 0 && Permission::getPermission('upload_logo_to_booking_panel') == 'off' )
 			{
 				return 'off';
 			}
-			else if( $optionName == 'google_calendar_enable' && Permission::tenantId() > 0 && Permission::tenantInf()->getPermission('google_calendar') == 'off' )
+		}
+		else if( Helper::isSaaSVersion() )
+		{
+			if( $optionName == 'zoom_enable' && Permission::tenantId() > 0 && Permission::getPermission('zoom') == 'off' )
 			{
 				return 'off';
 			}
-			else if( $optionName == 'woocommerce_enabled' )
+			else if( $optionName == 'google_calendar_enable' && Permission::tenantId() > 0 && Permission::getPermission('google_calendar') == 'off' )
 			{
 				return 'off';
 			}
-
 		}
 
 		return get_option( $prefix . $optionName, $default );
 	}
+
+    public static function getCustomerOption( $optionName, $default = null, $tenantId=0, $multi_tenant_option = true )
+    {
+        $prefix = 'bkntc_';
+
+        if (Helper::isSaaSVersion() && $multi_tenant_option) {
+
+            if ($tenantId > 0) {
+                $prefix .= 't' . $tenantId . '_';
+            }
+        }
+        return get_option( $prefix . $optionName, $default );
+    }
 
 	public static function setOption( $optionName, $optionValue, $multi_tenant_option = true, $autoLoad = null )
 	{
@@ -444,6 +510,9 @@ class Helper
 			case "stripe":
 				return bkntc__("Stripe");
 				break;
+			case "giftcard":
+				return bkntc__("Giftcard");
+				break;
 			default:
 				return bkntc__("On site");
 		}
@@ -458,6 +527,7 @@ class Helper
 				$icon = 'fa fa-check';
 				break;
 			case 'pending':
+			case 'waiting_for_payment':
 				$color = 'warning';
 				$icon = 'fa fa-clock';
 				break;
@@ -502,7 +572,7 @@ class Helper
 				break;
 		}
 
-		$price = static::floor( $price,  $scale);
+		$price = Math::floor( $price, $scale);
 
 		$price = number_format($price, $scale, $decimalPoint, $thousandsSeparator);
 
@@ -820,11 +890,6 @@ class Helper
 
 	public static function customerPanelURL()
 	{
-		if( Helper::isSaaSVersion() )
-		{
-			return site_url() . '/' . esc_html( Permission::tenantInf()->domain ) . '/' . Helper::getOption('customer_panel_url', 'cabinet', false);
-		}
-
 		$customerPanelPageID = Helper::getOption('customer_panel_page_id', '', false);
 
 		if( empty( $customerPanelPageID ) )
@@ -870,5 +935,59 @@ class Helper
 
 		return $isUpdate;
 	}
+
+	public static function checkUserRole( $userInfo, $roles )
+	{
+		$roles = is_array( $roles ) ? $roles : (array)$roles;
+
+		foreach( $roles AS $checkRole )
+		{
+			if( in_array( $checkRole, $userInfo->roles ) )
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+
+    public static function is_rtl_language( $tenant_id = 0, $is_backend = false, $session_lang = '' )
+    {
+        $default_language = '';
+
+        if($is_backend && $session_lang != '')
+        {
+            $default_language = $session_lang;
+        }
+        else if (self::isSaaSVersion() && $tenant_id > 0)
+        {
+            $default_language = self::getOption('default_language' , 'en', $tenant_id);
+        }
+        else if( !self::isSaaSVersion() && is_rtl() )
+        {
+            return true;
+        }
+         $rtl_languages = [
+                'ar',
+                'ary',
+                'azb',
+                'ckb',
+                'fa_AF',
+                'fa_IR',
+                'haz',
+                'ps',
+                'ug_CN',
+                'ur',
+                'he_IL'
+            ];
+
+            if( in_array( $default_language, $rtl_languages ) )
+            {
+                return true;
+            }
+
+        return false;
+    }
 
 }

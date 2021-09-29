@@ -24,10 +24,10 @@ use Google\Auth\HttpHandler\HttpHandlerFactory;
 use Google\Auth\Iam;
 use Google\Auth\ProjectIdProviderInterface;
 use Google\Auth\SignBlobInterface;
-use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Exception\ServerException;
-use GuzzleHttp\Psr7\Request;
+use Booknetic_GuzzleHttp\Exception\ClientException;
+use Booknetic_GuzzleHttp\Exception\RequestException;
+use Booknetic_GuzzleHttp\Exception\ServerException;
+use Booknetic_GuzzleHttp\Psr7\Request;
 use InvalidArgumentException;
 
 /**
@@ -38,8 +38,8 @@ use InvalidArgumentException;
  *
  *   use Google\Auth\Credentials\GCECredentials;
  *   use Google\Auth\Middleware\AuthTokenMiddleware;
- *   use GuzzleHttp\Client;
- *   use GuzzleHttp\HandlerStack;
+ *   use Booknetic_GuzzleHttp\Client;
+ *   use Booknetic_GuzzleHttp\HandlerStack;
  *
  *   $gce = new GCECredentials();
  *   $middleware = new AuthTokenMiddleware($gce);

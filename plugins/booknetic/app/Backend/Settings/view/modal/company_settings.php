@@ -3,6 +3,7 @@ namespace BookneticApp\Frontend\view;
 
 use BookneticApp\Providers\Helper;
 use BookneticApp\Providers\Date;
+use BookneticApp\Providers\Permission;
 
 defined( 'ABSPATH' ) or die();
 
@@ -48,6 +49,20 @@ defined( 'ABSPATH' ) or die();
 					<input class="form-control" id="input_company_website" value="<?php print htmlspecialchars( Helper::getOption('company_website', '') )?>">
 				</div>
 			</div>
+
+			<?php if( ! Helper::isSaaSVersion() || Permission::getPermission('upload_logo_to_booking_panel') !== 'off' ):?>
+			<div class="form-row">
+				<div class="form-group col-md-6">
+					<div class="form-control-checkbox">
+						<label for="input_display_logo_on_booking_panel"><?php print bkntc__('Display a company logo on the  Booking panel')?>:</label>
+						<div class="fs_onoffswitch">
+							<input type="checkbox" class="fs_onoffswitch-checkbox" id="input_display_logo_on_booking_panel"<?php print Helper::getOption('display_logo_on_booking_panel', 'off')=='on'?' checked':''?>>
+							<label class="fs_onoffswitch-label" for="input_display_logo_on_booking_panel"></label>
+						</div>
+					</div>
+				</div>
+			</div>
+			<?php endif;?>
 
 		</div>
 	</div>

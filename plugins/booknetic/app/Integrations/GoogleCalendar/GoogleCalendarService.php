@@ -22,7 +22,7 @@ class GoogleCalendarService
 
 	public static function redirectURI()
 	{
-		return site_url() . '/wp-admin/admin.php?page=booknetic&module=staff&google=true';
+		return admin_url( 'admin.php?page=booknetic&module=staff&google=true' );
 	}
 
 	public static function syncEventsOnBackground()
@@ -97,8 +97,8 @@ class GoogleCalendarService
 
 	public function __construct()
 	{
-		$this->client_id = Helper::getOption('google_calendar_client_id', false);
-		$this->client_secret = Helper::getOption('google_calendar_client_secret', false);
+		$this->client_id = Helper::getOption('google_calendar_client_id', '', false);
+		$this->client_secret = Helper::getOption('google_calendar_client_secret', '', false);
 	}
 
 	public function setAccessToken( $access_token, $checkIfExpired = true )
@@ -236,7 +236,7 @@ class GoogleCalendarService
 					$e_date = Date::dateSQL( $start_cursor );
 					$e_start_time = $e_date == $event_start_date ?  Date::timeSQL( $event_start ) : '00:00';
 
-					$start_cursor += 24 * 60 * 60;
+					$start_cursor = Date::epoch( $start_cursor, '+1 days' );
 
 					if( $start_cursor < $end_cursor )
 					{

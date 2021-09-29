@@ -74,9 +74,10 @@
 			allowClear: true
 		});
 
+
 		$(".fs-modal #input_date, #input_recurring_start_date, #input_recurring_end_date").datepicker({
 			autoclose: true,
-			format: 'yyyy-mm-dd',
+			format: dateFormat.replace('Y', 'yyyy').replace('m', 'mm').replace('d', 'dd'),
 			weekStart: weekStartsOn == 'sunday' ? 0 : 1
 		});
 
@@ -185,12 +186,15 @@
 		{
 			var serviceData = $(".fs-modal #input_service").select2('data')[0];
 
+			var startDate = $("#input_recurring_start_date").val();
+
+			startDate = convertDateToStandart( startDate );
+
 			if( serviceData && serviceData['full_period_value'] > 0 )
 			{
 				$("#input_recurring_end_date").attr('disabled', true);
 				$("#input_recurring_times").attr('disabled', true);
 
-				var startDate = $("#input_recurring_start_date").val();
 
 				if( serviceData['full_period_type'] == 'month' )
 				{
@@ -198,21 +202,21 @@
 					endDate.setMonth( endDate.getMonth() + parseInt( serviceData['full_period_value'] ) );
 					endDate.setDate( endDate.getDate() - 1 );
 
-					$("#input_recurring_end_date").val( endDate.getFullYear() + '-' + booknetic.zeroPad( endDate.getMonth() + 1 ) + '-' + booknetic.zeroPad( endDate.getDate() ) );
+					$("#input_recurring_end_date").val( booknetic.convertDate( endDate.getFullYear() + '-' + booknetic.zeroPad( endDate.getMonth() + 1 ) + '-' + booknetic.zeroPad( endDate.getDate() ), 'Y-m-d' ) );
 				}
 				else if( serviceData['full_period_type'] == 'week' )
 				{
 					endDate = new Date( startDate );
 					endDate.setDate( endDate.getDate() + parseInt( serviceData['full_period_value'] ) * 7 - 1 );
 
-					$("#input_recurring_end_date").val( endDate.getFullYear() + '-' + booknetic.zeroPad( endDate.getMonth() + 1 ) + '-' + booknetic.zeroPad( endDate.getDate() ) );
+					$("#input_recurring_end_date").val( booknetic.convertDate( endDate.getFullYear() + '-' + booknetic.zeroPad( endDate.getMonth() + 1 ) + '-' + booknetic.zeroPad( endDate.getDate() ), 'Y-m-d' ) );
 				}
 				else if( serviceData['full_period_type'] == 'day' )
 				{
 					endDate = new Date( startDate );
 					endDate.setDate( endDate.getDate() + parseInt( serviceData['full_period_value'] ) - 1 );
 
-					$("#input_recurring_end_date").val( endDate.getFullYear() + '-' + booknetic.zeroPad( endDate.getMonth() + 1 ) + '-' + booknetic.zeroPad( endDate.getDate() ) );
+					$("#input_recurring_end_date").val( booknetic.convertDate( endDate.getFullYear() + '-' + booknetic.zeroPad( endDate.getMonth() + 1 ) + '-' + booknetic.zeroPad( endDate.getDate() ), 'Y-m-d' ) );
 				}
 				else if( serviceData['full_period_type'] == 'time' )
 				{
@@ -226,10 +230,10 @@
 
 				if( $("#input_recurring_end_date").val() == '' )
 				{
-					var startDate = new Date( $("#input_recurring_start_date").val() );
+					startDate = new Date( startDate );
 					var endDate = new Date( startDate.setMonth( startDate.getMonth() + 1 ) );
 
-					$("#input_recurring_end_date").val( endDate.getFullYear() + '-' + booknetic.zeroPad( endDate.getMonth() + 1 ) + '-' + booknetic.zeroPad( endDate.getDate() ) );
+					$("#input_recurring_end_date").val( booknetic.convertDate( endDate.getFullYear() + '-' + booknetic.zeroPad( endDate.getMonth() + 1 ) + '-' + booknetic.zeroPad( endDate.getDate() ), 'Y-m-d' ) );
 				}
 			}
 		}
@@ -351,6 +355,28 @@
 			});
 
 			return JSON.stringify( extras );
+		}
+
+
+		function convertDateToStandart( date )
+		{
+			if( dateFormat == 'd-m-Y')
+			{
+				var startDateParts = date.split('-');
+				date = `${ startDateParts[1] }-${ startDateParts[0] }-${ startDateParts[2] }`;
+			}
+			else if( dateFormat == 'd/m/Y')
+			{
+				var startDateParts = date.split('/');
+				date = `${ startDateParts[1] }/${ startDateParts[0] }/${ startDateParts[2] }`;
+			}
+			else if( dateFormat == 'd.m.Y')
+			{
+				var startDateParts = date.split('.');
+				date = `${ startDateParts[1] }.${ startDateParts[0] }.${ startDateParts[2] }`;
+			}
+
+			return date;
 		}
 
 		$(".fs-modal").on('keyup', '#input_recurring_times', function()
@@ -844,8 +870,8 @@
 			booknetic.ajax('Appointments.get_day_offs', {
 				service: serviceId,
 				staff: staffId,
-				start: startDate,
-				end: endDate
+				start: convertDateToStandart( startDate ),
+				end: convertDateToStandart( endDate )
 			}, function( result )
 			{
 				globalDayOffs = result['day_offs'];

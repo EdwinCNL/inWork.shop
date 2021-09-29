@@ -12,6 +12,13 @@
 			$.fn.datepicker.dates['en']['daysMin'] = $.fn.datepicker.dates['en']['days'];
 		}
 
+		if( 'calendar' in $.fn )
+		{
+			$.fn.calendar.dates['en']['months'] = [booknetic.__('January'), booknetic.__('February'), booknetic.__('March'), booknetic.__('April'), booknetic.__('May'), booknetic.__('June'), booknetic.__('July'), booknetic.__('August'), booknetic.__('September'), booknetic.__('October'), booknetic.__('November'), booknetic.__('December')];
+			$.fn.calendar.dates['en']['days'] = [booknetic.__('Sun'), booknetic.__('Mon'), booknetic.__('Tue'), booknetic.__('Wed'), booknetic.__('Thu'), booknetic.__('Fri'), booknetic.__('Sat')];
+			$.fn.calendar.dates['en']['daysShort'] = $.fn.calendar.dates['en']['days'];
+		}
+
 		$(document).on('click', '#fs-toaster .toast-remove', function ()
 		{
 			$(this).closest('#fs-toaster').fadeOut(200, function()
@@ -24,6 +31,24 @@
 			var modalId = $(this).attr('data-modal-id');
 
 			$('#' + modalId).fadeIn(300);
+		}).on('click' , '.validate-button' , function()
+		{
+			$('div,span').removeClass('input-error');
+			$('.validate-form .required').each(function ()
+			{
+				if ($(this).val()==='')
+				{
+					if($(this).next().hasClass('select2'))
+					{
+						$(this).next().addClass('input-error');
+					}
+					else
+					{
+						$(this).addClass('input-error');
+					}
+
+				}
+			});
 		}).on('click' , '[data-load-modal]' , function()
 		{
 			var modal = $(this).attr('data-load-modal'),
@@ -88,6 +113,9 @@
 		{
 			$('.left_side_menu').addClass('animated faster slideInLeft').fadeIn(500);
 			$('body').append('<div class="close_menu_s animated faster fadeIn"></div>');
+		}).on('click', '.l_m_nav_item_link.share_your_page_btn', function ()
+		{
+			$('.close_menu_s').click();
 		}).on('click', '#back_to_wordpress_btn', function ()
 		{
 			location.href = 'index.php';
@@ -111,12 +139,13 @@
 		}).on('click', '.starting_guide_icon', function ()
 		{
 			$('.starting_guide_panel').stop().toggle(400);
-		}).on('click', '#language-switcher-select > div', function ()
+		}).on('click', '.language-switcher-select > div', function ()
 		{
 			let selected_language = $(this).data('language-key');
 
 			booknetic.ajax('Base.switch_language', {language: selected_language}, function ()
 			{
+				booknetic.loading( true );
 				window.location.reload();
 			});
 		});
@@ -171,6 +200,8 @@
 			$('.starting_guide_icon').click();
 		}
 
+		booknetic.ping();
+
 	});
 
 })(jQuery);
@@ -201,6 +232,82 @@ var booknetic =
 	__: function ( key )
 	{
 		return key in localization ? localization[ key ] : key;
+	},
+
+	customTrim: function trim(str, ch) {
+		var start = 0,
+			end = str.length;
+
+		while(start < end && str[start] === ch)
+			++start;
+
+		while(end > start && str[end - 1] === ch)
+			--end;
+
+		return (start > 0 || end < str.length) ? str.substring(start, end) : str;
+	},
+
+	reformatDateFromCustomFormat: function(format = 'Y-m-d', day = '', month = '', year = '')
+	{
+		return booknetic.customTrim(booknetic.customTrim(format.replace('d', day).replace('m', month).replace('Y', year), '/'),'-').replace('//', '/').replace('--', '-');
+	},
+
+	datePickerFormat: function()
+	{
+		let date_format = dateFormat.replace('yyyy', 'Y').replace('dd', 'd').replace('mm', 'm');
+
+		if( date_format == 'd-m-Y' )
+		{
+			return 'dd-mm-yyyy';
+		}
+		else if( date_format == 'm/d/Y' )
+		{
+			return 'mm/dd/yyyy';
+		}
+		else if( date_format == 'd/m/Y' )
+		{
+			return 'dd/mm/yyyy';
+		}
+		else if( date_format == 'd.m.Y' )
+		{
+			return 'dd.mm.yyyy';
+		}
+
+		return 'yyyy-mm-dd';
+	},
+
+	convertDate: function( date, from, to )
+	{
+		if( date == '' )
+			return date;
+		if( typeof to === 'undefined' )
+		{
+			to = booknetic.datePickerFormat();
+		}
+
+		to = to.replace('yyyy', 'Y').replace('dd', 'd').replace('mm', 'm');
+		from = from.replace('yyyy', 'Y').replace('dd', 'd').replace('mm', 'm');
+
+		var delimetr = from.indexOf('-') > -1 ? '-' : ( from.indexOf('.') > -1 ? '.' : '/' );
+		var delimetr_to = to.indexOf('-') > -1 ? '-' : ( to.indexOf('.') > -1 ? '.' : '/' );
+		var date_split = date.split(delimetr);
+		var date_from_split = from.split(delimetr);
+		var date_to_split = to.split(delimetr_to);
+
+		var parts = {'m':0, 'd':0, 'Y':0};
+
+		date_from_split.forEach(function( val, i )
+		{
+			parts[ val ] = i;
+		});
+
+		var new_date = '';
+		date_to_split.forEach(function( val, j )
+		{
+			new_date += (new_date == '' ? '' : delimetr_to) + date_split[ parts[ val ] ];
+		});
+
+		return new_date;
 	},
 
 	confirm: function ( text , bg, icon , fnOkButton, okButtonTxt, cancelButtonTxt , afterClose )
@@ -253,7 +360,15 @@ var booknetic =
 			}
 			else
 			{
-				modal.children('.fs-modal-content').removeClass('slideInRight').addClass('slideOutRight');
+				if( ! booknetic.isRtl() )
+				{
+					modal.children('.fs-modal-content').removeClass('slideInRight').addClass('slideOutRight');
+				}
+				else
+				{
+					modal.children('.fs-modal-content').removeClass('slideInLeft').addClass('slideOutLeft');
+				}
+
 			}
 
 
@@ -273,7 +388,12 @@ var booknetic =
 
 	isMobileVer: function()
 	{
-		return window.outerWidth <= 690;
+		return window.innerWidth <= 690;
+	},
+
+	isRtl: function()
+	{
+		return $('body').hasClass("rtl");
 	},
 
 	modal: function ( body, options )
@@ -291,7 +411,7 @@ var booknetic =
 		else
 		{
 			var modalWidth = 'width' in options ? 'width: ' + (options['width'].toString().match(/(%|px)/)==null ? options['width'] + "%" : options['width']) + ' !important;' : '';
-			modalWidth += 'width' in options ? 'min-width: ' + (options['width'].toString().match(/(%|px)/)==null ? options['width'] + "%" : options['width']) + ' !important;' : '';
+			modalWidth += 'width' in options ? 'min-width: ' + (options['width'].toString().match(/(%|px)/)==null ? options['width'] + "%" : options['width']) + ';' : '';
 		}
 
 		t.modalsCount++;
@@ -303,6 +423,11 @@ var booknetic =
 		if( booknetic.isMobileVer() )
 		{
 			modalTpl = modalTpl.replace('slideInRight', 'slideInUp');
+		}
+
+		if( booknetic.isRtl() )
+		{
+			modalTpl = modalTpl.replace('slideInRight', 'slideInLeft');
 		}
 
 		var el = t.parseHTML( modalTpl ),
@@ -380,7 +505,8 @@ var booknetic =
 			'Appointments.payment': '800px',
 			'Payments.info': '800px',
 			'Services.add_new': '800px',
-			'Staff.add_new': '800px'
+			'Staff.add_new': '800px',
+			'Giftcards.giftcard_usage_history': '800px'
 		};
 
 		if( module+'.'+action in modalSizes )
@@ -490,7 +616,8 @@ var booknetic =
 	{
 		if( typeof onOff === 'undefined' || onOff )
 		{
-			$('#booknetic_progress').removeClass('booknetic_progress_done');
+			$('#booknetic_progress').removeClass('booknetic_progress_done').show();
+
 			$({property: 0}).animate({property: 100}, {
 				duration: 1000,
 				step: function()
@@ -503,16 +630,17 @@ var booknetic =
 				}
 			});
 
-			var tpl = this.parseHTML(this.options.templates.loader);
-			tpl.firstChild.setAttribute('id' , 'pro-loading-element261272');
-			document.body.insertBefore( tpl , document.body.lastChild);
+			$('body').append( this.options.templates.loader );
 		}
-		else if( document.getElementById( 'pro-loading-element261272' ) !== null )
+		else if( ! $('#booknetic_progress').hasClass('booknetic_progress_done') )
 		{
-			$('#booknetic_progress').addClass('booknetic_progress_done').css('width', 0);
+			$('#booknetic_progress').addClass('booknetic_progress_done').css('width', 0).hide();
 
-			var prnt = document.getElementById( 'pro-loading-element261272' );
-			prnt.parentNode.removeChild(prnt);
+			// IOS bug...
+			setTimeout(function ()
+			{
+				$('.main_loading_layout').remove();
+			}, 0);
 		}
 	},
 
@@ -771,6 +899,11 @@ var booknetic =
 			theme: 'bootstrap',
 			placeholder: booknetic.__('select'),
 			allowClear: true,
+			language: {
+				searching: function() {
+					return booknetic.__('searching');
+				}
+			},
 			ajax: {
 				url: postURL ? postURL : ajaxurl,
 				dataType: 'json',
@@ -1060,7 +1193,7 @@ var booknetic =
 						{
 							booknetic.dataTable.reload( tableDiv );
 
-							booknetic.toast('Deleted!', 'success', 5000);
+							booknetic.toast(booknetic.__('Deleted'), 'success', 5000);
 						}
 					});
 				});
@@ -1160,6 +1293,49 @@ var booknetic =
 			}
 		}
 
+	},
+
+	checkPingTwice: 0,
+	ping: function ()
+	{
+		setTimeout(function ()
+		{
+			$.ajax( {
+				url: ajaxurl,
+				method: 'POST',
+				data: {
+					module: 'Base',
+					action: 'ping'
+				},
+				success: function ( result )
+				{
+					try
+					{
+						result = JSON.parse(result);
+					}
+					catch(e) {}
+
+					if( ! ( typeof result['status'] != 'undefined' && result['status'] == 'ok' ) )
+					{
+						booknetic.checkPingTwice = booknetic.checkPingTwice + 1;
+						if( booknetic.checkPingTwice < 2 )
+						{
+							booknetic.ping();
+						}
+						else
+						{
+							booknetic.toast( booknetic.__('session_has_expired'), 'unsuccess', 999999 );
+						}
+					}
+					else
+					{
+						booknetic.checkPingTwice = 0;
+						booknetic.ping();
+					}
+				}
+			} );
+		}, 15 * 1000);
 	}
+
 };
 

@@ -8,13 +8,14 @@ use BookneticApp\Providers\Controller;
 use BookneticApp\Providers\DataTable;
 use BookneticApp\Providers\DB;
 use BookneticApp\Providers\Helper;
+use BookneticApp\Providers\Permission;
 
 class Main extends Controller
 {
 
 	public function index()
 	{
-		$dataTable = new DataTable( "SELECT *, (SELECT (SELECT `date` FROM `" . DB::table('appointments') . "` WHERE id=appointment_id) FROM `" . DB::table('appointment_customers') . "` WHERE tb1.id=customer_id ORDER BY id DESC LIMIT 0,1) AS `last_appointment_date` FROM `" . DB::table('customers') . "` tb1 " . DB::tenantFilter('WHERE') );
+		$dataTable = new DataTable( "SELECT *, (SELECT (SELECT `date` FROM `" . DB::table('appointments') . "` WHERE id=appointment_id) FROM `" . DB::table('appointment_customers') . "` WHERE tb1.id=customer_id ORDER BY id DESC LIMIT 0,1) AS `last_appointment_date` FROM `" . DB::table('customers') . "` tb1 " . Permission::myCustomers('WHERE') );
 
 		$dataTable->setTableName('customers');
 		$dataTable->setTitle(bkntc__('Customers'));
@@ -30,7 +31,7 @@ class Main extends Controller
 		$dataTable->addColumns(bkntc__('CUSTOMER NAME'), function( $customer )
 		{
 			return Helper::profileCard( $customer['first_name'] . ' ' . $customer['last_name'], $customer['profile_image'], $customer['email'], 'Customers' );
-		}, ['is_html' => true, 'order_by_field' => "CONCAT(first_name, ' ', last_name)"], true);
+		}, ['is_html' => true, 'order_by_field' => "first_name,last_name"], true);
 
 		$dataTable->addColumnsForExport(bkntc__('First name'), 'first_name');
 		$dataTable->addColumnsForExport(bkntc__('Last name'), 'last_name');
@@ -38,10 +39,14 @@ class Main extends Controller
 
 		$dataTable->addColumns(bkntc__('PHONE'), 'phone_number');
 		$dataTable->addColumns(bkntc__('LAST APPOINTMENT'), 'last_appointment_date', ['type' => 'date'], true);
-		$dataTable->addColumns(bkntc__('GENDER'), 'gender');
+		// $dataTable->addColumns(bkntc__('GENDER'), 'gender');
+        $dataTable->addColumns(bkntc__('GENDER'), function( $customer )
+        {
+            return bkntc__($customer['gender']);
+        }, ['is_html' => true, 'order_by_field' => "gender"], true);
 		$dataTable->addColumns(bkntc__('Date of birth'), 'birthdate', ['type' => 'date']);
 
-		$dataTable->addColumnsForExport(bkntc__('Note'), 'note');
+		$dataTable->addColumnsForExport(bkntc__('Note'), 'notes');
 
 		$table = $dataTable->renderHTML();
 

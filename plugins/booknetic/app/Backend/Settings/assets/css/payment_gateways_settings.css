@@ -118,3 +118,30 @@
 	height: 100vh;
 	width: 100%;
 }
+
+.disable_editing
+{
+	position: relative;
+}
+.disable_editing:after
+{
+	content: "";
+	position: absolute;
+	top: -15px;
+	left: -15px;
+	width: calc(100% + 30px);
+	height: calc(100% + 30px);
+	background: rgba(204, 215, 221, 0.2);
+
+	border-radius: 3px;
+}
+
+.rtl .step_element
+{
+	text-align: right;
+}
+
+.rtl .step_element > .step_switch
+{
+	float: left;
+}

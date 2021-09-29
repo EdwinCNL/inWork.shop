@@ -5,6 +5,9 @@ use BookneticApp\Providers\Helper;
 use BookneticApp\Providers\Date;
 
 defined( 'ABSPATH' ) or die();
+
+print "<script> let dateFormat = '".Helper::getOption('date_format', 'Y-m-d'). "'; </script>";
+
 ?>
 <link rel="stylesheet" type="text/css" href="<?php print Helper::assets('css/dashboard.css', 'Dashboard')?>" />
 <link rel="stylesheet" type="text/css" href="<?php print Helper::assets('css/daterangepicker.css', 'Dashboard')?>" />
@@ -73,7 +76,7 @@ defined( 'ABSPATH' ) or die();
 <div id="upcomming_appointments" class="mb-2">
 
 	<ul class="nav nav-tabs nav-light">
-		<li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab_upcomming_appointments"><?php print bkntc__('Upcomming')?></a></li>
+		<li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab_upcomming_appointments"><?php print bkntc__('Upcoming')?></a></li>
 		<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab_pending_appointments"><?php print bkntc__('Pending')?> <?php if( !empty($parameters['pending_appointments'])):?><span class="badge-xs badge-warning ml-2"><?php print count( $parameters['pending_appointments'] )?></span><?php endif;?></a></li>
 	</ul>
 

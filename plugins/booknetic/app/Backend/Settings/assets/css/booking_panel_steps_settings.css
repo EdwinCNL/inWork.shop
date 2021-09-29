@@ -111,3 +111,13 @@
 		width: 100%;
 	}
 }
+
+.rtl .step_element
+{
+	text-align: right;
+}
+
+.rtl .step_element > .step_switch
+{
+	float: left;
+}

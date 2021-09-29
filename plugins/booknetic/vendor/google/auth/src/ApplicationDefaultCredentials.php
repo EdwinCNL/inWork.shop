@@ -25,7 +25,7 @@ use Google\Auth\HttpHandler\HttpClientCache;
 use Google\Auth\HttpHandler\HttpHandlerFactory;
 use Google\Auth\Middleware\AuthTokenMiddleware;
 use Google\Auth\Subscriber\AuthTokenSubscriber;
-use GuzzleHttp\Client;
+use Booknetic_GuzzleHttp\Client;
 use InvalidArgumentException;
 use Psr\Cache\CacheItemPoolInterface;
 
@@ -44,12 +44,12 @@ use Psr\Cache\CacheItemPoolInterface;
  * - #getSubscriber returns an AuthTokenSubscriber built from the credentials object
  * - #getMiddleware returns an AuthTokenMiddleware built from the credentials object
  *
- * This allows it to be used as follows with GuzzleHttp\Client:
+ * This allows it to be used as follows with Booknetic_GuzzleHttp\Client:
  *
  * ```
  * use Google\Auth\ApplicationDefaultCredentials;
- * use GuzzleHttp\Client;
- * use GuzzleHttp\HandlerStack;
+ * use Booknetic_GuzzleHttp\Client;
+ * use Booknetic_GuzzleHttp\HandlerStack;
  *
  * $middleware = ApplicationDefaultCredentials::getMiddleware(
  *     'https://www.googleapis.com/auth/taskqueue'

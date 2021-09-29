@@ -78,8 +78,8 @@ credentials file, the following code should output a list of your Drive files.
 
 ```php
 use Google\Auth\ApplicationDefaultCredentials;
-use GuzzleHttp\Client;
-use GuzzleHttp\HandlerStack;
+use Booknetic_GuzzleHttp\Client;
+use Booknetic_GuzzleHttp\HandlerStack;
 
 // specify the path to your application credentials
 putenv('GOOGLE_APPLICATION_CREDENTIALS=/path/to/my/credentials.json');
@@ -131,8 +131,8 @@ this, use the static method `getIdTokenMiddleware` on
 
 ```php
 use Google\Auth\ApplicationDefaultCredentials;
-use GuzzleHttp\Client;
-use GuzzleHttp\HandlerStack;
+use Booknetic_GuzzleHttp\Client;
+use Booknetic_GuzzleHttp\HandlerStack;
 
 // specify the path to your application credentials
 putenv('GOOGLE_APPLICATION_CREDENTIALS=/path/to/my/credentials.json');

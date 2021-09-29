@@ -1,5 +1,5 @@
 <?php
-namespace GuzzleHttp;
+namespace Booknetic_GuzzleHttp;
 
 /**
  * Expands URI templates. Userland implementation of PECL uri_template.

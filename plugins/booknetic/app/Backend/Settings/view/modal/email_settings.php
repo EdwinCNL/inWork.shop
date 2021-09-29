@@ -21,6 +21,7 @@ defined( 'ABSPATH' ) or die();
 		</div>
 		<div class="ms-content">
 
+			<?php if( !Helper::isSaaSVersion() ):?>
 			<div class="form-row">
 				<div class="form-group col-md-6">
 					<label for="input_mail_gateway"><?php print bkntc__('Mail Gateway')?>:</label>
@@ -73,6 +74,14 @@ defined( 'ABSPATH' ) or die();
 					<input class="form-control" id="input_sender_name" value="<?php print htmlspecialchars( Helper::getOption('sender_name', '') )?>">
 				</div>
 			</div>
+			<?php else:?>
+				<div class="form-row">
+					<div class="form-group col-md-6">
+						<label for="input_sender_name"><?php print bkntc__('Sender Name')?>:</label>
+						<input class="form-control" id="input_sender_name" value="<?php print htmlspecialchars( Helper::getOption('sender_name', '') )?>">
+					</div>
+				</div>
+			<?php endif;?>
 
 		</div>
 	</div>

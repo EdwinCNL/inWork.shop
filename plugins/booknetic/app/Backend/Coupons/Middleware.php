@@ -17,7 +17,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 				return true;
 			}
 
-			if( Permission::tenantInf()->getPermission( 'coupons' ) === 'on' )
+			if( Permission::getPermission( 'coupons' ) === 'on' )
 			{
 				return true;
 			}
@@ -33,7 +33,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 		// add menu...
 		$this->createMenu(bkntc__('Coupons'))
 			->setIcon('fa fa-tag')
-			->setOrder(9)
+			->setOrder(10)
 			->show();
 
 

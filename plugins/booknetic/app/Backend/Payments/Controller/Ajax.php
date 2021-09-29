@@ -20,7 +20,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			DB::DB()->prepare( "
 				SELECT 
 					tb1.id AS appointment_id, tb1.date, tb1.duration, tb1.start_time,
-					tb2.id, tb2.status, tb2.number_of_customers, tb2.service_amount, tb2.extras_amount, tb2.discount, tb2.paid_amount, tb2.payment_method, tb2.customer_id,tb2.payment_status,
+					tb2.id, tb2.status, tb2.number_of_customers, tb2.service_amount, tb2.extras_amount, tb2.tax_amount, tb2.discount, tb2.giftcard_amount, tb2.paid_amount, tb2.payment_method, tb2.customer_id,tb2.payment_status,
 					CONCAT(tb3.first_name, ' ', tb3.last_name) AS customer_name, tb3.phone_number AS customer_phone_number, tb3.email AS customer_email, tb3.profile_image AS customer_profile_image,
 					(SELECT `name` FROM `" . DB::table('services') . "` WHERE id=tb1.service_id) AS service_name,
 					(SELECT `name` FROM `" . DB::table('staff') . "` WHERE id=tb1.staff_id) AS staff_name,

@@ -65,8 +65,8 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			DB::DB()->prepare('
 				SELECT 
 					count(0) AS appointments,
-					sum(`service_amount`) AS revenue,
-					sum(tb2.`duration`) AS duration,
+					sum(`service_amount` + `extras_amount` - `discount` - `giftcard_amount` ) AS revenue,
+					sum(tb2.`duration`+ tb2.`extras_duration`) AS duration,
 					sum(IF(`status`=\'pending\', 1, 0)) AS pending
 				FROM `' . DB::table('appointment_customers') . '` tb1
 				INNER JOIN `' . DB::table('appointments') . '` tb2 ON tb2.id=tb1.appointment_id

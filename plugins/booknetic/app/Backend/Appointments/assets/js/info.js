@@ -16,7 +16,7 @@
 					'ids': [ $('#add_new_JS_info1').data('appointment-id') ]
 				};
 
-				$.post(location.href.replace('module=calendar', 'module=appointments'), ajaxData, function ( result )
+				$.post(location.href.replace( /module=\w+/g , 'module=appointments'), ajaxData, function ( result )
 				{
 					if( $("#fs_data_table_div").length > 0 )
 					{

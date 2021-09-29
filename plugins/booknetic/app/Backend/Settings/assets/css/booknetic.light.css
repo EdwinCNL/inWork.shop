@@ -24,7 +24,7 @@
 .booknetic_appointment_steps
 {
     width: 230px;
-    height: 72px;
+    height: 100%;
     background-color: #292D32;
     position: relative;
 
@@ -48,7 +48,7 @@
     font-size: 12px;
     font-weight: 500;
     padding: 15px 30px;
-    display: none !important;
+    display: none;
 }
 .booknetic_appointment_steps_footer_txt1
 {
@@ -124,7 +124,7 @@
 .booknetic_appointment_container
 {
     background: #f5f7fa;
-    width: 100%;
+    width: calc(100% - 230px);
     position: relative;
     height: 100%;
 }
@@ -311,17 +311,11 @@
     border: 1px solid #E3EAF3 !important;
 }
 
-.booknetic_appointment_step_element
+.booknetic_appointment_step_element, .booknetic_appointment_steps_footer
 {
     display: block !important;
 }
 
-.booknetic_appointment_steps_footer
-{
-    display: none !important;
-}{
-
-}
 
 
 
@@ -596,7 +590,7 @@
 {
     width: 100%;
     display: flex;
-    justify-content: space-evenly;
+    justify-content: space-between;
 }
 
 .booknetic_date_time_area.booknetic_date_based_reservation
@@ -1218,4 +1212,16 @@
     font-size: 16px;
     line-height: 25px;
     margin-top: 30px;
+}
+
+.rtl .booknetic_appointment_steps_body, .rtl .booknetic_appointment_container_header, .rtl .booknetic_service_category:first-child
+{
+   text-align: right;
+}
+
+.rtl .booknetic_card
+{
+    float: right;
+    margin-right: unset;
+    margin-left: 15px;
 }

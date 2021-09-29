@@ -157,10 +157,17 @@
 			if( is_in_edit_mode )
 				return;
 
-			var left = $(this).offset().left + $(this).outerWidth();
-			var top = $(this).offset().top + $(this).outerHeight() - 18;
+			var left = $(this)[0].getBoundingClientRect().x + $(this).outerWidth();
+			var top = $(this)[0].getBoundingClientRect().y + $(this).outerHeight() - 18;
+			if ($(window).innerWidth() <= 1440)
+			{
+				$('#translate_edit_icon').attr("style","").css({position:'absolute'}).show().appendTo($(this));
+			}
+			else
+			{
+				$('#translate_edit_icon').attr("style","").css({top: top+'px', left: left+'px'}).show().appendTo($(this));
+			}
 
-			$('#translate_edit_icon').css({top: top+'px', left: left+'px'}).show().appendTo($(this));
 		}).on('mouseleave', '[data-translate]', function ()
 		{
 			if( is_in_edit_mode )
@@ -291,6 +298,12 @@
 		});
 
 		$('#start_transaltion').click();
+
+		$('.booknetic_appointment_step_element:eq(0)').click();
+		$('.booknetic_appointment_step_element').each(function( i )
+		{
+			$(this).find('.booknetic_badge').text( parseInt(i) + 1 );
+		});
 
 	});
 

@@ -9,16 +9,19 @@ use BookneticApp\Providers\Controller;
 use BookneticApp\Providers\DataTable;
 use BookneticApp\Providers\DB;
 use BookneticApp\Providers\Helper;
+use BookneticApp\Providers\Session;
 
 class Main extends Controller
 {
 
 	public function index()
 	{
-		$view = Helper::_get('view', 'org', 'string', ['list', 'org']);
+		$view = Helper::_get('view', Session::get('service_module_view', 'org'), 'string', ['list', 'org']);
 
 		if( $view == 'org' )
 		{
+			Session::set('service_module_view', 'org');
+
 			// collect services by category
 			$servicesAll = Service::fetchAll();
 			$services = [];
@@ -90,6 +93,8 @@ class Main extends Controller
 		}
 		else
 		{
+            Session::set('service_module_view', 'list');
+
 			$dataTable = new DataTable( Service::leftJoin('category', 'name') );
 
 			$dataTable->setTitle(bkntc__('Services'));
@@ -114,7 +119,6 @@ class Main extends Controller
 
 			$this->view( 'index-list', ['table' => $table] );
 		}
-
 	}
 
 	public static function _delete( $deletedIds )
@@ -141,6 +145,5 @@ class Main extends Controller
 			DB::DB()->delete( DB::table('timesheet'), [ 'service_id' => $id ] );
 		}
 	}
-
 
 }

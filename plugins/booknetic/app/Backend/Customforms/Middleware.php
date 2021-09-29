@@ -17,7 +17,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 				return true;
 			}
 
-			if( Permission::tenantInf()->getPermission( 'custom_forms' ) === 'on' )
+			if( Permission::getPermission( 'custom_forms' ) === 'on' )
 			{
 				return true;
 			}
@@ -33,7 +33,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 		// add menu...
 		$this->createMenu(bkntc__('Custom Forms'))
 			->setIcon('fa fa-magic')
-			->setOrder(15)
+			->setOrder(17)
 			->show();
 
 

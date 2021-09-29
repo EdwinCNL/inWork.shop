@@ -40,6 +40,14 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			'reminder_time'		=>	$reminder_time
 		]);
 
+        DB::DB()->query (
+            DB::DB()->prepare (
+                "UPDATE `".DB::table('invoices')."` 
+                    SET `notifications`= TRIM(BOTH ',' FROM REPLACE(CONCAT(',', `notifications`, ','), %s, ','))
+                    WHERE CONCAT(',', `notifications`, ',') LIKE %s", [",$id,", "%,$id,%"]
+            )
+        );
+
 		$invoices = explode(',', $invoices);
 		foreach ( $invoices AS $invoice )
 		{
@@ -111,6 +119,15 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		$senderEmail	= Helper::getOption('sender_email', '', false);
 		$senderName		= Helper::getOption('sender_name', '', false);
 
+		if( Helper::isSaaSVersion() && Helper::getOption('allow_tenants_to_set_email_sender', 'off', false) == 'on' )
+		{
+			$tenantSenderName = Helper::getOption('sender_name', '');
+			if( !empty( $tenantSenderName ) )
+			{
+				$senderName = $tenantSenderName;
+			}
+		}
+
 		$headers = 'From: ' . $senderName . ' <' . $senderEmail . '>' . "\r\n" .
 			"Content-Type: text/html; charset=UTF-8\r\n";
 
@@ -120,7 +137,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		}
 		else // SMTP
 		{
-			$mail = new \PHPMailer\PHPMailer\PHPMailer();
+			$mail = new \Booknetic_PHPMailer\PHPMailer\PHPMailer();
 
 			$mail->isSMTP();
 

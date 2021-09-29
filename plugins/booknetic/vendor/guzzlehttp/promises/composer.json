@@ -18,7 +18,7 @@
     },
     "autoload": {
         "psr-4": {
-            "GuzzleHttp\\Promise\\": "src/"
+            "Booknetic_GuzzleHttp\\Promise\\": "src/"
         },
         "files": ["src/functions_include.php"]
     },

@@ -8,7 +8,6 @@ var bookneticPaymentStatus;
 		return key in BookneticData.localization ? BookneticData.localization[ key ] : key;
 	}
 
-
 	$(document).ready( function()
 	{
 		$(".booknetic_appointment").each(function (index)
@@ -56,7 +55,7 @@ var bookneticPaymentStatus;
 				{
 					if( typeof onOff === 'undefined' || onOff )
 					{
-						$('#booknetic_progress').removeClass('booknetic_progress_done');
+						$('#booknetic_progress').removeClass('booknetic_progress_done').show();
 						$({property: 0}).animate({property: 100}, {
 							duration: 1000,
 							step: function()
@@ -69,16 +68,17 @@ var bookneticPaymentStatus;
 							}
 						});
 
-						var tpl = this.parseHTML(this.options.templates.loader);
-						tpl.firstChild.setAttribute('id' , 'pro-loading-element261272');
-						document.body.insertBefore( tpl , document.body.lastChild);
+						$('body').append( this.options.templates.loader );
 					}
-					else if( document.getElementById( 'pro-loading-element261272' ) !== null )
+					else if( ! $('#booknetic_progress').hasClass('booknetic_progress_done') )
 					{
 						$('#booknetic_progress').addClass('booknetic_progress_done').css('width', 0);
 
-						var prnt = document.getElementById( 'pro-loading-element261272' );
-						prnt.parentNode.removeChild(prnt);
+						// IOS bug...
+						setTimeout(function ()
+						{
+							$('.booknetic_loading_layout').remove();
+						}, 0);
 					}
 				},
 
@@ -219,7 +219,7 @@ var bookneticPaymentStatus;
 					return false;
 				},
 
-				ajax: function ( action , params , func , loading, fnOnError )
+				ajax: function ( action , params , func , loading, fnOnError, async_param = true )
 				{
 					loading = loading === false ? false : true;
 
@@ -244,6 +244,7 @@ var bookneticPaymentStatus;
 							url: BookneticData.ajax_url,
 							method: 'POST',
 							data: params,
+							async: async_param, 
 							success: function ( result )
 							{
 								if( loading )
@@ -266,7 +267,16 @@ var bookneticPaymentStatus;
 								}
 								else if( typeof fnOnError == 'function' )
 								{
-									fnOnError();
+									try
+									{
+										result = JSON.parse(result);
+									}
+									catch(e)
+									{
+
+									}
+
+									fnOnError( result );
 								}
 							},
 							error: function (jqXHR, exception)
@@ -304,6 +314,11 @@ var bookneticPaymentStatus;
 					select.select2({
 						theme: 'bootstrap',
 						placeholder: __('select'),
+						language: {
+							searching: function() {
+								return __('searching');
+							}
+						},
 						allowClear: true,
 						ajax: {
 							url: BookneticData.ajax_url,
@@ -403,6 +418,7 @@ var bookneticPaymentStatus;
 					if( typeof load_dates != 'undefined' && load_dates === false )
 					{
 						booknetic.displayCalendar( loader );
+						booknetic.displayBringPeopleSelect();
 					}
 					else
 					{
@@ -411,8 +427,24 @@ var bookneticPaymentStatus;
 							booknetic.calendarDateTimes = result['data'];
 							booknetic.time_show_format = result['time_show_format'];
 							booknetic.displayCalendar( loader );
+							booknetic.displayBringPeopleSelect();
 						} , loader );
 					}
+				},
+
+				displayBringPeopleSelect: function()
+				{
+					var select = $('.booknetic_number_of_brought_customers select');
+					
+					var options = '';
+					
+					for(var i = 1; i < booknetic.serviceMaxCapacity; i++ )
+					{
+						options += `<option value="${ i }">${ i }</option>`
+					}
+
+					select.html( options );
+
 				},
 
 				displayCalendar: function( loader )
@@ -482,6 +514,10 @@ var bookneticPaymentStatus;
 						else if( BookneticData.date_format == 'd/m/Y' )
 						{
 							var date_format_view = booknetic.zeroPad(counter) + '/' + booknetic.zeroPad(month) + '/' + year;
+						}
+						else if( BookneticData.date_format == 'd.m.Y' )
+						{
+							var date_format_view = booknetic.zeroPad(counter) + '.' + booknetic.zeroPad(month) + '.' + year;
 						}
 
 						var addClass = '';
@@ -593,8 +629,14 @@ var bookneticPaymentStatus;
 					if( BookneticData.client_time_zone == 'off' )
 						return  '-';
 
-					var current_date = new Date();
-					return current_date.getTimezoneOffset();
+					if ( window.Intl && typeof window.Intl === 'object' )
+					{
+						return Intl.DateTimeFormat().resolvedOptions().timeZone;
+					}
+					else
+					{
+						return new Date().getTimezoneOffset();
+					}
 				},
 
 				datePickerFormat: function()
@@ -610,6 +652,10 @@ var bookneticPaymentStatus;
 					else if( BookneticData.date_format == 'd/m/Y' )
 					{
 						return 'dd/mm/yyyy';
+					}
+					else if( BookneticData.date_format == 'd.m.Y' )
+					{
+						return 'dd.mm.yyyy';
 					}
 
 					return 'yyyy-mm-dd';
@@ -735,6 +781,15 @@ var bookneticPaymentStatus;
 						if( booknetic.getSelected.serviceIsRecurring() )
 							return '';
 
+						var val = booking_panel_js.find(".booknetic_selected_time").data('date-original');
+						return val ? val : '';
+					},
+
+					date_in_customer_timezone: function()
+					{
+						if( booknetic.getSelected.serviceIsRecurring() )
+							return '';
+
 						var val = booking_panel_js.find(".booknetic_calendar_selected_day").data('date');
 						return val ? val : '';
 					},
@@ -745,6 +800,27 @@ var bookneticPaymentStatus;
 							return booknetic.getSelected.recurringTime();
 
 						var val = booking_panel_js.find(".booknetic_selected_time").data('time');
+						return val ? val : '';
+					},
+
+					brought_people_count: function()
+					{
+						if( $('#booknetic_bring_someone_checkbox ').is(':checked') )
+						{
+							var val = Number($('#booknetic_bring_people_count').val());
+
+							return Number.isInteger(val) ? val : 0;
+						}
+
+						return 0;
+					},
+
+					dateTime: function()
+					{
+						if( booknetic.getSelected.serviceIsRecurring() )
+							return booknetic.getSelected.recurringTime();
+
+						var val = booking_panel_js.find(".booknetic_selected_time").data('full-date-time-start');
 						return val ? val : '';
 					},
 
@@ -986,12 +1062,12 @@ var bookneticPaymentStatus;
 
 									booknetic.fadeInAnimate('.booknetic_appointment_container_body > [data-step-id="' + step_id + '"] .booknetic_fade');
 
+									booking_panel_js.find(".booknetic_next_step, .booknetic_prev_step").attr('disabled', false);
+
 									setTimeout(function ()
 									{
 										booking_panel_js.find(".booknetic_appointment_container_body").scrollTop(0);
 										booknetic.niceScroll();
-
-										booking_panel_js.find(".booknetic_next_step, .booknetic_prev_step").attr('disabled', false);
 									}, 101 + booking_panel_js.find('.booknetic_appointment_container_body > [data-step-id="' + step_id + '"] .booknetic_fade').length * 50);
 
 									if( step_id == 'information' )
@@ -1003,21 +1079,58 @@ var bookneticPaymentStatus;
 											utilsScript: BookneticData.assets_url + "js/utilsIntlTelInput.js",
 											initialCountry: phone_input.data('country-code')
 										}));
+
+										if ( ! booknetic.isMobileView() )
+										{
+											$( '#country-listbox' ).niceScroll( {
+												cursorcolor: "#e4ebf4",
+												bouncescroll: true,
+												preservenativescrolling: false
+											} );
+										}
 									}
 									else if( step_id == 'date_time' )
 									{
 										booknetic.serviceData = null;
-										booknetic.dateBasedService = result['service_info']['date_based'];
+										booknetic.dateBasedService   = result['service_info']['date_based'];
+										booknetic.serviceMaxCapacity = result['service_info']['max_capacity'];
 
 										if( result['service_type'] == 'non_recurring' )
 										{
 											booknetic.calendarDateTimes = result['data'];
 											booknetic.time_show_format = result['time_show_format'];
 											booknetic.nonRecurringCalendar(undefined, undefined, false, false);
-											booking_panel_js.find(".booknetic_times_list").niceScroll({
-												cursorcolor: "#e4ebf4",
-												bouncescroll: true
-											});
+
+											// if current month is empty, then next month will be loaded
+											// current_month_is_empty is on-fly property, is not initialized on main object, and it is always undefined by default
+											if ( typeof booknetic.current_month_is_empty === 'undefined' )
+											{
+												for ( let i in booknetic.calendarDateTimes.dates )
+												{
+													if ( booknetic.calendarDateTimes.dates.hasOwnProperty( i ) && booknetic.calendarDateTimes.dates[ i ].length > 0 ) {
+														booknetic.current_month_is_empty = false;
+
+														break;
+													}
+												}
+
+												if ( typeof booknetic.current_month_is_empty === 'undefined' )
+												{
+													let now     = new Date();
+													let year    = now.getFullYear();
+													let month   = now.getMonth() + 1;
+
+													booknetic.nonRecurringCalendar( year, month );
+												}
+											}
+
+											if ( ! booknetic.isMobileView() )
+											{
+												booking_panel_js.find( '.booknetic_times_list' ).niceScroll( {
+													cursorcolor: '#e4ebf4',
+													bouncescroll: true
+												} );
+											}
 										}
 										else
 										{
@@ -1048,9 +1161,18 @@ var bookneticPaymentStatus;
 
 									if( step_id == 'confirm_details' )
 									{
-										if( booknetic.getSelected.paymentMethod() == 'woocommerce' )
+										if( booknetic.getSelected.paymentMethod() == 'woocommerce' && booking_panel_js.find('.booknetic_redirect_to_wc').length > 0 )
 										{
 											booking_panel_js.find(".booknetic_next_step").attr('disabled', false).trigger('click');
+										}
+
+										if ( ! booknetic.isMobileView() )
+										{
+											$( '.booknetic_portlet_content' ).niceScroll( {
+												cursorcolor: "#e4ebf4",
+												bouncescroll: true,
+												preservenativescrolling: false
+											} );
 										}
 									}
 								});
@@ -1144,8 +1266,11 @@ var bookneticPaymentStatus;
 						filter_data['staff'] = booknetic.getSelected.staff();
 						filter_data['service'] = booknetic.getSelected.service();
 						filter_data['service_extras'] = booknetic.getSelected.serviceExtras();
-						filter_data['date'] = booknetic.getSelected.date();
+
+						filter_data['original_date'] = booknetic.getSelected.date();
+						filter_data['date'] = booknetic.getSelected.date_in_customer_timezone();
 						filter_data['time'] = booknetic.getSelected.time();
+						filter_data['brought_people_count'] = booknetic.getSelected.brought_people_count();
 
 						filter_data['recurring_start_date'] = booknetic.getSelected.recurringStartDate();
 						filter_data['recurring_end_date'] = booknetic.getSelected.recurringEndDate();
@@ -1436,7 +1561,8 @@ var bookneticPaymentStatus;
 					data.append( 'location', booknetic.getSelected.location() );
 					data.append( 'staff', booknetic.getSelected.staff() );
 					data.append( 'service', booknetic.getSelected.service() );
-					data.append( 'coupon', booking_panel_js.find('#booknetic_coupon').val() );
+					data.append( 'coupon', (booking_panel_js.find('.booknetic_add_coupon.booknetic_coupon_ok').length > 0 ? booking_panel_js.find('#booknetic_coupon').val() : '') );
+					data.append( 'giftcard', (booking_panel_js.find('.booknetic_add_giftcard.booknetic_giftcard_ok').length > 0 ? booking_panel_js.find('#booknetic_giftcard').val() : '') );
 
 					var extras = booknetic.getSelected.serviceExtras();
 
@@ -1450,6 +1576,7 @@ var bookneticPaymentStatus;
 
 					data.append( 'date', booknetic.getSelected.date() );
 					data.append( 'time', booknetic.getSelected.time() );
+					data.append( 'brought_people_count', booknetic.getSelected.brought_people_count() );
 
 					data.append( 'recurring_start_date', booknetic.getSelected.recurringStartDate() );
 					data.append( 'recurring_end_date', booknetic.getSelected.recurringEndDate() );
@@ -1512,8 +1639,13 @@ var bookneticPaymentStatus;
 						}
 
 						booking_panel_js.find('#booknetic_add_to_google_calendar_btn').data('url', result['google_url'] );
-					} , true, function()
+					} , true, function( result )
 					{
+						if( typeof result['id'] != 'undefined' )
+						{
+							booknetic.appointmentId = result['id'];
+						}
+
 						if( payment_method == 'paypal' || payment_method == 'stripe' )
 						{
 							booknetic.paymentWindow.close();
@@ -1648,6 +1780,42 @@ var bookneticPaymentStatus;
 							{
 								return __('select_time');
 							}
+
+
+							if( $('#booknetic_bring_someone_checkbox').is(':checked') )
+							{
+
+								var send_data = 
+								{
+									service_id           : booknetic.getSelected.service(),
+									staff_id             : booknetic.getSelected.staff(),
+									date                 : booknetic.getSelected.date(),
+									time                 : booknetic.getSelected.time(),
+									brought_people_count : booknetic.getSelected.brought_people_count()
+								};
+
+
+								var a = false;
+								var err_message = '';
+							
+								booknetic.ajax( 'check_timeslot_capacity', send_data, function ( result )
+								{
+									if( result.status == 'ok' )
+									{
+										a = true;
+									}
+								} , true , function(err){ err_message  = err.message; }, false);
+
+
+
+								if( a == false )
+								{
+									return err_message;
+								}
+
+								
+							}
+
 						}
 
 					}
@@ -1792,7 +1960,8 @@ var bookneticPaymentStatus;
 					{
 						booking_panel_js.find(".booknetic_appointment_container_body").niceScroll({
 							cursorcolor: "#e4ebf4",
-							bouncescroll: true
+							bouncescroll: true,
+							preservenativescrolling: false
 						});
 
 						booknetic._niceScrol = true;
@@ -1806,12 +1975,22 @@ var bookneticPaymentStatus;
 
 						booking_panel_js.find(".booknetic_appointment_container_body").getNiceScroll().remove();
 
+						if ( $( '#country-listbox' ).length )
+						{
+							$( '#country-listbox' ).getNiceScroll().remove();
+						}
+
 						return;
 					}
 
 					if( booknetic._niceScrol )
 					{
 						booking_panel_js.find(".booknetic_appointment_container_body").getNiceScroll().resize();
+
+						if ( $( '#country-listbox' ).length )
+						{
+							$( '#country-listbox' ).getNiceScroll().resize();
+						}
 					}
 				},
 
@@ -1846,7 +2025,7 @@ var bookneticPaymentStatus;
 
 				isMobileView: function ()
 				{
-					return window.matchMedia('(max-device-width: 1000px)').matches;
+					return window.matchMedia('(max-width: 1000px)').matches;
 				}
 
 			};
@@ -1971,6 +2150,8 @@ var bookneticPaymentStatus;
 					prev_step_num	= parseInt( current_step_el.children('span') ) + 1,
 					prev_step_el	= current_step_el.prev('.booknetic_appointment_step_element');
 
+					current_step_el.removeClass('booknetic_selected_step').nextAll('.booknetic_appointment_step_element').removeClass('booknetic_selected_step');
+
 				while( prev_step_el.hasClass('booknetic_menu_hidden') )
 					prev_step_el = prev_step_el.prev();
 
@@ -2009,7 +2190,7 @@ var bookneticPaymentStatus;
 						time_badge = '<div class="booknetic_time_group_num">' + times[i]['available_customers'] + ' / ' + times[i]['max_capacity'] + '</div>';
 					}
 
-					booking_panel_js.find(".booknetic_times_list").append('<div data-time="' + times[i]['start_time'] + '" data-endtime="' + times[i]['end_time'] + '"><div>' + times[i]['start_time_format'] + '</div>' + (time_show_format == 1 ? '<div>' + times[i]['end_time_format'] + '</div>' : '') + time_badge + '</div>');
+					booking_panel_js.find(".booknetic_times_list").append('<div data-time="' + times[i]['start_time'] + '" data-endtime="' + times[i]['end_time'] + '" data-date-original="' + times[i]['date'] + '"><div>' + times[i]['start_time_format'] + '</div>' + (time_show_format == 1 ? '<div>' + times[i]['end_time_format'] + '</div>' : '') + time_badge + '</div>');
 				}
 
 				booking_panel_js.find(".booknetic_times_list").scrollTop(0);
@@ -2058,7 +2239,7 @@ var bookneticPaymentStatus;
 				booking_panel_js.find('.booknetic_selected_time').removeClass('booknetic_selected_time');
 				$(this).addClass('booknetic_selected_time');
 
-				booking_panel_js.find(".booknetic_next_step").trigger('click');
+				//booking_panel_js.find(".booknetic_next_step").trigger('click');
 			}).on('click', '.booknetic_payment_method', function ()
 			{
 				booking_panel_js.find(".booknetic_payment_method_selected").removeClass('booknetic_payment_method_selected');
@@ -2154,12 +2335,14 @@ var bookneticPaymentStatus;
 			}).on('click', '#booknetic_add_to_google_calendar_btn', function ()
 			{
 				window.open( $(this).data('url') );
-			}).on('click', '#booknetic_coupon_ok_btn', function ()
+			}).on('click', '.booknetic_coupon_ok_btn', function ()
 			{
 				var coupon = booking_panel_js.find('#booknetic_coupon').val();
 				var staff = booknetic.getSelected.staff();
 				var service = booknetic.getSelected.service();
 				var service_extras = booknetic.getSelected.serviceExtras();
+				var custom_fields = booknetic.getSelected.formData();
+				var brought_people_count = booknetic.getSelected.brought_people_count();
 
 				if( coupon == '' )
 					return;
@@ -2168,26 +2351,84 @@ var bookneticPaymentStatus;
 					coupon: coupon,
 					service: service,
 					staff: staff,
-					service_extras: service_extras
+					service_extras: service_extras,
+					email: custom_fields['data']['email'],
+					phone: custom_fields['data']['phone'],
+					brought_people_count: brought_people_count
 				}, function ( result )
 				{
 					booking_panel_js.find('.booknetic_discount_price').text( result['discount'] );
 					booking_panel_js.find('.booknetic_sum_price').text( result['sum'] );
+					booking_panel_js.find('.booknetic_deposit_amount_txt').text( result['deposit_txt'] );
 					booking_panel_js.find('.booknetic_add_coupon').addClass('booknetic_coupon_ok');
+					booking_panel_js.find('.booknetic_giftcard_ok_btn').data('discount_price', result['discount_price']);
 					booking_panel_js.find('.booknetic_discount').removeClass('booknetic_hidden').hide().fadeIn(200);
+					
 
 					if( result['sum_price'] <= 0 )
 					{
 						booking_panel_js.find('.booknetic_payment_method_selected').data('payment-type', 'local');
-						booking_panel_js.find('.booknetic_confirm_deposit_body').fadeOut(200, function ()
+						booking_panel_js.find('.booknetic_confirm_deposit_body').fadeOut(300, function ()
 						{
-							booking_panel_js.find('.booknetic_confirm_sum_body').animate({width: '100%'}, 200);
+							booking_panel_js.find('.booknetic_confirm_sum_body').animate({width: '100%'}, 300);
 						});
+					}
+
+					if( booking_panel_js.find('.booknetic_add_giftcard').hasClass('booknetic_giftcard_ok') )
+					{
+						booking_panel_js.find('.booknetic_giftcard_ok_btn').click();
 					}
 
 				}, true, function ()
 				{
 					booking_panel_js.find('.booknetic_add_coupon').removeClass('booknetic_coupon_ok');
+				});
+
+			}).on('click', '.booknetic_giftcard_ok_btn', function ()
+			{
+				var giftcard = booking_panel_js.find('#booknetic_giftcard').val();
+				var staff = booknetic.getSelected.staff();
+				var service = booknetic.getSelected.service();
+				var service_extras = booknetic.getSelected.serviceExtras();
+				var discount_price = booking_panel_js.find('.booknetic_giftcard_ok_btn').data('discount_price');
+				var brought_people_count = booknetic.getSelected.brought_people_count();
+
+				if( giftcard == '' )
+					return;
+
+				booknetic.ajax('summary_with_giftcard', {
+					giftcard: giftcard,
+					service: service,
+					staff: staff,
+					service_extras: service_extras,
+					discount_price: discount_price,
+					brought_people_count: brought_people_count
+				}, function( result )
+				{
+					if( result['sum_price'] <= 0 )
+					{
+						booking_panel_js.find('.booknetic_payment_method_selected').data('payment-type', 'giftcard');
+						booking_panel_js.find('.booknetic_confirm_deposit_body').fadeOut(300, function ()
+						{
+							booking_panel_js.find('.booknetic_confirm_sum_body').animate({width: '100%'}, 300);
+						});
+					}
+
+					booking_panel_js.find('.booknetic_show_balance').text('Balance: ' + result['printBalance']);
+
+					booking_panel_js.find('.booknetic_gift_discount_price').mouseover(function(){
+						booking_panel_js.find('.booknetic_show_balance').css('display', 'block');
+					}).mouseout(function() {
+						booking_panel_js.find('.booknetic_show_balance').css('display', 'none');
+					  });
+
+					booking_panel_js.find('.booknetic_gift_discount').css('display', 'block');
+					booking_panel_js.find('.booknetic_gift_discount_price').text( result['printSpent'] );
+					booking_panel_js.find('.booknetic_sum_price').text( result['sum'] );
+					booking_panel_js.find('.booknetic_add_giftcard').addClass('booknetic_giftcard_ok');
+				}, true, function ()
+				{
+					booking_panel_js.find('.booknetic_add_giftcard').removeClass('booknetic_giftcard_ok');
 				});
 
 			}).on('click', '.booknetic_try_again_btn', function ()
@@ -2410,7 +2651,7 @@ var bookneticPaymentStatus;
 					startDate	= booknetic.getSelected.recurringStartDate(),
 					endDate		= booknetic.getSelected.recurringEndDate();
 
-				if( startDate == '' || endDate == '' )
+				if( startDate == '' || ( !$('#booknetic_recurring_end').is(':disabled') && endDate == '' ) )
 					return;
 
 				booknetic.ajax('get_day_offs', {
@@ -2468,6 +2709,21 @@ var bookneticPaymentStatus;
 				}
 
 				while_fn();
+
+			})
+			.on('change', '#booknetic_bring_someone_checkbox', function(event) {
+				
+				if( $(this).is(':checked') )
+				{
+					$('.booknetic_number_of_brought_customers').fadeIn(200);
+					$(".booknetic_appointment_container_body").animate({ scrollTop: 200 }, 300);
+				}
+				else
+				{
+					$('.booknetic_number_of_brought_customers').fadeOut(200);
+				}
+
+				booknetic.niceScroll();
 
 			});
 

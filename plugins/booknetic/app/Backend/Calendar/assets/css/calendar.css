@@ -572,3 +572,22 @@
 	}
 
 }
+
+.add-appointment-on-calendar
+{
+	margin-left: 5px;
+	position: relative;
+	top: 5px;
+	padding: 1px 7px;
+	background: #7E82FF;
+	color: #FFF;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	cursor: pointer;
+}
+
+.add-appointment-on-calendar > i{
+	color: #fff;
+	font-size: 13px;
+}

@@ -37,7 +37,7 @@
 	flex-direction: column;
 
 	right: -10px;
-	top: 17px;
+	top: 4px;
 	opacity: 0;
 
 	transition: all 0.5s;
@@ -320,7 +320,7 @@
 	-moz-border-radius: 50%;
 	border-radius: 50%;
 	overflow: hidden;
-	idth: 100%;
+	width: 100%;
 	height: 100%;
 	display: flex;
 	flex-direction: column;
@@ -409,6 +409,32 @@
 {
 	position: absolute;
 	left: 30px;
+}
+
+.copy_dropdown
+{
+	margin-top: 5px;	
+}
+
+#copy_extra_dropdown
+{
+	
+	padding: 3px;
+	border: none;
+	border-radius: 50%;
+	background: rgb(199, 207, 217);
+	outline: none;
+}
+
+.copy_extra_icon
+{
+	color: white
+}
+
+.copy_option:hover
+{
+	cursor: pointer;
+	background: rgb(199, 207, 217); 
 }
 
 .color-r-1{ background: #53d56c !important; }

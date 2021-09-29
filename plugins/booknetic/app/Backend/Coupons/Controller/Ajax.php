@@ -117,7 +117,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			'type'				=>	$type,
 			'series_count'		=>	(int)$series_count,
 			'code'				=>	$code,
-			'discount'			=>	(int)$discount,
+			'discount'			=>	$discount,
 			'discount_type'		=>	$discount_type,
 			'start_date'		=>	empty($start_date) ? null : Date::dateSQL( $start_date ),
 			'end_date'			=>	empty($end_date) ? null : Date::dateSQL( $end_date ),

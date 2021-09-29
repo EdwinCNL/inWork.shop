@@ -16,19 +16,20 @@ class Main extends Controller
 
 	public function index()
 	{
-		$dataTable = new DataTable( "
+	    $dataTable = new DataTable( "
 			SELECT 
 				tb1.*, 
 				(SELECT `name` FROM `" . DB::table('locations') . "` WHERE id=tb1.location_id) AS `location_name`,
 				(SELECT `name` FROM `" . DB::table('services') . "` WHERE id=tb1.service_id) AS `service_name`,
-				(SELECT SUM(`service_amount`+`extras_amount`-`discount`) FROM `" . DB::table('appointment_customers') . "` WHERE `appointment_id`=tb1.id) AS `service_amount`,
+				(SELECT SUM(`service_amount`+`extras_amount` + `tax_amount` -`discount`  - `giftcard_amount`) FROM `" . DB::table('appointment_customers') . "` WHERE `appointment_id`=tb1.id) AS `service_amount`,
 				tb2.name AS staff_name, tb2.profile_image AS staff_profile_image,
-				(SELECT group_concat( (SELECT concat(IFNULL(`first_name`,''), ' ', IFNULL(`last_name`,''), '::', IFNULL(`email`,''), '::', IFNULL(`profile_image`,'')) FROM `" . DB::table('customers') . "` WHERE `id`=subtb1.`customer_id`), '::', `status`, '::', IFNULL(`id`,''), '::', IFNULL(`created_at`,'') ) FROM `" . DB::table('appointment_customers') . "` subtb1 WHERE `appointment_id`=tb1.`id`) AS customers
+				(SELECT group_concat( (SELECT concat(IFNULL(`first_name`,''), ' ', IFNULL(`last_name`,''), '::', IFNULL(`email`,''), '::', IFNULL(`profile_image`, ''), '::', IFNULL(`phone_number`, '')) FROM `" . DB::table('customers') . "` WHERE `id`=subtb1.`customer_id`), '::', `status`, '::', IFNULL(`id`,''), '::', IFNULL(`created_at`,'') ) FROM `" . DB::table('appointment_customers') . "` subtb1 WHERE `appointment_id`=tb1.`id`) AS customers
 			FROM `" . DB::table('appointments') . "` tb1
 			LEFT JOIN `" . DB::table('staff') . "` tb2 ON tb2.id=tb1.staff_id
 			".Permission::queryFilter('appointments', 'tb1.staff_id', 'WHERE', 'tb1.tenant_id') );
 
 		$dataTable->setTableName('appointments');
+        $dataTable->activateExportBtn();
 
 		$dataTable->addFilter( 'date', 'date', bkntc__('Date'), '=' );
 		$dataTable->addFilter( 'service_id', 'select', bkntc__('Service'), '=', [
@@ -68,7 +69,7 @@ class Main extends Controller
 			$customers = explode(',', $appointment['customers']);
 			$customer_first = explode('::', $customers[0]);
 
-			return isset($customer_first[4]) ? $customer_first[4] : '-';
+			return isset($customer_first[5]) ? $customer_first[5] : '-';
 		}, ['order_by_field' => 'date,start_time']);
 
 		$dataTable->addColumns(bkntc__('DATE'), function( $appointment )
@@ -99,14 +100,33 @@ class Main extends Controller
 				}
 				$customerNameAndStatus = explode('::', $customerName);
 
-				if( !isset($customerNameAndStatus[1]) || !isset($customerNameAndStatus[2]) || !isset($customerNameAndStatus[3]) )
+				if( !isset($customerNameAndStatus[1]) || !isset($customerNameAndStatus[2]) || !isset($customerNameAndStatus[4]) )
 					continue;
 
-				$customersTxt .= Helper::profileCard( $customerNameAndStatus[0], $customerNameAndStatus[2], $customerNameAndStatus[1], 'Customers' ) . ' <span class="appointment-status-' . htmlspecialchars( $customerNameAndStatus[3] ) .'"></span><br/>';
+				$customersTxt .= Helper::profileCard( $customerNameAndStatus[0], $customerNameAndStatus[2], $customerNameAndStatus[1], 'Customers' ) . ' <span class="appointment-status-' . htmlspecialchars( $customerNameAndStatus[4] ) .'"></span><br/>';
 			}
 
 			return '<div class="d-flex align-items-center">'.$customersTxt.'</div>';
-		}, ['is_html' => true]);
+		}, ['is_html' => true], true);
+
+        $dataTable->addColumnsForExport(bkntc__('Customer (s)'), function( $appointment )
+        {
+            $customers = explode(',', $appointment['customers']);
+
+            $customersTxt = '';
+            foreach ( $customers AS $key => $customerName )
+            {
+                $customerNameAndStatus = explode('::', $customerName);
+
+                if( !isset($customerNameAndStatus[1]) || !isset($customerNameAndStatus[2]) || !isset($customerNameAndStatus[3]) )
+                    continue;
+
+
+                $customersTxt .= $customerNameAndStatus[0].' '. $customerNameAndStatus[2]. ' '. $customerNameAndStatus[1]. ' '. $customerNameAndStatus[3]. (isset($customers[$key + 1]) ? ' | ' : '');
+            }
+
+            return $customersTxt;
+        });
 
 		$dataTable->addColumns(bkntc__('STAFF'), function($appointment)
 		{
@@ -128,7 +148,7 @@ class Main extends Controller
 			$customers = explode(',', $appointment['customers']);
 			$customer = explode( '::', $customers[0] );
 
-			return isset( $customer[5] ) && Date::isValid( $customer[5] ) ? Date::dateTime( $customer[5] ) : '-';
+			return isset( $customer[6] ) && Date::isValid( $customer[6] ) ? Date::dateTime( $customer[6] ) : '-';
 		}, ['is_html' => true]);
 
 		$table = $dataTable->renderHTML();

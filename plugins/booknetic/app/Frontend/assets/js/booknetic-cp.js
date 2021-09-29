@@ -34,7 +34,7 @@ var bookneticPaymentStatus;
 		{
 			if( typeof onOff === 'undefined' || onOff )
 			{
-				$('#booknetic_progress').removeClass('booknetic_progress_done');
+				$('#booknetic_progress').removeClass('booknetic_progress_done').show();
 				$({property: 0}).animate({property: 100}, {
 					duration: 1000,
 					step: function()
@@ -47,16 +47,17 @@ var bookneticPaymentStatus;
 					}
 				});
 
-				var tpl = this.parseHTML(this.options.templates.loader);
-				tpl.firstChild.setAttribute('id' , 'pro-loading-element261272');
-				document.body.insertBefore( tpl , document.body.lastChild);
+				$('body').append( this.options.templates.loader );
 			}
-			else if( document.getElementById( 'pro-loading-element261272' ) !== null )
+			else if( ! $('#booknetic_progress').hasClass('booknetic_progress_done') )
 			{
 				$('#booknetic_progress').addClass('booknetic_progress_done').css('width', 0);
 
-				var prnt = document.getElementById( 'pro-loading-element261272' );
-				prnt.parentNode.removeChild(prnt);
+				// IOS bug...
+				setTimeout(function ()
+				{
+					$('.booknetic_loading_layout').remove();
+				}, 0);
 			}
 		},
 
@@ -282,6 +283,11 @@ var bookneticPaymentStatus;
 			select.select2({
 				theme: 'bootstrap',
 				placeholder: __('select'),
+				language: {
+					searching: function() {
+						return __('searching');
+					}
+				},
 				allowClear: true,
 				ajax: {
 					url: BookneticData.ajax_url,
@@ -368,11 +374,37 @@ var bookneticPaymentStatus;
 			} , typeof duration != 'undefined' ? duration : 4000);
 		},
 
+		timeZoneOffset: function()
+		{
+			if( BookneticData.client_time_zone == 'off' )
+				return  '-';
+
+			if ( window.Intl && typeof window.Intl === 'object' )
+			{
+				return Intl.DateTimeFormat().resolvedOptions().timeZone;
+			}
+			else
+			{
+				return new Date().getTimezoneOffset();
+			}
+		}
 
 	};
 
 	$(document).ready( function()
 	{
+		if( BookneticData.client_timezone != 'off' && BookneticData.tz_offset_param === '-' )
+		{
+			location.href = location.href + (location.href.indexOf('?') === -1 ? '?' : '&') + 'client_time_zone=' + booknetic.timeZoneOffset();
+		}
+
+		if( 'datepicker' in $.fn )
+		{
+			$.fn.datepicker.dates['en']['months'] = [__('January'), __('February'), __('March'), __('April'), __('May'), __('June'), __('July'), __('August'), __('September'), __('October'), __('November'), __('December')];
+			$.fn.datepicker.dates['en']['days'] = [__('Sun'), __('Mon'), __('Tue'), __('Wed'), __('Thu'), __('Fri'), __('Sat')];
+			$.fn.datepicker.dates['en']['daysShort'] = $.fn.datepicker.dates['en']['days'];
+			$.fn.datepicker.dates['en']['daysMin'] = $.fn.datepicker.dates['en']['days'];
+		}
 
 		$(document).on('click', '#booknetic-toaster .booknetic-toast-remove', function ()
 		{
@@ -441,6 +473,8 @@ var bookneticPaymentStatus;
 				id			= tr.data('id'),
 				date		= tr.data('date'),
 				time		= tr.data('time'),
+				date_show	= tr.data('date-show'),
+				time_show	= tr.data('time-show'),
 				datebased	= tr.data('datebased');
 
 			if( datebased )
@@ -452,8 +486,8 @@ var bookneticPaymentStatus;
 				$('#booknetic_reschedule_popup_time_area').show();
 			}
 
-			$('#booknetic_reschedule_popup_date').datepicker("update", new Date(date));
-			$('#booknetic_reschedule_popup_time').html( '<option select="">'+time+'</option>' );
+			$('#booknetic_reschedule_popup_date').datepicker("update", date);
+			$('#booknetic_reschedule_popup_time').html( '<option select="" value="'+time+'">'+time_show+'</option>' );
 
 			$('#booknetic_cp_reschedule_popup').data('appointment-id', id).removeClass('booknetic_hidden').hide().fadeIn(200);
 		}).on('click', '.booknetic_reschedule_popup_confirm', function ()
@@ -471,6 +505,7 @@ var bookneticPaymentStatus;
 				var tr = $('#booknetic_tab_appointments tr[data-id="'+dataid+'"]');
 				tr.find('.td_datetime').text(result['datetime']);
 				tr.find('.booknetic_cancel_btn').removeClass('booknetic_hidden').show();
+				tr.find('.booknetic_appointment_status_td > span').attr('class', 'booknetic_appointment_status_' + result['appointment_status']).text( result['appointment_status_text'] );
 
 				tr.data('date', date);
 				tr.data('time', time);
@@ -497,6 +532,7 @@ var bookneticPaymentStatus;
 
 				tr.find('.td_status').text(result['status']);
 				tr.find('.booknetic_cancel_btn').hide();
+				tr.find('.booknetic_appointment_status_td > span').attr('class', 'booknetic_appointment_status_' + result['appointment_status']).text( result['appointment_status_text'] );
 
 				booknetic.toast( result['message'] );
 
@@ -512,6 +548,9 @@ var bookneticPaymentStatus;
 				booknetic.loading(1);
 				location.href = result['redirect_url'];
 			});
+		}).on('change', '#booknetic_reschedule_popup_date', function ()
+		{
+			$('#booknetic_reschedule_popup_time').val('').trigger('change');
 		});
 
 		$("#booknetic_reschedule_popup_date, #booknetic_input_birthdate").datepicker({

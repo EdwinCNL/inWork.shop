@@ -25,6 +25,7 @@ use BookneticApp\Providers\Backend;
 use BookneticApp\Providers\Date;
 use BookneticApp\Providers\DB;
 use BookneticApp\Providers\Helper;
+use BookneticApp\Providers\Math;
 use BookneticApp\Providers\Permission;
 
 class Ajax extends \BookneticApp\Providers\Ajax
@@ -32,7 +33,21 @@ class Ajax extends \BookneticApp\Providers\Ajax
 
 	public function add_new()
 	{
-		$this->modalView( 'add_new', [] );
+        $date = Helper::_post('date', '', 'string');
+		$locations = Location::where('is_active', 1)->fetchAll();
+		if( count( $locations ) == 1 )
+		{
+			$locationInf = $locations[0];
+		}
+		else
+		{
+			$locationInf = false;
+		}
+
+		$this->modalView( 'add_new', [
+			'location'  =>  $locationInf,
+            'date' => $date
+		] );
 	}
 
 	public function edit()
@@ -261,6 +276,8 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		$customers				=	json_decode($customers, true);
 		$service_extras			=	json_decode($service_extras, true);
 
+		$date = Date::reformatDateFromCustomFormat($date);
+
 		if( (!empty( $date ) && !Date::isValid( $date )) || (!empty( $time ) && !Date::isValid( $time )) )
 		{
 			Helper::response(false, bkntc__('Please fill the "Date" and "Time" field correctly!'));
@@ -286,6 +303,17 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			}
 
 			$numberOfCustomersSum += (int)$customer['number'];
+		}
+
+		$getServiceInfo = Service::get( $service );
+		
+		if( $getServiceInfo['max_capacity'] == 1 && $numberOfCustomersSum > 1 )
+		{
+			Helper::response( false, bkntc__('Selected service is not group service. So you cannot add more than 1 customer.') );
+		}
+		else if( $getServiceInfo['max_capacity'] < $numberOfCustomersSum )
+		{
+			Helper::response( false, bkntc__('The maximum capacity of the service is %d. You cannot add more than %d customers.', [(int)$getServiceInfo['max_capacity'], (int)$getServiceInfo['max_capacity']]) );
 		}
 
 		$extras_arr	= [];
@@ -344,6 +372,8 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		$send_notifications	=	Helper::_post('send_notifications', '0', 'int', ['1']);
 		$service_extras		=	Helper::_post('extras', '', 'str');
 
+		$date = Date::reformatDateFromCustomFormat($date);
+
 		if( empty( $location ) || empty( $service ) || empty( $staff ) || empty( $customers ) )
 		{
 			Helper::response(false, bkntc__('Please fill in all required fields correctly!'));
@@ -355,29 +385,6 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		if( $dayDif > $available_days_for_booking )
 		{
 			Helper::response(false, bkntc__('Limited booking days is %d' , [ (int)$available_days_for_booking ]) );
-		}
-
-		$appointmentStatusIsCanceled = true;
-		$numberOfCustomersSum = 0;
-		foreach ( $customers AS $customer )
-		{
-			if( ! (
-				isset( $customer['id'] ) && is_numeric($customer['id']) && $customer['id'] >= 0
-				&& isset( $customer['cid'] ) && is_numeric($customer['cid']) && $customer['cid'] > 0
-				&& isset( $customer['status'] ) && is_string($customer['status']) && in_array( $customer['status'], ['approved', 'pending', 'canceled', 'rejected'] )
-				&& isset( $customer['number'] ) && is_numeric($customer['number']) && $customer['number'] >= 0
-			)
-			)
-			{
-				Helper::response(false, bkntc__('Please select customers!'));
-			}
-
-			if( $customer['status'] != 'canceled' && $customer['status'] != 'rejected' )
-			{
-				$appointmentStatusIsCanceled = false;
-			}
-
-			$numberOfCustomersSum += (int)$customer['number'];
 		}
 
 		$getAppointmentInfo	= Appointment::get( $id );
@@ -398,6 +405,38 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		if( !$getAppointmentInfo || !$getServiceInfo || !$getLocationInfo || !$getStaffInfo || !$getStaffService )
 		{
 			Helper::response(false, bkntc__('Please fill in all required fields correctly!'));
+		}
+
+		$appointmentStatusIsCanceled = true;
+		$numberOfCustomersSum = 0;
+		foreach ( $customers AS $customer )
+		{
+			if( ! (
+				isset( $customer['id'] ) && is_numeric($customer['id']) && $customer['id'] >= 0
+				&& isset( $customer['cid'] ) && is_numeric($customer['cid']) && $customer['cid'] > 0
+				&& isset( $customer['status'] ) && is_string($customer['status']) && in_array( $customer['status'], ['approved', 'pending', 'waiting_for_payment', 'canceled', 'rejected'] )
+				&& isset( $customer['number'] ) && is_numeric($customer['number']) && $customer['number'] >= 0
+			)
+			)
+			{
+				Helper::response(false, bkntc__('Please select customers!'));
+			}
+
+			if( $customer['status'] != 'canceled' && $customer['status'] != 'rejected' )
+			{
+				$appointmentStatusIsCanceled = false;
+			}
+
+			$numberOfCustomersSum += (int)$customer['number'];
+		}
+
+		if( $getServiceInfo['max_capacity'] == 1 && $numberOfCustomersSum > 1 )
+		{
+			Helper::response( false, bkntc__('Selected service is not group service. So you cannot add more than 1 customer.') );
+		}
+		else if( $getServiceInfo['max_capacity'] < $numberOfCustomersSum )
+		{
+			Helper::response( false, bkntc__('The maximum capacity of the service is %d. You cannot add more than %d customers.', [(int)$getServiceInfo['max_capacity'], (int)$getServiceInfo['max_capacity']]) );
 		}
 
 		$price = $getStaffService['price'] == -1 ? $getServiceInfo['price'] : $getStaffService['price'];
@@ -997,9 +1036,8 @@ class Ajax extends \BookneticApp\Providers\Ajax
 	public function get_customers()
 	{
 		$search = Helper::_post('q', '', 'string');
-
 		$services = DB::DB()->get_results(
-			DB::DB()->prepare( "SELECT * FROM `" . DB::table('customers') . "` WHERE CONCAT(`first_name`, ' ', `last_name`) LIKE %s " . Permission::myCustomers() . " LIMIT 0,100" , [ '%' . $search . '%' ]),
+			DB::DB()->prepare( "SELECT * FROM `" . DB::table('customers') . "` WHERE (CONCAT(`first_name`, ' ', `last_name`) LIKE %s OR `email` LIKE %s) " . Permission::myCustomers() . " LIMIT 0,100" , [ '%' . $search . '%', '%' . $search . '%' ]),
 			ARRAY_A
 		);
 
@@ -1025,11 +1063,12 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		$staff			= Helper::_post('staff', 0, 'int');
 		$date			= Helper::_post('date', '', 'string');
 
+		$date           = Date::reformatDateFromCustomFormat( $date );
+
 		$service_extras	= Helper::_post('extras', '[]', 'string');
 		$service_extras	= json_decode($service_extras, true);
 
 		$extras_arr	= [];
-
 		foreach ( $service_extras AS $extraInf )
 		{
 			if( !( is_array( $extraInf )
@@ -1153,6 +1192,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		$paymentId		= Helper::_post('id', 0, 'integer');
 		$service_amount	= Helper::_post('service_amount', null, 'float');
 		$extras_amount	= Helper::_post('extras_amount', null, 'float');
+		$tax_amount  	= Helper::_post('tax_amount', null, 'float');
 		$discount		= Helper::_post('discount', null, 'float');
 		$paid_amount	= Helper::_post('paid_amount', null, 'float');
 		$status			= Helper::_post('status', null, 'string', ['paid', 'paid_deposit', 'pending']);
@@ -1176,7 +1216,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			Helper::response(false, bkntc__('Appointment not found or permission denied!'));
 		}
 
-		$dueAmount = Helper::floor( $service_amount ) + Helper::floor( $extras_amount ) - Helper::floor( $discount ) - Helper::floor( $paid_amount );
+		$dueAmount = Math::floor( $service_amount ) + Math::floor( $extras_amount ) + Math::floor( $tax_amount ) - Math::floor( $discount ) - Math::floor( $paid_amount );
 
 		if( $dueAmount < 0 )
 		{
@@ -1186,6 +1226,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		AppointmentCustomer::where('id', $paymentId)->update([
 			'service_amount'	=>	$service_amount,
 			'extras_amount'		=>	$extras_amount,
+			'tax_amount'		=>	$tax_amount,
 			'discount'			=>	$discount,
 			'paid_amount'		=>	$paid_amount,
 			'payment_status'	=>	$status
@@ -1218,6 +1259,14 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		$location	=	Helper::_post('location', '0', 'integer');
 		$startDate	=	Helper::_post('start', '', 'string');
 		$endDate	=	Helper::_post('end', '', 'string');
+
+		$startDate  = date( 'Y-m-d' , strtotime($startDate) );
+		$endDate    = date( 'Y-m-d' , strtotime($endDate) );
+		
+		if( !Date::isValid( $endDate ) )
+		{
+			$endDate = date("Y-m-d", strtotime("+100 years", strtotime($startDate)));
+		}
 
 		if( !Date::isValid( $startDate ) || !Date::isValid( $endDate ) )
 		{

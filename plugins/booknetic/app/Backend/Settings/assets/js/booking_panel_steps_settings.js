@@ -17,7 +17,9 @@
 				skip_extras_step_if_need			= $("#input_skip_extras_step_if_need").is(':checked') ? 'on' : 'off',
 				disable_payment_options				= $("#input_disable_payment_options").is(':checked') ? 'on' : 'off',
 				hide_coupon_section					= $("#input_hide_coupon_section").is(':checked') ? 'on' : 'off',
+				hide_giftcard_section				= $("#input_hide_giftcard_section").is(':checked') ? 'on' : 'off',
 				hide_discount_row					= $("#input_hide_discount_row").is(':checked') ? 'on' : 'off',
+				hide_gift_discount_row				= $("#input_hide_gift_discount_row").is(':checked') ? 'on' : 'off',
 				hide_price_section					= $("#input_hide_price_section").is(':checked') ? 'on' : 'off',
 				hide_add_to_google_calendar_btn		= $("#input_hide_add_to_google_calendar_btn").is(':checked') ? 'on' : 'off',
 				hide_start_new_booking_btn			= $("#input_hide_start_new_booking_btn").is(':checked') ? 'on' : 'off',
@@ -56,7 +58,9 @@
 				separate_first_and_last_name: separate_first_and_last_name,
 				disable_payment_options: disable_payment_options,
 				hide_coupon_section: hide_coupon_section,
+				hide_giftcard_section: hide_giftcard_section,
 				hide_discount_row: hide_discount_row,
+				hide_gift_discount_row: hide_gift_discount_row,
 				hide_price_section: hide_price_section,
 				hide_add_to_google_calendar_btn: hide_add_to_google_calendar_btn,
 				hide_start_new_booking_btn: hide_start_new_booking_btn,
@@ -109,7 +113,7 @@
 			handle: ".drag_drop_helper"
 		});
 
-		$('.step_elements_list > .step_element:eq(0)').trigger('click');
+		$('.step_elements_list > .step_element:not(.hidden):eq(0)').trigger('click');
 
 		var phone_input = $('#input_default_phone_country_code');
 
