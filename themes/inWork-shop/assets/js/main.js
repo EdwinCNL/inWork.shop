@@ -111,6 +111,7 @@ function sliderDot(number) {
 
 }
 
+// this functions is for the burger in the menu
 const menuBtn = document.getElementById("menuBurger");
 let menuOpen = false;
 menuBtn.addEventListener('click', () => {
@@ -125,3 +126,11 @@ menuBtn.addEventListener('click', () => {
     }
 });
 
+window.addEventListener("scroll", () => {
+    const scrolled = window.scrollY;
+    if(scrolled >= 2) {
+        document.getElementById("navContainer").classList.add('blur');
+    } else {
+        document.getElementById("navContainer").classList.remove('blur');
+    }
+});

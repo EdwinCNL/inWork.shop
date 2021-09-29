@@ -1,16 +1,16 @@
 /* Theme Name: inWork.shop Author: Edwin Cornelisse Author URI: www.edwincornelisse.nl Description: This theme is specifically build for the website inWork.shop. Version: 1.1 */
 /* Fixed styles for desktop and mobile. */
-@font-face { font-family: 'lato-light'; src: url("wp-content/themes/inWork-shop/assets/fonts/lato-light-webfont.woff2") format("woff2"), url("wp-content/themes/inWork-shop/assets/fonts/lato-light-webfont.woff") format("woff"); font-weight: normal; font-style: normal; }
+@font-face { font-family: 'lato-light'; src: url("/wp-content/themes/inWork-shop/assets/fonts/lato-light-webfont.woff2") format("woff2"), url("/wp-content/themes/inWork-shop/assets/fonts/lato-light-webfont.woff") format("woff"); font-weight: normal; font-style: normal; }
 
-@font-face { font-family: 'Lato-regular'; src: url("wp-content/themes/inWork-shop/assets/fonts/lato-regular-webfont.woff2") format("woff2"), url("wp-content/themes/inWork-shop/assets/fonts/lato-regular-webfont.woff") format("woff"); font-weight: normal; font-style: normal; }
+@font-face { font-family: 'lato-regular'; src: url("/wp-content/themes/inWork-shop/assets/fonts/lato-regular-webfont.woff2") format("woff2"), url("/wp-content/themes/inWork-shop/assets/fonts/lato-regular-webfont.woff") format("woff"); font-weight: normal; font-style: normal; }
 
-@font-face { font-family: 'Lato-bold'; src: url("wp-content/themes/inWork-shop/assets/fonts/lato-bold-webfont.woff2") format("woff2"), url("wp-content/themes/inWork-shop/assets/fonts/lato-bold-webfont.woff") format("woff"); font-weight: normal; font-style: normal; }
+@font-face { font-family: 'lato-bold'; src: url("/wp-content/themes/inWork-shop/assets/fonts/lato-bold-webfont.woff2") format("woff2"), url("/wp-content/themes/inWork-shop/assets/fonts/lato-bold-webfont.woff") format("woff"); font-weight: normal; font-style: normal; }
 
-h1 { font-family: Lato-light; font-size: 3rem; margin: 0; }
+h1 { font-family: lato-light; font-size: 3rem; margin: 0; }
 
-h2 { font-family: Lato-bold; font-size: 2.3rem; margin: 0; }
+h2 { font-family: lato-bold; font-size: 2.3rem; margin: 0; }
 
-h3 { font-family: Lato-regular; font-size: 1.5rem; margin: 0; }
+h3 { font-family: lato-regular; font-size: 1.5rem; margin: 0; }
 
 .font-white { color: #FFFFFF; }
 
@@ -33,7 +33,7 @@ main, footer { width: 100%; max-width: 1120px; margin: auto; }
 
 .section-container__hero .hero__image-container { position: absolute; height: 280px; width: 280px; -webkit-border-radius: 15vh; -moz-border-radius: 15vh; border-radius: 25vh; background-color: rgba(255, 255, 255, 0.4); border: 1px solid rgba(255, 255, 255, 0.8); right: 10%; bottom: 22px; }
 
-.section-container__hero .hero__image-container .hero__image { background-image: url("/wp-content/themes/inWork-shop/assets/images/girl-with-pen.png"); position: absolute; background-size: contain; background-repeat: no-repeat; height: 370px; width: 230px; bottom: -13px; right: 14px; z-index: 10000; }
+.section-container__hero .hero__image-container .hero__image { position: absolute; background-size: contain; background-repeat: no-repeat; height: 370px; width: 230px; bottom: -13px; right: 14px; z-index: 10000; }
 
 .section-container__booker { display: flex; justify-content: center; margin-top: 24px; }
 
@@ -63,35 +63,41 @@ main, footer { width: 100%; max-width: 1120px; margin: auto; }
 
 .nav__container-holder { position: relative; display: flex; justify-content: center; z-index: 1000; left: 0; top: 0; right: 0; height: 68px; }
 
-.nav__container { display: flex; position: fixed; flex-direction: row; justify-content: space-between; height: 68px; background-color: #FFFFFF; width: 100%; max-width: 1120px; }
+.blur { background: rgba(255, 255, 255, 0.45); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(255, 255, 255, 0.18); transition: all 0.3s ease-in-out; border-bottom-right-radius: 8px; border-bottom-left-radius: 8px; transition: box-shadow 0.4s ease-in-out; }
 
-.nav__container .nav__container-right { right: 0; position: relative; height: 68px; }
+.nav__container { display: flex; position: fixed; flex-direction: row; justify-content: space-between; height: 68px; width: 100%; max-width: 1120px; transition: all 0.3s ease-in-out; transition: box-shadow 0.4s ease-in-out; }
 
-.nav__container .nav__container-right .nav__burger { display: block; width: 38px; right: 0; margin-top: 30px; position: relative; cursor: pointer; }
+.nav__container .nav__container-right { right: 0; position: relative; height: 68px; margin-right: 12px; }
 
-.nav__container .nav__container-right .nav__burger .nav__burger-btn { width: 38px; height: 4px; background: #007BFF; border-radius: 2px; transition: all .5s ease-in-out; }
+.nav__container .nav__container-right .nav__burger { display: flex; align-items: center; height: 68px; width: 30px; right: 0; position: relative; cursor: pointer; }
 
-.nav__container .nav__container-right .nav__burger .nav__burger-btn:before, .nav__container .nav__container-right .nav__burger .nav__burger-btn:after { content: ''; position: absolute; width: 38px; height: 4px; background: #007BFF; border-radius: 5px; transition: all .5s ease-in-out; }
+.nav__container .nav__container-right .nav__burger .nav__burger-btn { width: 30px; height: 4px; background: #007BFF; border-radius: 2px; transition: all .5s ease-in-out; }
+
+.nav__container .nav__container-right .nav__burger .nav__burger-btn:before, .nav__container .nav__container-right .nav__burger .nav__burger-btn:after { content: ''; position: absolute; width: 30px; height: 4px; background: #007BFF; border-radius: 5px; transition: all .5s ease-in-out; }
 
 .nav__container .nav__container-right .nav__burger .nav__burger-btn:before { transform: translateY(-16px); }
 
 .nav__container .nav__container-right .nav__burger .nav__burger-btn:after { transform: translateY(16px); }
 
-.nav__container .nav__container-right .nav__burger.open .nav__burger-btn { transform: translateX(-50px); background: transparent; }
+.nav__container .nav__container-right .nav__burger.open .nav__burger-btn { transform: translateX(-30px); background: transparent; }
 
-.nav__container .nav__container-right .nav__burger.open .nav__burger-btn:before { -webkit-transform: rotate(45deg) translate(35px, -35px); -moz-transform: rotate(45deg) translate(35px, -35px); -ms-transform: rotate(45deg) translate(35px, -35px); -o-transform: rotate(45deg) translate(35px, -35px); transform: rotate(45deg) translate(35px, -35px); }
+.nav__container .nav__container-right .nav__burger.open .nav__burger-btn:before { -webkit-transform: rotate(45deg) translate(20px, -20px); -moz-transform: rotate(45deg) translate(20px, -20px); -ms-transform: rotate(45deg) translate(20px, -20px); -o-transform: rotate(45deg) translate(20px, -20px); transform: rotate(45deg) translate(20px, -20px); }
 
-.nav__container .nav__container-right .nav__burger.open .nav__burger-btn:after { -webkit-transform: rotate(-45deg) translate(35px, 35px); -moz-transform: rotate(-45deg) translate(35px, 35px); -ms-transform: rotate(-45deg) translate(35px, 35px); -o-transform: rotate(-45deg) translate(35px, 35px); transform: rotate(-45deg) translate(35px, 35px); }
+.nav__container .nav__container-right .nav__burger.open .nav__burger-btn:after { -webkit-transform: rotate(-45deg) translate(20px, 20px); -moz-transform: rotate(-45deg) translate(20px, 20px); -ms-transform: rotate(-45deg) translate(20px, 20px); -o-transform: rotate(-45deg) translate(20px, 20px); transform: rotate(-45deg) translate(20px, 20px); }
 
-.nav__container .nav__container-right .nav__dropdown-container { position: absolute; width: 198px; right: 0; display: none; justify-content: center; background: white; top: 68px; }
+.nav__container .nav__container-right .nav__dropdown-container { position: absolute; width: 198px; right: 0; display: none; justify-content: center; top: 68px; background: rgba(255, 255, 255, 0.45); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(255, 255, 255, 0.18); border-bottom-right-radius: 8px; border-bottom-left-radius: 8px; border-top: none; }
 
 .nav__container .nav__container-right .show_nav { display: flex; }
 
 .nav__container .nav__container-right ul { display: flex; flex-direction: column; margin-right: 16px; list-style-type: none; }
 
-.nav__container .nav__container-right ul li { display: block; padding: 12px 0; border-bottom: 1px solid black; width: 150px; background-color: #FFFFFF; }
+.nav__container .nav__container-right ul li { display: block; padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.3); width: 150px; text-align: center; }
 
-.nav__container .nav__container-right ul li a { text-decoration: none; line-height: 2; }
+.nav__container .nav__container-right ul li:last-child { border-bottom: none; }
+
+.nav__container .nav__container-right ul li a { font-family: lato-light; font-size: 1.2rem; text-decoration: none; line-height: 2; color: #007BFF; }
+
+.nav__container .nav__container-right ul li a:hover { color: #6610F2; }
 
 .nav__container .nav__container-left { margin-left: 16px; }
 

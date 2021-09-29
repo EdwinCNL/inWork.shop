@@ -24,7 +24,7 @@
 <?php } else {  ?>
 
     <header class="nav__container-holder">
-        <section class="nav__container">
+        <section id="navContainer" class="nav__container">
             <div class="nav__container-left">
                 <a href="<?php get_home_url() ?>">
                     <img src="<?php echo site_url() . "/wp-content/themes/inWork-shop/assets/images/" ?>inWorkshop-logo.png">

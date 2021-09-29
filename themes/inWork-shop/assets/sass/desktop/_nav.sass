@@ -20,27 +20,37 @@
   right: 0
   height: $nav-height
 
+.blur
+  @include glassmorphism()
+  transition: all 0.3s ease-in-out
+  border-bottom-right-radius: 8px
+  border-bottom-left-radius: 8px
+  transition: box-shadow 0.4s ease-in-out
+
 .nav__container
   display: flex
   position: fixed
   flex-direction: row
   justify-content: space-between
   height: $nav-height
-  background-color: $white
   @include page-width()
+  transition: all 0.3s ease-in-out
+  transition: box-shadow 0.4s ease-in-out
   .nav__container-right
     right: 0
     position: relative
     height: $nav-height
+    margin-right: 12px
     .nav__burger
-      display: block
-      width: 38px
+      display: flex
+      align-items: center
+      height: 68px
+      width: 30px
       right: 0
-      margin-top: 30px
       position: relative
       cursor: pointer
       .nav__burger-btn
-        width: 38px
+        width: 30px
         height: 4px
         background: $blue
         border-radius: 2px
@@ -48,7 +58,7 @@
         &:before, &:after
           content: ''
           position: absolute
-          width: 38px
+          width: 30px
           height: 4px
           background: $blue
           border-radius: 5px
@@ -58,20 +68,22 @@
         &:after
           transform: translateY(16px)
     .nav__burger.open .nav__burger-btn
-      transform: translateX(-50px)
+      transform: translateX(-30px)
       background: transparent
       &:before
-        -webkit-transform: rotate(45deg) translate(35px, -35px)
-        -moz-transform: rotate(45deg) translate(35px, -35px)
-        -ms-transform: rotate(45deg) translate(35px, -35px)
-        -o-transform: rotate(45deg) translate(35px, -35px)
-        transform: rotate(45deg) translate(35px, -35px)
+        $burger-translateB: 20px, -20px
+        -webkit-transform: rotate(45deg) translate($burger-translateB)
+        -moz-transform: rotate(45deg) translate($burger-translateB)
+        -ms-transform: rotate(45deg) translate($burger-translateB)
+        -o-transform: rotate(45deg) translate($burger-translateB)
+        transform: rotate(45deg) translate($burger-translateB)
       &:after
-        -webkit-transform: rotate(-45deg) translate(35px, 35px)
-        -moz-transform: rotate(-45deg) translate(35px, 35px)
-        -ms-transform: rotate(-45deg) translate(35px, 35px)
-        -o-transform: rotate(-45deg) translate(35px, 35px)
-        transform: rotate(-45deg) translate(35px, 35px)
+        $burger-translateA: 20px, 20px
+        -webkit-transform: rotate(-45deg) translate($burger-translateA)
+        -moz-transform: rotate(-45deg) translate($burger-translateA)
+        -ms-transform: rotate(-45deg) translate($burger-translateA)
+        -o-transform: rotate(-45deg) translate($burger-translateA)
+        transform: rotate(-45deg) translate($burger-translateA)
 
     .nav__dropdown-container
       position: absolute
@@ -79,8 +91,11 @@
       right: 0
       display: none
       justify-content: center
-      background: white
       top: 68px
+      @include glassmorphism()
+      border-bottom-right-radius: 8px
+      border-bottom-left-radius: 8px
+      border-top: none
     .show_nav
       display: flex
     ul
@@ -91,15 +106,21 @@
       li
         display: block
         padding: 12px 0
-        border-bottom: 1px solid black
+        border-bottom: 1px solid rgba(255,255,255,0.3)
         width: 150px
-        background-color: $white
+        text-align: center
+        &:last-child
+          border-bottom: none
         a
+          font-family: lato-light
+          font-size: 1.2rem
           text-decoration: none
           line-height: 2
+          color: $blue
+          &:hover
+            color: $purple
   .nav__container-left
     margin-left: $page-margin
-
 
 
 // Footer navigation
