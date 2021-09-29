@@ -338,7 +338,9 @@
 		var first_change = true;
 		$(".fs-modal #input_date").datepicker({
 			autoclose: true,
-			format: 'yyyy-mm-dd',
+			format: dateFormat.replace('YYYY','Y').replace('Y', 'yyyy')
+				.replace('MM', 'm').replace('m', 'mm')
+				.replace('DD','d').replace('d', 'dd'),
 			weekStart: weekStartsOn == 'sunday' ? 0 : 1
 		});
 

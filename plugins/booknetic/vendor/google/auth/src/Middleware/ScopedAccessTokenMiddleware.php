@@ -98,8 +98,8 @@ class ScopedAccessTokenMiddleware
      *
      *   use google\appengine\api\app_identity\AppIdentityService;
      *   use Google\Auth\Middleware\ScopedAccessTokenMiddleware;
-     *   use GuzzleHttp\Client;
-     *   use GuzzleHttp\HandlerStack;
+     *   use Booknetic_GuzzleHttp\Client;
+     *   use Booknetic_GuzzleHttp\HandlerStack;
      *
      *   $scope = 'https://www.googleapis.com/auth/taskqueue'
      *   $middleware = new ScopedAccessTokenMiddleware(

@@ -1,7 +1,6 @@
 <?php
 namespace BookneticApp\Frontend\view;
 
-use BookneticApp\Providers\DB;
 use BookneticApp\Providers\Helper;
 use BookneticApp\Providers\Date;
 
@@ -11,8 +10,6 @@ if( count( $parameters['services'] ) == 0 )
 {
 	print '<div class="booknetic_empty_box"><img src="' . Helper::assets('images/empty-service.svg', 'front-end') . '"><span>' . bkntc__('Service not found. Please go back and select a different option.') . '</div>';
 }
-
-
 
 $lastCategoryPrinted = null;
 foreach ( $parameters['services'] AS $eq => $serviceInf )

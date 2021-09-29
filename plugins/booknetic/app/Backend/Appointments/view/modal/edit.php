@@ -31,8 +31,16 @@ function customerTpl( $display = false, $cid = 0, $customerId = null, $customerN
 		],
 	];
 
-	$status = isset( $statuses[ $status ] ) ? $status : 'approved';
+	if( $status == 'waiting_for_payment' )
+	{
+		$statuses['waiting_for_payment'] = [
+			'title'	=>	bkntc__('Waiting'),
+			'color'	=>	'#fd9b78',
+			'icon'	=>	'far fa-clock'
+		];
+	}
 
+	$status = isset( $statuses[ $status ] ) ? $status : 'approved';
 	?>
 	<div class="form-row customer-tpl<?php print ($display?'':' hidden')?>"<?php print (' data-id="' . $cid . '"')?>>
 		<div class="col-md-6">
@@ -139,7 +147,7 @@ function customerTpl( $display = false, $cid = 0, $customerId = null, $customerN
 							<label for="input_date"><?php print bkntc__('Date')?> <span class="required-star">*</span></label>
 							<div class="inner-addon left-addon">
 								<i><img src="<?php print Helper::icon('calendar.svg')?>"/></i>
-								<input class="form-control" id="input_date" placeholder="<?php print bkntc__('Select...')?>" value="<?php print Date::dateSQL( $parameters['info']['date'] )?>">
+								<input class="form-control" id="input_date" placeholder="<?php print bkntc__('Select...')?>" value="<?php print Date::format(Helper::getOption('date_format', 'Y-m-d'), $parameters['info']['date'] )?>">
 							</div>
 						</div>
 						<div class="form-group col-md-6">
@@ -147,7 +155,7 @@ function customerTpl( $display = false, $cid = 0, $customerId = null, $customerN
 							<div class="inner-addon left-addon">
 								<i><img src="<?php print Helper::icon('time.svg')?>"/></i>
 								<select class="form-control" id="input_time">
-									<option selected><?php print Date::time( $parameters['info']['start_time'] )?></option>
+									<option selected><?php print ! empty( $parameters['info']['start_time'] ) ? Date::time( $parameters['info']['start_time'] ) : ''; ?></option>
 								</select>
 							</div>
 						</div>

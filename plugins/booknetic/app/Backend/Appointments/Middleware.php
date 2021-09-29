@@ -2,6 +2,7 @@
 
 namespace BookneticApp\Backend\Appointments;
 
+use BookneticApp\Backend\Appointments\Helpers\AppointmentService;
 use BookneticApp\Providers\Helper;
 use BookneticApp\Providers\Permission;
 
@@ -10,7 +11,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 
 	public static function handle()
 	{
-		if( Helper::isSaaSVersion() && Permission::tenantInf()->getPermission( 'appointments' ) === 'off' )
+		if( Helper::isSaaSVersion() && Permission::getPermission( 'appointments' ) === 'off' )
 		{
 			return false;
 		}
@@ -23,11 +24,10 @@ class Middleware extends \BookneticApp\Providers\Middleware
 		// add menu...
 		$this->createMenu(bkntc__('Appointments'))
 			->setIcon('fa fa-clock')
-			->setOrder(2)
+			->setOrder(3)
 			->show();
 
-
-
+		AppointmentService::cancelUnpaidAppointments();
 	}
 
 }

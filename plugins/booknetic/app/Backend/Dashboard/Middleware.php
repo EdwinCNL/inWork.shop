@@ -10,7 +10,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 
 	public static function handle()
 	{
-		if( Helper::isSaaSVersion() && Permission::tenantInf()->getPermission( 'dashboard' ) === 'off' )
+		if( Helper::isSaaSVersion() && Permission::getPermission( 'dashboard' ) === 'off' )
 		{
 			return false;
 		}

@@ -37,7 +37,7 @@ defined( 'ABSPATH' ) or die();
 <div class="form-row">
 	<div class="form-group col-md-<?php print $parameters['show_only_name'] ? '12' : '6'?>">
 		<label for="bkntc_input_name" data-required="true"><?php print bkntc__('Name')?></label>
-		<input type="text" id="bkntc_input_name" class="form-control" name="first_name" value="<?php print esc_html( $parameters['name'] . ( $parameters['show_only_name'] ? ' ' . $parameters['surname'] : '' ) )?>">
+		<input type="text" id="bkntc_input_name" class="form-control" name="first_name" value="<?php print esc_html( $parameters['name'] . ( $parameters['show_only_name'] ? ($parameters['name'] ? ' ' : '') . $parameters['surname'] : '' ) )?>">
 	</div>
 	<div class="form-group col-md-6<?php print $parameters['show_only_name'] ? ' booknetic_hidden' : ''?>">
 		<label for="bkntc_input_surname"<?php print $parameters['show_only_name'] ? '' : ' data-required="true"'?>><?php print bkntc__('Surname')?></label>

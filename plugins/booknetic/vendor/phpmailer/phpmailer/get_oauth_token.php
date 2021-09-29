@@ -28,7 +28,7 @@
  * revoke access to your app and run the script again.
  */
 
-namespace PHPMailer\PHPMailer;
+namespace Booknetic_PHPMailer\PHPMailer;
 
 /**
  * Aliases for League Provider Classes

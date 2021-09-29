@@ -17,7 +17,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 				return true;
 			}
 
-			if( Permission::tenantInf()->getPermission( 'invoices' ) === 'on' )
+			if( Permission::getPermission( 'invoices' ) === 'on' )
 			{
 				return true;
 			}
@@ -33,7 +33,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 		// add menu...
 		$this->createMenu(bkntc__('Invoices'))
 			->setIcon('fa fa-file-alt')
-			->setOrder(13)
+			->setOrder(15)
 			->show();
 
 

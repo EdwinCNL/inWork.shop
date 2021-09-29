@@ -95,8 +95,9 @@
 			weekStart: weekStartsOn == 'sunday' ? 0 : 1
 		});
 
-		$('#input_wp_user').select2({
+		$('#input_wp_user, #input_gender').select2({
 			theme: 'bootstrap',
+			placeholder: booknetic.__('select'),
 			allowClear: true
 		});
 

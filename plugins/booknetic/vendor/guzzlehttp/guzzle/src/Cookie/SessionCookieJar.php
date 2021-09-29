@@ -1,5 +1,5 @@
 <?php
-namespace GuzzleHttp\Cookie;
+namespace Booknetic_GuzzleHttp\Cookie;
 
 /**
  * Persists cookies in the client session

@@ -1,7 +1,7 @@
 <?php
-namespace GuzzleHttp\Handler;
+namespace Booknetic_GuzzleHttp\Handler;
 
-use GuzzleHttp\RequestOptions;
+use Booknetic_GuzzleHttp\RequestOptions;
 use Psr\Http\Message\RequestInterface;
 
 /**

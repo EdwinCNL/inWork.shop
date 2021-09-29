@@ -63,7 +63,9 @@ color: %%compleated_steps_txt%%;
     border-color: %%border%% !important;
 }
 
-#booknetic_theme_%%id%% .booknetic_service_card_price, #booknetic_theme_%%id%% .booknetic_service_extra_card_price, #booknetic_theme_%%id%% .booknetic_confirm_details_price:not(.booknetic_discount_price)
+#booknetic_theme_%%id%% .booknetic_service_card_price, #booknetic_theme_%%id%% .booknetic_service_extra_card_price, #booknetic_theme_%%id%% .booknetic_confirm_details_price:not(.booknetic_discount_price,.booknetic_gift_discount_price)
 {
     color: %%price%% !important;
 }
+
+%%custom_css%%

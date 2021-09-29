@@ -34,12 +34,12 @@ trait ClientPanelAjax
 		}
 
 		$userId = Permission::userId();
-		$customer = Customer::where('user_id', $userId)->fetch();
+		$customer = Customer::where('user_id', $userId)->noTenant()->fetch();
 
 		if( !$customer )
 			Helper::response( false );
 
-		Customer::where('id', $customer->id)->update([
+		Customer::where('user_id', $userId)->noTenant()->update([
 			'first_name'		=>	trim($name),
 			'last_name'			=>	trim($surname),
 			'phone_number'		=>	$phone,
@@ -68,7 +68,7 @@ trait ClientPanelAjax
 		}
 
 		$userId = Permission::userId();
-		$customer = Customer::where('user_id', $userId)->fetch();
+		$customer = Customer::where('user_id', $userId)->noTenant()->fetch();
 
 		if( !$customer )
 			Helper::response( false );
@@ -86,82 +86,162 @@ trait ClientPanelAjax
 
 	public static function reschedule_appointment()
 	{
-		if( Helper::getOption('customer_panel_enable', 'off', false) != 'on' )
-		{
-			Helper::response( false );
-		}
-
-		if( Helper::getOption('customer_panel_allow_reschedule', 'on', false) != 'on' )
-		{
-			Helper::response( false );
-		}
 
 		$appointment_id		=	Helper::_post('id', '', 'int');
 		$date				=	Helper::_post('date', '', 'str');
 		$time				=	Helper::_post('time', '', 'str');
 
+		if(Date::epoch() >= Date::epoch($date.' '.$time. ':00'))
+        {
+            Helper::response( false, bkntc__('You can not change the date and time to past.') );
+        }
+
 		$userId = Permission::userId();
-		$customer = Customer::where('user_id', $userId)->fetch();
+		$customers = Customer::where('user_id', $userId)->noTenant()->fetchAll();
 
-		if( !$customer )
-		{
-			Helper::response( false, '|' . Permission::tenantId() . '|' );
-		}
-
-		$appointmentCustomerInfo = AppointmentCustomer::where('status', ['<>', 'canceled'])->where('status', ['<>', 'rejected'])->get( $appointment_id );
-
-		if( !$appointmentCustomerInfo || $appointmentCustomerInfo->customer_id != $customer->id )
+		if( empty( $customers ) )
 		{
 			Helper::response( false );
 		}
 
-		$appointmentInfo = Appointment::get( $appointmentCustomerInfo->appointment_id );
+		$customerIds = [];
+		foreach ( $customers AS $customerInf )
+		{
+			$customerIds[] = $customerInf->id;
+		}
+
+		$appointmentCustomerInfo = AppointmentCustomer::noTenant()->get( $appointment_id );
+
+		if( !$appointmentCustomerInfo || !in_array( $appointmentCustomerInfo->customer_id, $customerIds ) )
+		{
+			Helper::response( false );
+		}
+
+		$appointmentInfo = Appointment::noTenant()->get( $appointmentCustomerInfo->appointment_id );
+
+        $minute = Helper::getCustomerOption('time_restriction_to_make_changes_on_appointments', '5', $appointmentInfo->tenant_id);
+        $beforeThisTime = Helper::getOption('min_time_req_prior_booking', '5');
+
+        if(Date::epoch('+'.$minute.' minutes') > Date::epoch($appointmentInfo->date.' '.$appointmentInfo->start_time))
+        {
+            Helper::response( false, bkntc__('Minimum time requirement prior to change the appointment date and time is %s', [Helper::secFormatWithName($minute*60)]) );
+        }
+
+        $before = Date::epoch('+'.$beforeThisTime.' minutes');
+
+        if($before > Date::epoch($date.' '.$time.':00'))
+        {
+            Helper::response( false, bkntc__('You cannot change the appointment less than %s in advance', [Helper::secFormatWithName($beforeThisTime * 60)]));
+        }
+
 		if( $appointmentCustomerInfo->status != 'canceled' && Date::dateSQL($appointmentInfo->date) == Date::dateSQL($date) && Date::timeSQL($appointmentInfo->start_time) == Date::timeSQL($time) )
 		{
 			Helper::response( false, bkntc__('You have not changed the date and time.') );
 		}
 
-		AppointmentService::reschedule( $appointment_id, $date, $time );
+        if( Helper::isSaaSVersion() )
+        {
+            $tenantId = $appointmentInfo->tenant_id;
+            Permission::setTenantId( $tenantId );
+        }
+        if( Helper::getOption('customer_panel_enable', 'off',false) != 'on' )
+        {
+            Helper::response( false );
+        }
+
+        if( Helper::getOption('customer_panel_allow_reschedule', 'on') != 'on' )
+        {
+            Helper::response( false );
+        }
+
+		$inf = AppointmentService::reschedule( $appointment_id, $date, $time );
+
+		if( $inf['appointment_status'] == 'approved' )
+		{
+			$appointmentStatusText = bkntc__('Approved');
+		}
+		else if( $inf['appointment_status'] == 'pending' )
+		{
+			$appointmentStatusText = bkntc__('Pending');
+		}
+		else if( $inf['appointment_status'] == 'canceled' )
+		{
+			$appointmentStatusText = bkntc__('Canceled');
+		}
+		else
+		{
+			$appointmentStatusText = bkntc__('Rejected');
+		}
 
 		Helper::response( true, [
-			'message' 	=> bkntc__('Appointment was rescheduled successfully!'),
-			'datetime'	=> Date::dateTime( $date . ' ' . $time )
+			'message' 	                =>  bkntc__('Appointment was rescheduled successfully!'),
+			'datetime'	                =>  Date::dateTime( $date . ' ' . $time ),
+			'appointment_status'        =>  $inf['appointment_status'],
+			'appointment_status_text'   =>  $appointmentStatusText
 		] );
 	}
 
 	public static function cancel_appointment()
 	{
-		if( Helper::getOption('customer_panel_enable', 'off', false) != 'on' )
-		{
-			Helper::response( false );
-		}
 
-		if( Helper::getOption('customer_panel_allow_cancel', 'on', false) != 'on' )
-		{
-			Helper::response( false );
-		}
 
-		$appointment_id		=	Helper::_post('id', '', 'int');
+		$appointment_id =	Helper::_post('id', '', 'int');
 
 		$userId = Permission::userId();
-		$customer = Customer::where('user_id', $userId)->fetch();
+		$customers = Customer::where('user_id', $userId)->noTenant()->fetchAll();
 
-		if( !$customer )
+		if( empty( $customers ) )
 		{
 			Helper::response( false );
 		}
 
-		$appointmentCustomerInfo = AppointmentCustomer::where('status', ['<>', 'canceled'])->where('status', ['<>', 'rejected'])->get( $appointment_id );
+		$customerIds = [];
+		foreach ( $customers AS $customerInf )
+		{
+			$customerIds[] = $customerInf->id;
+		}
 
-		if( !$appointmentCustomerInfo || $appointmentCustomerInfo->customer_id != $customer->id )
+		$appointmentCustomerInfo = AppointmentCustomer::noTenant()
+	                                      ->where('status', ['<>', 'canceled'])
+	                                      ->where('status', ['<>', 'rejected'])
+	                                      ->get( $appointment_id );
+
+		if( !$appointmentCustomerInfo || !in_array( $appointmentCustomerInfo->customer_id, $customerIds ) )
 		{
 			Helper::response( false );
 		}
+
+		$appointmentInfo = Appointment::noTenant()->get( $appointmentCustomerInfo->appointment_id );
+
+
+        $minute = Helper::getCustomerOption('time_restriction_to_make_changes_on_appointments', '5', $appointmentInfo->tenant_id);
+
+        if(Date::epoch('+'.$minute.' minutes') > Date::epoch($appointmentInfo->date.' '.$appointmentInfo->start_time))
+        {
+            Helper::response( false, bkntc__('Minimum time requirement prior to change the appointment date and time is %s', [Helper::secFormatWithName($minute*60)]) );
+        }
+
+		if( Helper::isSaaSVersion() )
+		{
+			$tenantId = $appointmentInfo->tenant_id;
+			Permission::setTenantId( $tenantId );
+		}
+        if( Helper::getOption('customer_panel_enable', 'off',false) != 'on' )
+        {
+            Helper::response( false );
+        }
+
+        if( Helper::getOption('customer_panel_allow_cancel', 'on') != 'on' )
+        {
+            Helper::response( false );
+        }
 
 		AppointmentService::cancel( $appointment_id );
 
 		Helper::response( true, [
-			'message' 	=> bkntc__('You have canceled the appointment!'),
+			'message' 	                =>  bkntc__('You have canceled the appointment!'),
+			'appointment_status'        =>  'canceled',
+			'appointment_status_text'   =>  bkntc__('Canceled')
 		] );
 	}
 
@@ -172,35 +252,46 @@ trait ClientPanelAjax
 			Helper::response( false );
 		}
 
-		if( Helper::getOption('customer_panel_allow_reschedule', 'on', false) != 'on' )
-		{
-			Helper::response( false );
-		}
+
 
 		$appointment_id	= Helper::_post('id', 0, 'int');
 		$search			= Helper::_post('q', '', 'string');
 		$date			= Helper::_post('date', '', 'string');
 
 		$userId = Permission::userId();
-		$customer = Customer::where('user_id', $userId)->fetch();
+		$customers = Customer::where('user_id', $userId)->noTenant()->fetchAll();
 
-		if( !$customer )
+		if( empty( $customers ) )
 		{
 			Helper::response( false );
 		}
 
-		$customer_id = $customer->id;
+		$customerIds = [];
+		foreach ( $customers AS $customerInf )
+		{
+			$customerIds[] = $customerInf->id;
+		}
 
-		$appointmentCustomerInfo = AppointmentCustomer::get( $appointment_id );
+		$appointmentCustomerInfo = AppointmentCustomer::noTenant()->get( $appointment_id );
 
-		if( !$appointmentCustomerInfo || $appointmentCustomerInfo->customer_id != $customer_id )
+		if( !$appointmentCustomerInfo || !in_array( $appointmentCustomerInfo->customer_id, $customerIds ) )
 		{
 			Helper::response( false );
 		}
 
-		$appointmentInf	= Appointment::get( $appointmentCustomerInfo->appointment_id );
+		$customer_id    = $appointmentCustomerInfo->customer_id;
+		$appointmentInf	= Appointment::noTenant()->get( $appointmentCustomerInfo->appointment_id );
 		$staff			= $appointmentInf->staff_id;
 		$service		= $appointmentInf->service_id;
+
+		if( Helper::isSaaSVersion() )
+		{
+			Permission::setTenantId( $appointmentInf->tenant_id );
+		}
+        if( Helper::getOption('customer_panel_allow_reschedule', 'on') != 'on' )
+        {
+            Helper::response( false );
+        }
 
 		$extras_arr = [];
 		$appointmentExtras = AppointmentExtra::where('appointment_id', $appointmentCustomerInfo->appointment_id)->where('customer_id', $customer_id)->fetchAll();
@@ -258,12 +349,12 @@ trait ClientPanelAjax
 		}
 
 		$userId = Permission::userId();
-		$customer = Customer::where('user_id', $userId)->fetch();
+		$customer = Customer::where('user_id', $userId)->noTenant()->fetch();
 
 		if( !$customer )
 			Helper::response( false );
 
-		Customer::where('id', $customer->id)->update([
+		Customer::where('user_id', $userId)->noTenant()->update([
 			'user_id'		=>	null,
 			'first_name'	=>	'[-] ID: ' . $customer->id,
 			'last_name'		=>	'',

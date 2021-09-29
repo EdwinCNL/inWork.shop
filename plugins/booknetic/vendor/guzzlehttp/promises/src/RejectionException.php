@@ -1,5 +1,5 @@
 <?php
-namespace GuzzleHttp\Promise;
+namespace Booknetic_GuzzleHttp\Promise;
 
 /**
  * A special exception that is thrown when waiting on a rejected promise.

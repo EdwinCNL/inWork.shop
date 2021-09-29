@@ -4,9 +4,9 @@
 namespace Twilio\Http;
 
 
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\BadResponseException;
-use GuzzleHttp\Psr7\Request;
+use Booknetic_GuzzleHttp\ClientInterface;
+use Booknetic_GuzzleHttp\Exception\BadResponseException;
+use Booknetic_GuzzleHttp\Psr7\Request;
 use Twilio\Exceptions\HttpException;
 
 final class GuzzleClient implements Client

@@ -1,5 +1,6 @@
 <?php
 
+
 namespace BookneticApp\Frontend\Controller;
 
 use BookneticApp\Backend\Appointments\Helpers\AppointmentService;
@@ -111,7 +112,7 @@ class Ajax extends FrontendAjax
 			ARRAY_A
 		);
 
-		if( !empty( $date ) && !empty( $time ) && count( $staff ) < 7 )
+		if( !empty( $date ) && !empty( $time ) )
 		{
 			$onlyAvailableStaffList = [];
 
@@ -148,8 +149,6 @@ class Ajax extends FrontendAjax
 		{
 			$locationFilter = " AND tb1.`id` IN (SELECT `service_id` FROM `".DB::table('service_staff')."` WHERE `staff_id` IN (SELECT `id` FROM `".DB::table('staff')."` WHERE FIND_IN_SET('{$location}', IFNULL(`locations`, ''))))";
 		}
-
-		$parrent_services =
 
 		$services = DB::DB()->get_results(
 			DB::DB()->prepare( "
@@ -263,7 +262,7 @@ class Ajax extends FrontendAjax
 
 			}
 
-			$data = AppointmentService::getCalendar( $staff, $service, $location, $extras_arr, $date_start, $date_end, true, null, false );
+			$data = AppointmentService::getCalendar( $staff, $service, $location, $extras_arr, $date_start, $date_end, true, null, false, true, true );
 		}
 
 		if( is_array( $data ) )
@@ -282,7 +281,8 @@ class Ajax extends FrontendAjax
 				'repeat_type'		=>	htmlspecialchars( $serviceInf['repeat_type'] ),
 				'repeat_frequency'	=>	htmlspecialchars( $serviceInf['repeat_frequency'] ),
 				'full_period_type'	=>	htmlspecialchars( $serviceInf['full_period_type'] ),
-				'full_period_value'	=>	(int)$serviceInf['full_period_value']
+				'full_period_value'	=>	(int)$serviceInf['full_period_value'],
+				'max_capacity'		=>  (int) $serviceInf['max_capacity'] > 0 ? (int) $serviceInf['max_capacity'] : 1,
 			]
 		]);
 	}
@@ -354,7 +354,7 @@ class Ajax extends FrontendAjax
 				Helper::response(false, bkntc__('Limited booking days is %d' , [ $available_days_for_booking ]) );
 			}
 
-			$selectedTimeSlotInfo = AppointmentService::getTimeSlotInfo( $service, $extras_arr, $staff, $appointmentDate, $appointmentTime );
+			$selectedTimeSlotInfo = AppointmentService::getTimeSlotInfo( $service, $extras_arr, $staff, $appointmentDate, $appointmentTime, true, 0, false );
 
 			$appointments[$key][2] = true;
 			if( empty( $selectedTimeSlotInfo ) )
@@ -467,12 +467,18 @@ class Ajax extends FrontendAjax
 		$service_extras		= Helper::_post('service_extras', [], 'arr');
 		$date				= Helper::_post('date', '', 'str');
 		$time				= Helper::_post('time', '', 'str');
+        $original_date		= Helper::_post('original_date', '', 'str');
+
+		$brought_people_count		=	Helper::_post('brought_people_count', 0 , 'int');
+		$total_customer_count		=   $brought_people_count + 1;
 
 		$locationInf		= Location::get( $location );
 		$serviceInf			= Service::get( $service );
 
 		$date 				= Date::dateSQL( $date );
 		$time 				= Date::time( $time );
+
+        $original_date		= Date::dateSQL( $original_date );
 
 		$extras_arr		= [];
 		$extras_price	= 0;
@@ -491,17 +497,17 @@ class Ajax extends FrontendAjax
 
 				$extras_arr[] = $extra_inf;
 				$extras_price += $extra_inf['price'] * $quantity;
-				$extras_drtn += $extra_inf['duration'];
+				$extras_drtn += $extra_inf['duration'] * $quantity;
 			}
 		}
 
 		if( $staff == -1 )
 		{
-			$availableStaffIDs = AppointmentService::staffByService( $service, $location, true, $date );
+			$availableStaffIDs = AppointmentService::staffByService( $service, $location, true, $original_date );
 
 			foreach ( $availableStaffIDs AS $staffID )
 			{
-				if( $serviceInf['is_recurring'] || AppointmentService::checkStaffAvailability( $service, $extras_arr, $staffID, $date, $time ) )
+				if( $serviceInf['is_recurring'] || AppointmentService::checkStaffAvailability( $service, $extras_arr, $staffID, $original_date, $time ) )
 				{
 					$staff = $staffID;
 					break;
@@ -523,6 +529,7 @@ class Ajax extends FrontendAjax
 		}
 
 		$discount = 0;
+		$gift_discount = 0;
 		$appointments_count = 1;
 
 		if( $serviceInf['is_recurring'] )
@@ -545,7 +552,7 @@ class Ajax extends FrontendAjax
 		{
 			if( Helper::getOption('time_view_type_in_front', '1')=='1' )
 			{
-				$time = Date::time( $time, false, true ) . '/' . Date::time( $time, '+' . ($serviceInf['duration'] + $extras_drtn) . ' minutes', true );
+				$time = Date::time( $time, false, true ) . '-' . Date::time( $time, '+' . ($serviceInf['duration'] + $extras_drtn) . ' minutes', true );
 			}
 			else
 			{
@@ -590,9 +597,22 @@ class Ajax extends FrontendAjax
 			]
 		];
 
-		$sum_amount			= $appointments_count * ( $extras_price + $servicePrice ) - $discount;
-		$hide_discount_row	= Helper::getOption('hide_discount_row', 'off');
-		$hide_price_section	= Helper::getOption('hide_price_section', 'off');
+		$sum_amount			    = $total_customer_count * $appointments_count * $servicePrice +  $appointments_count * $extras_price - $discount;  //$total_customer_count * $appointments_count * ( $extras_price + $servicePrice ) - $discount;
+
+		$tax					= $serviceInf['tax'];
+		$tax_type				= $serviceInf['tax_type'];
+		$has_tax				= $tax > 0;
+
+		$tax_amount				= $tax_type == 'percent' ? ( $sum_amount * $tax ) / 100  : $tax;
+
+		$sum_amount_with_tax    = $sum_amount + $tax_amount;	
+
+
+		$hide_discount_row	    = Helper::getOption('hide_discount_row', 'off');
+		$hide_price_section	    = Helper::getOption('hide_price_section', 'off');
+
+		$woocommerce_enabled    = WooCommerceService::paymentMethodIsEnabled();
+		$wc_show_confirm_step   = Helper::getOption('woocommerce_skip_confirm_step', 'on', false) == 'off';
 
 		if( $sum_amount <= 0 )
 		{
@@ -600,6 +620,11 @@ class Ajax extends FrontendAjax
 			$paypalIsActive = 'off';
 			$stripeIsActive = 'off';
 			$hide_discount_row = 'on';
+			$hideMothodSelecting = true;
+		}
+
+		if( $woocommerce_enabled && $wc_show_confirm_step && !$hasDeposit )
+		{
 			$hideMothodSelecting = true;
 		}
 
@@ -628,8 +653,10 @@ class Ajax extends FrontendAjax
 
 			'date'					=>	Date::datee( $date ),
 			'time'					=>	$time,
+			'total_customer_count'  =>  $total_customer_count,
 
 			'discount'				=>	$discount,
+			'gift_discount'			=>  $gift_discount,
 			'appointments_count'	=>	$appointments_count,
 			'sum'					=>	$sum_amount,
 
@@ -644,7 +671,14 @@ class Ajax extends FrontendAjax
 			'deposit'				=>	$deposit,
 			'deposit_type'			=>	$deposit_type,
 
-			'woocommerce_enabled'   =>  WooCommerceService::paymentMethodIsEnabled(),
+			'has_tax'				=> $has_tax,
+			'tax'					=> $tax,
+			'tax_type'				=> $tax_type,
+			'tax_amount'		    => $tax_amount,
+			'sum_amount_with_tax'   => $sum_amount_with_tax,
+
+			'woocommerce_enabled'   =>  $woocommerce_enabled,
+			'wc_show_confirm_step'  =>  $wc_show_confirm_step,
 			'gateways_order'		=>	$gateways_order,
 			'payment_gateways'		=>	$payment_gateways,
 
@@ -689,45 +723,46 @@ class Ajax extends FrontendAjax
 		$staff					    =	Helper::_post('staff', 0, 'int');
 		$service				    =	Helper::_post('service', 0, 'int');
 		$service_extras			    =	Helper::_post('service_extras', [], 'arr');
+
 		$date					    =	Helper::_post('date', '', 'str');
 		$time					    =	Helper::_post('time', '', 'str');
+		$brought_people_count		=	Helper::_post('brought_people_count', 0 , 'int');
+
+		$total_customer_count		=	$brought_people_count + 1;
+
 		$customer_data			    =	Helper::_post('customer_data', [], 'arr');
 		$custom_fields			    =	Helper::_post('custom_fields', [], 'arr');
-		$payment_method			    =	Helper::_post('payment_method', '', 'str', [ 'local', 'paypal', 'stripe', 'woocommerce' ]);
+		$payment_method			    =	Helper::_post('payment_method', '', 'str', ['giftcard', 'local', 'paypal', 'stripe', 'woocommerce' ]);
 		$deposit_full_amount	    =	Helper::_post('deposit_full_amount', '1', 'int', [ '0', '1' ]);
 		$coupon					    =	Helper::_post('coupon', '', 'str');
+		$giftcard					=	Helper::_post('giftcard', '', 'str');
 
 		$recurring_start_date	    =	Helper::_post('recurring_start_date', '', 'string');
 		$recurring_end_date		    =	Helper::_post('recurring_end_date', '', 'string');
 		$recurring_times		    =	Helper::_post('recurring_times', '', 'string');
 		$appointmentsParam		    =	Helper::_post('appointments', '', 'string');
-		$google_recaptcha_token	    =	Helper::_post('google_recaptcha_token', '', 'string');
-		$google_recaptcha_action    =	Helper::_post('google_recaptcha_action', '', 'string');
 
 		$appointmentsParam		    =	json_decode( $appointmentsParam );
 		$appointmentsParam		    =	is_array( $appointmentsParam ) ? $appointmentsParam : [];
 
-		if( Helper::getOption('google_recaptcha', 'off', false) == 'on' )
+		$customFiles                =   isset($_FILES['custom_fields']) ? $_FILES['custom_fields']['tmp_name'] : [];
+
+		$client_timezone		=   Helper::_post('client_time_zone', '-', 'string');
+
+		if( $recurring_start_date == 'undefined' )
 		{
-			$google_site_key = Helper::getOption('google_recaptcha_site_key', '', false);
-			$google_secret_key = Helper::getOption('google_recaptcha_secret_key', '', false);
+			$check = AppointmentService::timeslot_capacity_is_available( $service, $staff, $date, $time, $brought_people_count);
 
-			if( !empty( $google_site_key ) && !empty( $google_secret_key ) )
+			if( !$check['status'] )
 			{
-				if( empty( $google_recaptcha_token ) || empty( $google_recaptcha_action ) )
-				{
-					Helper::response( false, bkntc__('Please refresh the page and try again.') );
-				}
-
-				$checkToken = Curl::getURL( 'https://www.google.com/recaptcha/api/siteverify?secret=' . urlencode($google_secret_key) . '&response=' . urlencode($google_recaptcha_token) );
-				$checkToken = json_decode( $checkToken, true );
-
-				if( !($checkToken['success'] == '1' && $checkToken['action'] == $google_recaptcha_action && $checkToken['score'] >= 0.5) )
-				{
-					Helper::response( false, bkntc__('Please refresh the page and try again.') );
-				}
+				Helper::response( false, $check['message'] );
 			}
 		}
+
+		/**
+		 * Validate the Google ReCaptcha...
+		 */
+		AjaxHelper::validateGoogleReCaptcha();
 
 		if( $location == -1 )
 		{
@@ -771,8 +806,8 @@ class Ajax extends FrontendAjax
 				Helper::response(false);
 			}
 
-			$customerId = $checkIfExist['customer_id'];
-			$appointmentId = $checkIfExist['appointment_id'];
+			$customerId             = $checkIfExist['customer_id'];
+			$appointmentId          = $checkIfExist['appointment_id'];
 
 			$appointmentInfo		= Appointment::get( $appointmentId );
 			$staffInf               = Staff::get( $appointmentInfo->staff_id );
@@ -804,35 +839,54 @@ class Ajax extends FrontendAjax
 				$deposit		= $getStaffService['deposit'];
 				$deposit_type	= $getStaffService['deposit_type'];
 			}
+
 			$servicePrice = $getStaffService['price'] == -1 ? $serviceInf['price'] : $getStaffService['price'];
-			$payable_amount = 0;
+
+			$payable_amount     = 0;
+			$payable_tax_sum    = 0;
+
 			foreach ( $appointmentCustomers AS $recurringSubId => $appointment_customer )
 			{
-				$sumPrice = $appointment_customer['service_amount'] + $appointment_customer['extras_amount'] - $appointment_customer['discount'];
+				$tax					= $serviceInf['tax'];
+				$tax_type				= $serviceInf['tax_type'];
+
+				$tax_amount_sum			= $tax_type == 'percent' ? ( ( $appointment_customer['service_amount'] + $appointment_customer['extras_amount'] ) * $tax ) / 100  : $tax;
+
+				$sumPriceWithoutTax = $appointment_customer['service_amount'] + $appointment_customer['extras_amount'] - $appointment_customer['discount'];
+				$sumPrice 			= $sumPriceWithoutTax + $tax_amount_sum;
 
 				if( $payment_method == 'local' || ($mustPayOnlyFirst && $recurringSubId > 0) )
 				{
 					$payable_amount_this = 0;
+					$payable_tax         = 0;
 				}
 				else if( $deposit_full_amount && $deposit_can_pay_full_amount == 'on' )
 				{
 					$payable_amount_this = $sumPrice;
+					$payable_tax         = $tax_amount_sum;
 				}
 				else if( $deposit_type == 'price' )
 				{
 					$payable_amount_this = $deposit == $servicePrice ? $sumPrice : $deposit;
+					$payable_tax         = $deposit == $servicePrice ? $tax_amount_sum : (( $sumPrice  - $deposit) / $sumPrice) * $tax_amount_sum;
 				}
 				else
 				{
 					$payable_amount_this = $sumPrice * $deposit / 100;
+					$payable_tax		 = $tax_amount_sum * $deposit / 100;
 				}
 
+				//$payable_amount_this *= $total_customer_count;
+
 				$payable_amount += $payable_amount_this;
+
+				$payable_tax_sum  += $payable_tax;
 
 				if( $payable_amount_this != $appointment_customer['paid_amount'] )
 				{
 					AppointmentCustomer::where('id', $appointment_customer['id'])->update([
-						'paid_amount'   =>  $payable_amount_this
+						'paid_amount'   =>  $payable_amount_this,
+						'tax_amount'    =>  $tax_amount_sum
 					]);
 				}
 			}
@@ -890,47 +944,31 @@ class Ajax extends FrontendAjax
 		}
 		else
 		{
-			$extras_arr		= [];
-			$extras_price	= 0;
-			$extras_drtn	= 0;
-
 			if( empty( $location ) || empty( $service ) || empty( $staff ) )
 			{
 				Helper::response(false, bkntc__('Please fill in all required fields correctly!'));
 			}
 
-			foreach ( $service_extras AS $extra_id => $quantity )
-			{
-				if( !(is_numeric($quantity) && $quantity > 0) )
-					continue;
+			/**
+			 * Handle service extras...
+			 */
+			$serviceExtrasData  = AjaxHelper::handleServiceExtras( $service_extras, $service );
+			$extras_arr		    = $serviceExtrasData['extras_arr'];
+			$extras_price	    = $serviceExtrasData['extras_price'];
+			$extras_drtn	    = $serviceExtrasData['extras_drtn'];
 
-				$extra_inf = ServiceExtra::where('service_id', $service)->where('id', $extra_id)->fetch();
-
-				if( $extra_inf && $extra_inf['max_quantity'] >= $quantity )
-				{
-					$extra_inf['quantity'] = $quantity;
-					$extra_inf['customer'] = 0;
-
-					$extras_arr[] = $extra_inf;
-					$extras_price += $extra_inf['price'] * $quantity;
-					$extras_drtn += $extra_inf['duration'];
-				}
-			}
-
+			/**
+			 * If "Any Staff" option selected...
+			 * Find an available Staff for selected criteria...
+			 */
 			if( $staff == -1 )
 			{
-				$availableStaffIDs = AppointmentService::staffByService( $service, $location, true, $date );
-
-				foreach ( $availableStaffIDs AS $staffID )
-				{
-					if( $serviceInf['is_recurring'] || AppointmentService::checkStaffAvailability( $service, $extras_arr, $staffID, $date, $time ) )
-					{
-						$staff = $staffID;
-						break;
-					}
-				}
+				$staff = AjaxHelper::findAnAvailableStaff( $serviceInf, $location, $extras_arr, $date, $time, $appointmentsParam );
 			}
 
+			/**
+			 * Check if the Staff has been assigned to the service...
+			 */
 			$serviceStaffInf = ServiceStaff::where('service_id', $service)->where('staff_id', $staff)->fetch();
 
 			if( !$serviceStaffInf )
@@ -938,204 +976,68 @@ class Ajax extends FrontendAjax
 				Helper::response(false);
 			}
 
-			$customer_inputs = ['first_name', 'last_name', 'email', 'phone'];
-			foreach ( $customer_inputs AS $required_input_name )
+			/**
+			 * Validate Custom form inputs...
+			 */
+			AjaxHelper::handleCustomData( $custom_fields, $customer_data, $customFiles, $service );
+
+			/**
+			 * Handle and validate coupon code...
+			 */
+			$couponInf  = false;
+			$couponId   = 0;
+			$discount   = 0;
+			if( ! empty( $coupon ) )
 			{
-				if( !isset( $customer_data[ $required_input_name ] ) || !is_string( $customer_data[ $required_input_name ] ) )
+				$couponInf  = AppointmentService::getCouponInf( $service, $staff, $service_extras, $coupon, $customer_data, $total_customer_count);
+				$discount   = $couponInf['discount_price'];
+				$couponId   = $couponInf['id'];
+			}
+
+			/**
+			 * Handle and validate giftcard/balance...
+			 */
+			$giftcardInf    = false;
+			$giftcardId     = 0;
+			$giftCardSpent  = 0;
+			if( ! empty( $giftcard ) )
+			{
+				$giftcardInf    = AppointmentService::getGiftcardInf( $service, $staff, $service_extras, $giftcard, $discount, $total_customer_count);
+				$giftCardSpent  = $giftcardInf['spent'];
+
+				if( $payment_method == 'giftcard' && $giftcardInf['sum_price'] > 0 )
 				{
-					Helper::response(false, bkntc__('Please fill in all required fields correctly!'));
+					Helper::response(false, bkntc__('Please fill in all required fields correctly!') );
 				}
 			}
 
-			foreach ( $customer_data AS $input_name => $customer_datum )
-			{
-				if( !(in_array( $input_name, $customer_inputs ) && is_string($customer_datum)) )
-				{
-					unset( $customer_data[ $input_name ] );
-				}
-			}
-
-			$customFiles = isset($_FILES['custom_fields']) ? $_FILES['custom_fields']['tmp_name'] : [];
-			$getFormId = DB::DB()->get_row( DB::DB()->prepare( 'SELECT id FROM `'.DB::table('forms').'` WHERE FIND_IN_SET(%d, service_ids) '.DB::tenantFilter().' LIMIT 0,1', [ $service ] ), ARRAY_A );
-			if( $getFormId )
-			{
-				$curFormId = (int)$getFormId['id'];
-
-				$getRequiredFilesFields = FormInput::where('is_required', '1')->where('form_id', $curFormId)->where('type', 'file')->fetchAll();
-				foreach ( $getRequiredFilesFields AS $fieldInf )
-				{
-					if( !isset( $customFiles[ $fieldInf['id'] ] ) )
-					{
-						Helper::response(false, bkntc__('Please fill in all required fields correctly!', [ htmlspecialchars( $fieldInf['label'] ) ]));
-					}
-				}
-			}
-
-			foreach ( $custom_fields AS $field_id => $value )
-			{
-				if( !( is_numeric($field_id) && $field_id > 0 && is_string( $value ) ) )
-				{
-					Helper::response(false, bkntc__('Please fill in all required fields correctly!'));
-				}
-
-				$customFieldInf = FormInput::get( $field_id );
-
-				if( !$customFieldInf )
-				{
-					Helper::response(false, bkntc__('Please fill in all required fields correctly!'));
-				}
-
-				if( $customFieldInf['type'] == 'file' )
-				{
-					continue;
-				}
-
-				$isRequired = (int)$customFieldInf['is_required'];
-
-				if( $isRequired && empty( $value ) )
-				{
-					Helper::response(false, bkntc__('Please fill in all required fields correctly!', [ htmlspecialchars( $customFieldInf['label'] ) ]));
-				}
-
-				$options = $customFieldInf['options'];
-				$options = json_decode( $options, true );
-
-				if( isset( $options['min_length'] ) && is_numeric( $options['min_length'] ) && $options['min_length'] > 0 && !empty( $value ) && mb_strlen( $value, 'UTF-8' ) < $options['min_length'] )
-				{
-					Helper::response(false, bkntc__('Minimum length of "%s" field is %d!', [ htmlspecialchars( $customFieldInf['label'] ) , (int)$options['min_length'] ]));
-				}
-
-				if( isset( $options['max_length'] ) && is_numeric( $options['max_length'] ) && $options['max_length'] > 0 && mb_strlen( $value, 'UTF-8' ) > $options['max_length'] )
-				{
-					Helper::response(false, bkntc__('Maximum length of "%s" field is %d!', [ htmlspecialchars( $customFieldInf['label'] ) , (int)$options['max_length'] ]));
-				}
-
-			}
-
-			foreach( $customFiles AS $field_id => $value )
-			{
-				if( !( is_numeric($field_id) && $field_id > 0 && is_string( $value ) ) )
-				{
-					Helper::response(false, bkntc__('Please fill in all required fields correctly!'));
-				}
-
-				$customFieldInf = FormInput::get( $field_id );
-
-				if( !$customFieldInf || $customFieldInf['type'] != 'file' )
-				{
-					Helper::response(false, bkntc__('Please fill in all required fields correctly!'));
-				}
-
-				$isRequired = (int)$customFieldInf['is_required'];
-				$options = json_decode( $customFieldInf['options'], true );
-
-				if( isset( $options['allowed_file_formats'] ) && !empty( $options['allowed_file_formats'] ) && is_string( $options['allowed_file_formats'] ) )
-				{
-					$allowedFileFormats = Helper::secureFileFormats( explode(',', str_replace(' ', '', $options['allowed_file_formats'])) );
-				}
-				else
-				{
-					$allowedFileFormats = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'gif', 'mp4', 'zip', 'rar', 'csv'];
-				}
-
-				if( $isRequired && empty( $value ) )
-				{
-					Helper::response(false, bkntc__('Please fill in all required fields correctly!', [ htmlspecialchars( $customFieldInf['label'] ) ]));
-				}
-
-				$customFileName = $_FILES['custom_fields']['name'][ $field_id ];
-				$extension = strtolower( pathinfo($customFileName, PATHINFO_EXTENSION) );
-
-				if( !in_array( $extension, $allowedFileFormats ) )
-				{
-					Helper::response(false, bkntc__('File extension is not allowed!' ));
-				}
-			}
-
-			$couponInf = AppointmentService::getCouponInf( $service, $staff, $service_extras, $coupon );
-
-			// create new customer...
-			$repeatCustomer = false;
-			$wpUserId = Permission::userId();
-
-			if( $wpUserId > 0 )
-			{
-				$checkCustomerExists = Customer::where('user_id', $wpUserId)->fetch();
-				if(
-					$checkCustomerExists
-					&& !( !empty( $checkCustomerExists->email ) && $checkCustomerExists->email != $customer_data['email'] )
-					&& !( !empty( $checkCustomerExists->phone_number ) && $checkCustomerExists->phone_number != $customer_data['phone'] )
-				)
-				{
-					$repeatCustomer = true;
-					$customerId = $checkCustomerExists->id;
-				}
-			}
-
-			if( !$repeatCustomer && !( empty( $customer_data['phone'] ) && empty( $customer_data['email'] ) ) )
-			{
-				$checkCustomerExists = Customer::where('email', $customer_data['email'])->where('phone_number', $customer_data['phone'])->fetch();
-				if( $checkCustomerExists )
-				{
-					$repeatCustomer = true;
-					$customerId = $checkCustomerExists->id;
-				}
-			}
-
-			if( !$repeatCustomer )
-			{
-				$customerWPUserId = $wpUserId > 0 ? $wpUserId : null;
-
-				if( is_null( $customerWPUserId ) && Helper::getOption('customer_panel_enable', 'off', false) == 'on' && !empty( $customer_data['email'] ) )
-				{
-					$userRandomPass = wp_generate_password( 8, false );
-
-					$customerWPUserId = wp_insert_user( [
-						'user_login'	=>	$customer_data['email'],
-						'user_email'	=>	$customer_data['email'],
-						'display_name'	=>	$customer_data['first_name'] . ' ' . $customer_data['last_name'],
-						'first_name'	=>	$customer_data['first_name'],
-						'last_name'		=>	$customer_data['last_name'],
-						'role'			=>	'booknetic_customer',
-						'user_pass'		=>	$userRandomPass
-					] );
-
-					if( is_wp_error( $customerWPUserId ) )
-					{
-						$customerWPUserId = null;
-					}
-					else if( !empty( $customer_data['phone'] ) )
-					{
-						add_user_meta( $customerWPUserId, 'billing_phone', $customer_data['phone'], true );
-					}
-				}
-
-				Customer::insert( [
-					'user_id'		=>	$customerWPUserId,
-					'first_name'	=>	$customer_data['first_name'],
-					'last_name'		=>	$customer_data['last_name'],
-					'phone_number'	=>	$customer_data['phone'],
-					'email'			=>	$customer_data['email']
-				] );
-
-				$customerId = DB::lastInsertedId();
-			}
+			/**
+			 * Get Customer ID (If the Customer is new, create it)
+			 */
+			$customerInfo       = AjaxHelper::getOrCreateCustomer( $customer_data );
+			$customerId         = $customerInfo['customer_id'];
+			$isNewCustomer      = $customerInfo['is_new_customer'];
+			$newCustomerPass    = $customerInfo['new_customer_pass'];
 
 			$customers = [
 				[
 					'id'		=>	$customerId,
-					'status'	=>	$payment_method != 'local' ? 'canceled' : Helper::getOption('default_appointment_status', 'approved'),
-					'number'	=>	1
+					'status'	=>	! in_array( $payment_method, ['local', 'giftcard'] ) ? 'waiting_for_payment' : Helper::getOption('default_appointment_status', 'approved'),
+					'number'	=>	$total_customer_count,
 				]
 			];
 
-			$discount = isset( $couponInf['discount_price'] ) ? $couponInf['discount_price'] : 0;
-
+			/**
+			 * Add customer ID parameter to the Extra services Array...
+			 */
 			foreach ( $extras_arr AS $extraKey => $extraInfo )
 			{
 				$extras_arr[ $extraKey ]['customer'] = $customerId;
 			}
 
+			/**
+			 * Create new Appointment...
+			 */
 			$createInfo = AppointmentService::create(
 				$location,
 				$staff,
@@ -1149,15 +1051,21 @@ class Ajax extends FrontendAjax
 				$recurring_times,
 				$appointmentsParam,
 				true,
-				isset( $couponInf['id'] ) ? $couponInf['id'] : 0,
+				$couponId,
+				$giftcardId,
+				$giftCardSpent,
 				$discount,
 				$payment_method,
 				$deposit_full_amount,
 				$custom_fields,
-				$customFiles
+				$customFiles,
+				false,
+                $client_timezone,
+				$total_customer_count
 			);
 
-			$payable_amount = $createInfo['payable_amount_sum'];
+			$payable_amount     = $createInfo['payable_amount_sum'] - $giftCardSpent;
+			$payable_tax_sum    = $createInfo['payable_tax'] ? $createInfo['payable_tax'] : 0;
 
 			$createdAppointment = reset( $createInfo['appointments'] );
 			$id = isset( $createdAppointment[0] ) ? (int)$createdAppointment[0][0] : 0;
@@ -1165,25 +1073,9 @@ class Ajax extends FrontendAjax
 			$appointmentId = array_keys( $createInfo['appointments'] );
 			$appointmentId = reset( $appointmentId );
 
-			if( isset( $customerWPUserId ) && !is_null( $customerWPUserId ) && isset( $userRandomPass ) )
+			if( $isNewCustomer )
 			{
-				$sendMail = new SendEmail( 'cp_access' );
-				$sendMail->setID( $appointmentId )
-					->setCustomer( $customerId )
-					->setPassword( $userRandomPass )
-					->send();
-
-				$sendSMS = new SendSMS( 'cp_access' );
-				$sendSMS->setID( $appointmentId )
-					->setCustomer( $customerId )
-					->setPassword( $userRandomPass )
-					->send();
-
-				$sendWPMessage = new SendMessage( 'cp_access' );
-				$sendWPMessage->setID( $appointmentId )
-					->setCustomer( $customerId )
-					->setPassword( $userRandomPass )
-					->send();
+				AjaxHelper::sendNotificationsForCP( $appointmentId, $customerId, $newCustomerPass );
 			}
 
 			$firstAppointmentData = $createInfo['appointment_date_time'][0];
@@ -1192,14 +1084,17 @@ class Ajax extends FrontendAjax
 
 		$addToGoogleCalendarUrl = 'https://www.google.com/calendar/render?action=TEMPLATE&text=' . urlencode($serviceInf['name']) . '&dates=' . ( Date::UTCDateTime($firstAppointmentData.' '.$firstAppointmentTime, 'Ymd\THis\Z') . '/' . Date::UTCDateTime($firstAppointmentData.' '.$firstAppointmentTime, 'Ymd\THis\Z', '+' . ($serviceInf['duration'] + $extras_drtn) . ' minutes') ) . '&details=&location=' . urlencode($locationInf['name']) . '&sprop=&sprop=name:';
 
+		$tenantIdParam = ( Helper::isSaaSVersion() ? '&tenant_id=' . Permission::tenantId() : '' );
+
 		if( $payment_method == 'paypal' )
 		{
 			$paypal = new Paypal( );
 			$paypal->setId( $id );
 			$paypal->setItem( $service, $serviceInf['name'], $serviceInf['notes'] );
-			$paypal->setAmount( $payable_amount, Helper::getOption('currency', 'USD') );
-			$paypal->setSuccessURL(site_url() . '/?booknetic_paypal_status=success&booknetic_appointment_id=' . $id );
-			$paypal->setCancelURL(site_url() . '/?booknetic_paypal_status=cancel&booknetic_appointment_id=' . $id);
+			$paypal->setAmount( $payable_amount - $payable_tax_sum, Helper::getOption('currency', 'USD') );
+			$paypal->setTax( $payable_tax_sum );
+			$paypal->setSuccessURL(site_url() . '/?booknetic_paypal_status=success&booknetic_appointment_id=' . $id . $tenantIdParam );
+			$paypal->setCancelURL(site_url() . '/?booknetic_paypal_status=cancel&booknetic_appointment_id=' . $id . $tenantIdParam);
 			$res = $paypal->create();
 
 			if( $res['status'] )
@@ -1212,7 +1107,10 @@ class Ajax extends FrontendAjax
 			}
 			else
 			{
-				Helper::response( false, $res['error'] );
+				Helper::response( false, [
+					'id'			=>	$id,
+					'error_msg'     =>  $res['error']
+				] );
 			}
 		}
 		else if( $payment_method == 'stripe' )
@@ -1221,13 +1119,13 @@ class Ajax extends FrontendAjax
 			$stripe->setId( $id );
 			$stripe->setItem( $serviceInf['name'], Helper::profileImage($serviceInf['image'], 'Services') );
 			$stripe->setAmount( $payable_amount, Helper::getOption('currency', 'USD') );
-			$stripe->setSuccessURL(site_url() . '/?booknetic_stripe_status=success&booknetic_appointment_id=' . $id .'&bkntc_session_id={CHECKOUT_SESSION_ID}');
-			$stripe->setCancelURL(site_url() . '/?booknetic_stripe_status=cancel&booknetic_appointment_id=' . $id);
+			$stripe->setSuccessURL(site_url() . '/?booknetic_stripe_status=success&booknetic_appointment_id=' . $id .'&bkntc_session_id={CHECKOUT_SESSION_ID}' . $tenantIdParam);
+			$stripe->setCancelURL(site_url() . '/?booknetic_stripe_status=cancel&booknetic_appointment_id=' . $id . $tenantIdParam);
 			$stripeSessionId = $stripe->create();
 
 			Helper::response( true, [
 				'id'			=>	$id,
-				'url'           =>  site_url() . '/?bkntc_session_id=' . $stripeSessionId,
+				'url'           =>  site_url() . '/?bkntc_session_id=' . $stripeSessionId . $tenantIdParam,
 				'google_url'	=>	$addToGoogleCalendarUrl
 			] );
 		}
@@ -1255,15 +1153,35 @@ class Ajax extends FrontendAjax
 		$staff			= Helper::_post('staff', 0, 'int');
 		$service_extras	= Helper::_post('service_extras', [], 'arr');
 		$coupon			= Helper::_post('coupon', '', 'str');
+		$email			= Helper::_post('email', '', 'str');
+		$phone			= Helper::_post('phone', '', 'str');
 
-		$couponInf = AppointmentService::getCouponInf( $service, $staff, $service_extras, $coupon );
+		$brought_people_count		=	Helper::_post('brought_people_count', 0 , 'int');
+		$total_customer_count		=	$brought_people_count + 1;
 
-		if( isset( $couponInf['error'] ) )
-		{
-			Helper::response(false, $couponInf['error']);
-		}
+		$couponInf = AppointmentService::getCouponInf( $service, $staff, $service_extras, $coupon, [
+			'email' =>  $email,
+			'phone' =>  $phone
+		], $total_customer_count);
 
 		Helper::response( true, $couponInf );
+	}
+
+	public static function summary_with_giftcard()
+	{
+		$service		    = Helper::_post('service', 0, 'int');
+		$staff			    = Helper::_post('staff', 0, 'int');
+		$service_extras	    = Helper::_post('service_extras', [], 'arr');
+		$giftcard		    = Helper::_post('giftcard', '', 'str');
+		$discount_price	    = Helper::_post('discount_price', 0, 'float');
+
+
+		$brought_people_count		=	Helper::_post('brought_people_count', 0 , 'int');
+		$total_customer_count		=	$brought_people_count + 1;
+
+		$giftcardInf        = AppointmentService::getGiftcardInf( $service, $staff, $service_extras, $giftcard, $discount_price, $total_customer_count );
+
+		Helper::response( true, $giftcardInf );
 	}
 
 	public static function get_available_times_all()
@@ -1310,6 +1228,28 @@ class Ajax extends FrontendAjax
 		}
 
 		return implode(' > ', array_reverse($categNames));
+	}
+
+
+
+	public static function check_timeslot_capacity()
+	{
+		$service_id				    =	Helper::_post('service_id', 0, 'int');
+		$staff_id				    =	Helper::_post('staff_id', 0, 'int');
+		$date					    =	Helper::_post('date', '', 'str');
+		$time					    =	Helper::_post('time', '', 'str');
+		$brought_people_count		=	Helper::_post('brought_people_count', 0 , 'int');
+
+
+		$check = AppointmentService::timeslot_capacity_is_available( $service_id, $staff_id, $date, $time, $brought_people_count);
+
+		if( $check['status'] )
+		{
+			Helper::response( true );
+		}
+
+		Helper::response( false, ['message' => $check['message']] );
+		
 	}
 
 }

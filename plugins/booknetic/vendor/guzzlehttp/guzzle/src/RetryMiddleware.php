@@ -1,9 +1,9 @@
 <?php
-namespace GuzzleHttp;
+namespace Booknetic_GuzzleHttp;
 
-use GuzzleHttp\Promise\PromiseInterface;
-use GuzzleHttp\Promise\RejectedPromise;
-use GuzzleHttp\Psr7;
+use Booknetic_GuzzleHttp\Promise\PromiseInterface;
+use Booknetic_GuzzleHttp\Promise\RejectedPromise;
+use Booknetic_GuzzleHttp\Psr7;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -110,7 +110,7 @@ class RetryMiddleware
                 null,
                 $reason
             )) {
-                return \GuzzleHttp\Promise\rejection_for($reason);
+                return \Booknetic_GuzzleHttp\Promise\rejection_for($reason);
             }
             return $this->doRetry($req, $options);
         };

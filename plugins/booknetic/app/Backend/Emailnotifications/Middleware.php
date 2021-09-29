@@ -17,7 +17,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 				return true;
 			}
 
-			if( Permission::tenantInf()->getPermission( 'email_notifications' ) === 'on' )
+			if( Permission::getPermission( 'email_notifications' ) === 'on' )
 			{
 				return true;
 			}

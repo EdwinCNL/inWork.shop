@@ -3,6 +3,7 @@
 namespace BookneticApp\Backend\Billing\Controller;
 
 
+use BookneticApp\Providers\Math;
 use BookneticSaaS\Backend\Plans\Model\Plan;
 use BookneticSaaS\Backend\Tenants\Model\Tenant;
 use BookneticSaaS\Backend\Tenants\Model\TenantBilling;
@@ -35,7 +36,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 
 		$amount                 = $payment_cycle == 'monthly' ? $planInf->monthly_price : $planInf->annually_price;
 		$discount               = $payment_cycle == 'monthly' ? $planInf->monthly_price_discount : $planInf->annually_price_discount;
-		$first_month_amount     = $discount > 0 && $discount <= 100 ? Helper::floor( ($amount * (100 - $discount) / 100), \BookneticSaaS\Providers\Helper::getOption('price_number_of_decimals', '2') ) : $amount;
+		$first_month_amount     = $discount > 0 && $discount <= 100 ? Math::floor( ($amount * (100 - $discount) / 100), \BookneticSaaS\Providers\Helper::getOption('price_number_of_decimals', '2') ) : $amount;
 
 		TenantBilling::insert([
 			'amount'            =>  $first_month_amount,

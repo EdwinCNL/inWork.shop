@@ -37,6 +37,21 @@
 				$('#integrations_zoom_settings_area').slideUp(fadeSpeed);
 			}
 			fadeSpeed = 400;
+		}).on('click', '#disconnect_zoom', function ()
+		{
+			booknetic.ajax('disconnect_zoom', { }, function ()
+			{
+				$('#disconnect_zoom_area').fadeOut( 200, function ()
+				{
+					$('#connect_zoom').fadeIn(200);
+				})
+			});
+		}).on('click', '#connect_zoom', function ()
+		{
+			booknetic.ajax('connect_zoom', { }, function ( result )
+			{
+				location.href = result['url'];
+			});
 		});
 
 		$('input[name="input_zoom_enable"]').trigger('change');

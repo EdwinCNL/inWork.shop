@@ -11,4 +11,5 @@ print $parameters['table'];
 <link rel="stylesheet" type="text/css" href="<?php print Helper::assets('css/bootstrap-colorpicker.min.css', 'Services')?>" />
 <script type="application/javascript" src="<?php print Helper::assets('js/bootstrap-colorpicker.min.js', 'Services')?>"></script>
 
+<link rel="stylesheet" type="text/css" href="<?php print Helper::assets('css/service-list.css', 'Services')?>" />
 <script type="text/javascript" src="<?php print Helper::assets('js/services-list.js', 'Services')?>"></script>

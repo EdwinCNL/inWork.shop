@@ -17,7 +17,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 				return true;
 			}
 
-			if( Permission::tenantInf()->getPermission( 'appearances' ) === 'on' )
+			if( Permission::getPermission( 'appearances' ) === 'on' )
 			{
 				return true;
 			}
@@ -33,7 +33,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 		// add menu...
 		$this->createMenu( bkntc__('Appearance') )
 			->setIcon('fa fa-paint-brush')
-			->setOrder(14)
+			->setOrder(16)
 			->show();
 
 

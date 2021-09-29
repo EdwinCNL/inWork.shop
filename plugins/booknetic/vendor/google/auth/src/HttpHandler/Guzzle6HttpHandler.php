@@ -2,7 +2,7 @@
 
 namespace Google\Auth\HttpHandler;
 
-use GuzzleHttp\ClientInterface;
+use Booknetic_GuzzleHttp\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -39,7 +39,7 @@ class Guzzle6HttpHandler
      * @param RequestInterface $request
      * @param array $options
      *
-     * @return \GuzzleHttp\Promise\PromiseInterface
+     * @return \Booknetic_GuzzleHttp\Promise\PromiseInterface
      */
     public function async(RequestInterface $request, array $options = [])
     {

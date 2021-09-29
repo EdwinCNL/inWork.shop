@@ -17,11 +17,11 @@
 namespace Google\Auth\HttpHandler;
 
 use Exception;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Message\ResponseInterface as Guzzle5ResponseInterface;
-use GuzzleHttp\Promise\Promise;
-use GuzzleHttp\Promise\RejectedPromise;
-use GuzzleHttp\Psr7\Response;
+use Booknetic_GuzzleHttp\ClientInterface;
+use Booknetic_GuzzleHttp\Message\ResponseInterface as Guzzle5ResponseInterface;
+use Booknetic_GuzzleHttp\Promise\Promise;
+use Booknetic_GuzzleHttp\Promise\RejectedPromise;
+use Booknetic_GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -65,7 +65,7 @@ class Guzzle5HttpHandler
      */
     public function async(RequestInterface $request, array $options = [])
     {
-        if (!class_exists('GuzzleHttp\Promise\Promise')) {
+        if (!class_exists('Booknetic_GuzzleHttp\Promise\Promise')) {
             throw new Exception('Install guzzlehttp/promises to use async with Guzzle 5');
         }
 

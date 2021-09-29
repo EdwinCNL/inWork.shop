@@ -4,21 +4,25 @@ namespace BookneticApp\Frontend\view;
 use BookneticApp\Providers\Helper;
 use BookneticApp\Providers\Permission;
 
+
 defined( 'ABSPATH' ) or die();
 
-
-if( Helper::isSaaSVersion() && Permission::tenantInf()->getPermission( 'receiving_appointments' ) === 'off' )
+if( Helper::isSaaSVersion() && ($tenantInf = Permission::tenantInf()) && $tenantInf->getPermission( 'receiving_appointments' ) === 'off' )
 {
 	print '<div>' . bkntc__('You can\'t receive appointments. Please upgrade your plan to receive appointments.') . '</div>';
 	return;
 }
-
 ?>
 
 <div id="booknetic_progress" class="booknetic_progress_waiting booknetic_progress_done"><dt></dt><dd></dd></div>
 
-<div class="booknetic_appointment" id="booknetic_theme_<?php print $theme_id;?>">
-	<div class="booknetic_appointment_steps">
+<div class="booknetic_appointment<?php print Helper::is_rtl_language( Permission::tenantId() ) ? " booknetic_rtl": "" ?>" id="booknetic_theme_<?php print $theme_id;?>">
+	<div class="booknetic_appointment_steps <?php print Helper::getOption('display_logo_on_booking_panel', 'off') == 'on' ? 'has-logo' : ''; ?>">
+		<?php if( Helper::getOption('display_logo_on_booking_panel', 'off') == 'on' ):?>
+		<div class="booknetic_company_logo">
+			<img src="<?php print Helper::profileImage(Helper::getOption('company_image', ''), 'Settings')?>">
+		</div>
+		<?php endif;?>
 		<div class="booknetic_appointment_steps_body">
 			<?php
 			foreach ( $steps_order AS $stepId )

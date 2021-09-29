@@ -17,7 +17,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 				return true;
 			}
 
-			if( Permission::tenantInf()->getPermission( 'whatsapp_notifications' ) === 'on' )
+			if( Permission::getPermission( 'whatsapp_notifications' ) === 'on' )
 			{
 				return true;
 			}
@@ -33,7 +33,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 		// add menu...
 		$this->createMenu(bkntc__('WhatsApp Notifications'))
 			->setParent( 'notifications', 'fa fa-bell', bkntc__( 'Notifications' ) )
-			->setOrder(11)
+			->setOrder(14)
 			->show();
 
 

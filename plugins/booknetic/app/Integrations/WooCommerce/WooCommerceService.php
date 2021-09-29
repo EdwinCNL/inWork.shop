@@ -9,10 +9,12 @@ use BookneticApp\Backend\Appointments\Model\AppointmentCustomer;
 use BookneticApp\Backend\Appointments\Model\AppointmentExtra;
 use BookneticApp\Backend\Customers\Model\Customer;
 use BookneticApp\Backend\Locations\Model\Location;
+use BookneticApp\Backend\Services\Model\ServiceExtra;
 use BookneticApp\Backend\Staff\Model\Staff;
 use BookneticApp\Providers\Date;
 use BookneticApp\Providers\DB;
 use BookneticApp\Providers\Helper;
+use BookneticApp\Providers\Permission;
 
 class WooCommerceService
 {
@@ -40,6 +42,18 @@ class WooCommerceService
 		if( !self::woocommerceIsEnabled() )
 			return;
 
+		if( Helper::isSaaSVersion() )
+		{
+			add_action('wp_loaded', [self::class, 'setTenantIdForSaaS']);
+		}
+
+		if( Helper::_post('client_time_zone', null) === null )
+		{
+			add_action('wp_loaded', [self::class, 'setClientTimezone']);
+		}
+
+		add_action('wp_loaded', [self::class, 'checkSelectedTimeslot']);
+
 		$productId = self::bookneticProduct();
 
 		add_filter( 'woocommerce_get_item_data',			            [self::class, 'getItemData'], 10, 2 );
@@ -48,6 +62,13 @@ class WooCommerceService
 		add_filter( 'woocommerce_cart_item_thumbnail',		            [self::class, 'productImage'], 10, 3 );
 		add_filter( 'woocommerce_cart_item_price',      	            [self::class, 'productPrice'], 10, 3 );
 		add_action( 'woocommerce_before_calculate_totals',              [self::class, 'beforeCalculateTotals'], 10, 1 );
+        $terms = [];
+		$terms[] = 'exclude-from-search';
+        $terms[] = 'exclude-from-catalog';
+		if ( ! is_wp_error( wp_set_post_terms( $productId, $terms, 'product_visibility', false ) ) )
+		{
+            do_action( 'woocommerce_product_set_visibility', $productId, "hidden" );
+        }
 
 		if ( version_compare( WC()->version, '3.0', '>=') )
 		{
@@ -65,7 +86,6 @@ class WooCommerceService
 		add_action( 'woocommerce_order_status_completed',               [self::class, 'paymentComplete'], 10, 1 );
 		//add_action( 'woocommerce_order_status_on-hold',                 [self::class, 'paymentComplete'], 10, 1 );
 		add_action( 'woocommerce_order_status_processing',              [self::class, 'paymentComplete'], 10, 1 );
-
 
 		add_filter( 'woocommerce_checkout_cart_item_quantity',			[self::class, 'checkoutCartItemQuantity'], 10, 2 );
 		add_filter( 'woocommerce_order_item_quantity_html',		    	[self::class, 'checkoutCartItemQuantity'], 10, 2 );
@@ -214,7 +234,7 @@ class WooCommerceService
 	{
 		foreach ( self::getCartItems() AS $cart_item )
 		{
-			if ( isset( $cart_item['booknetic_appointment_id'] ) && self::appointmentExist( $cart_item['booknetic_appointment_id'] ) )
+			if ( isset( $cart_item['booknetic_appointment_id'] ) && self::appointmentExist( $cart_item['booknetic_appointment_id'] ) && !self::appointmentIsApproved( $cart_item['booknetic_appointment_id'] ) )
 			{
 				self::removeAppointment( $cart_item );
 			}
@@ -274,11 +294,16 @@ class WooCommerceService
 	{
 		if( isset( $cart_item['booknetic_appointment_id'] ) && self::appointmentExist( $cart_item['booknetic_appointment_id'] ) )
 		{
-			$item_name = esc_html( self::appointmentInfo( $cart_item['booknetic_appointment_id'] )->service()->fetch()->name );
+			$appointmentInf = self::appointmentInfo( $cart_item['booknetic_appointment_id'] );
 
-			if( self::getAppoointmentsCount( $cart_item['booknetic_appointment_id'] ) > 1 )
+			if( $appointmentInf )
 			{
-				$item_name .= ' <strong class="product-quantity">× ' . self::getAppoointmentsCount( $cart_item['booknetic_appointment_id'] ) . '</strong>';
+				$item_name = esc_html( $appointmentInf->service()->fetch()->name );
+
+				if( self::getAppoointmentsCount( $cart_item['booknetic_appointment_id'] ) > 1 )
+				{
+					$item_name .= ' <strong class="product-quantity">× ' . self::getAppoointmentsCount( $cart_item['booknetic_appointment_id'] ) . '</strong>';
+				}
 			}
 		}
 
@@ -294,7 +319,11 @@ class WooCommerceService
 	{
 		if( isset( $cart_item['booknetic_appointment_id'] ) && self::appointmentExist( $cart_item['booknetic_appointment_id'] ) )
 		{
-			$_product_img = '<img src="'.Helper::profileImage(self::appointmentInfo( $cart_item['booknetic_appointment_id'] )->service()->fetch()->image, 'Services').'" width="300" height="300">';
+			$appointmentInf = self::appointmentInfo( $cart_item['booknetic_appointment_id'] );
+			if( $appointmentInf )
+			{
+				$_product_img = '<img src="'.Helper::profileImage( $appointmentInf->service()->fetch()->image, 'Services' ).'" width="300" height="300">';
+			}
 		}
 
 		return $_product_img;
@@ -326,7 +355,7 @@ class WooCommerceService
 	{
 		$additionalData = '';
 
-		$woocommerde_order_details = Helper::getOption('woocommerde_order_details', "Date: {appointment_date}\nTime: {appointment_start_time}\nStaff: {staff_name}");
+		$woocommerde_order_details = Helper::getOption('woocommerde_order_details', "Date: {appointment_date}\nTime: {appointment_start_time}\nStaff: {staff_name}", false);
 		$woocommerde_order_details = trim($woocommerde_order_details);
 		if( !empty( $woocommerde_order_details ) )
 		{
@@ -346,14 +375,16 @@ class WooCommerceService
 	{
 		$appointmentInfo 			= self::appointmentInfo( $appointmentCustomerId );
 		$appointmentCustomerInfo	= self::appointmentCustomerInfo( $appointmentCustomerId );
-		$serviceInfo				= $appointmentInfo->service()->fetch();
-		$categoryInfo				= $serviceInfo->category()->fetch();
-		$customerInfo				= $appointmentCustomerInfo->customer()->fetch();
-		$staffInfo					= $appointmentInfo->staff()->fetch();
-		$locationInfo				= $appointmentInfo->location()->fetch();
+		$serviceInfo				= $appointmentInfo ? $appointmentInfo->service()->fetch() : false;
+		$categoryInfo				= $serviceInfo ? $serviceInfo->category()->fetch() : false;
+		$customerInfo				= $appointmentCustomerInfo ? $appointmentCustomerInfo->customer()->fetch() : false;
+		$staffInfo					= $appointmentInfo ? $appointmentInfo->staff()->fetch() : false;
+		$locationInfo				= $appointmentInfo ? $appointmentInfo->location()->fetch() : false;
 
-		$appointmentId				= $appointmentInfo->id;
-		$customerId					= $customerInfo->id;
+		$appointmentId				= $appointmentInfo ? $appointmentInfo->id : 0;
+		$customerId					= $customerInfo ? $customerInfo->id : 0;
+
+		$dateTimeEpoch              = Date::epoch( $appointmentInfo['date'] . ' ' . $appointmentInfo['start_time'] );
 
 		$body = str_replace( [
 			'{appointment_id}',
@@ -371,6 +402,7 @@ class WooCommerceService
 			'{appointment_sum_price}',
 			'{appointment_paid_price}',
 			'{appointment_payment_method}',
+			'{appointment_tax_amount}',
 
 			'{service_name}',
 			'{service_price}',
@@ -408,10 +440,10 @@ class WooCommerceService
 			'{company_address}',
 		], [
 			$appointmentCustomerInfo['id'],
-			Date::datee( $appointmentInfo['date'] ),
-			Date::dateTime($appointmentInfo['date'] . ' ' . $appointmentInfo['start_time'] ),
-			Date::time( $appointmentInfo['date'] . ' ' . $appointmentInfo['start_time'] ),
-			Date::time(Date::epoch( $appointmentInfo['date'] . ' ' . $appointmentInfo['start_time'] ) + $appointmentInfo['duration'] * 60),
+			Date::datee( $dateTimeEpoch, false, true, $appointmentCustomerInfo['client_timezone'] ),
+			Date::dateTime($dateTimeEpoch, false, true, $appointmentCustomerInfo['client_timezone'] ),
+			Date::time( $dateTimeEpoch, false, true,$appointmentCustomerInfo['client_timezone'] ),
+			Date::time($dateTimeEpoch + $appointmentInfo['duration'] * 60, false, true),
 			Helper::secFormat( $appointmentInfo['duration'] * 60 ),
 			Helper::secFormat( $appointmentInfo['buffer_before'] * 60 ),
 			Helper::secFormat( $appointmentInfo['buffer_after'] * 60 ),
@@ -422,6 +454,7 @@ class WooCommerceService
 			Helper::price( $appointmentCustomerInfo['service_amount'] + $appointmentCustomerInfo['extras_amount'] - $appointmentCustomerInfo['discount'] ),
 			Helper::price( $appointmentCustomerInfo['paid_amount'] ),
 			Helper::paymentMethod( $appointmentCustomerInfo['payment_method'] ),
+			Helper::price( $appointmentCustomerInfo['tax_amount'] ),
 
 			$serviceInfo['name'],
 			Helper::price( $serviceInfo['price'] ),
@@ -559,7 +592,14 @@ class WooCommerceService
 	 */
 	public static function paymentMethodIsEnabled()
 	{
+		// Woocommerce plugin is not installed.
 		if( !self::woocommerceIsEnabled() )
+		{
+			return false;
+		}
+
+		// On the Woocommerce settings (SaaS settings) is not allowed to use the Woocommerce integration.
+		if( Helper::isSaaSVersion() && Helper::getOption('allow_to_use_woocommerce_integration', 'off', false) == 'off' )
 		{
 			return false;
 		}
@@ -579,7 +619,7 @@ class WooCommerceService
 		if( !self::paymentMethodIsEnabled() )
 			return 0;
 
-		$productId = Helper::getOption('woocommerce_product_id');
+		$productId = Helper::getOption('woocommerce_product_id', null, false);
 
 		if( $productId )
 		{
@@ -594,7 +634,7 @@ class WooCommerceService
 				'post_status'   => 'publish'
 			]);
 
-			Helper::setOption('woocommerce_product_id', $productId);
+			Helper::setOption('woocommerce_product_id', $productId, false);
 
 			// set product is simple/variable/grouped
 			wp_set_object_terms( $productId, 'simple', 'product_type' );
@@ -639,7 +679,11 @@ class WooCommerceService
 		self::setCustomerCookie();
 
 		WC()->cart->empty_cart();
-		WC()->cart->add_to_cart( self::bookneticProduct(), 1, '', [], ['booknetic_appointment_id' => $appointmentId] );
+		WC()->cart->add_to_cart( self::bookneticProduct(), 1, '', [], [
+			'booknetic_appointment_id'  => $appointmentId,
+			'booknetic_tenant_id'       => Permission::tenantId(),
+			'client_time_zone'          => Helper::_post('client_time_zone', '', 'string')
+		] );
 
 		return true;
 	}
@@ -666,16 +710,16 @@ class WooCommerceService
 	 */
 	public static function redirect()
 	{
-		return Helper::getOption('woocommerce_rediret_to', 'cart') == 'cart' ? wc_get_cart_url() : wc_get_checkout_url();
+		return Helper::getOption('woocommerce_rediret_to', 'cart', false) == 'cart' ? wc_get_cart_url() : wc_get_checkout_url();
 	}
 
 	/**
-	 * @param $id
+	 * @param $appointmentCustomerId
 	 * @return Appointment
 	 */
-	private static function appointmentInfo( $id )
+	private static function appointmentInfo( $appointmentCustomerId )
 	{
-		$appointmentCustomerInfo = self::appointmentCustomerInfo( $id );
+		$appointmentCustomerInfo = self::appointmentCustomerInfo( $appointmentCustomerId );
 
 		if( !isset( self::$_appointments[ $appointmentCustomerInfo->appointment_id ] ) )
 		{
@@ -752,6 +796,21 @@ class WooCommerceService
 		return $bookingInfo && $bookingInfo->id > 0;
 	}
 
+
+
+	/**
+	 * @param $bookingId
+	 * @return bool
+	 */
+	private static function appointmentIsApproved( $bookingId )
+	{
+		$bookingInfo = AppointmentCustomer::get( $bookingId );
+
+		return $bookingInfo['status'] === 'approved';
+	}
+
+
+
 	/**
 	 * @param $bookingId
 	 */
@@ -786,7 +845,7 @@ class WooCommerceService
 	{
 		if( is_null( self::$woocommerceCartItems ) )
 		{
-			self::$woocommerceCartItems = WC()->cart->get_cart();
+			self::$woocommerceCartItems = WC()->cart ? WC()->cart->get_cart() : [];
 		}
 
 		return self::$woocommerceCartItems;
@@ -809,6 +868,77 @@ class WooCommerceService
 		}
 
 		return false;
+	}
+
+	public static function setTenantIdForSaaS()
+	{
+		foreach ( self::getCartItems() AS $item )
+		{
+			if( isset( $item['booknetic_tenant_id'] ) && $item['booknetic_tenant_id'] > 0 )
+			{
+				Permission::setTenantId( $item['booknetic_tenant_id'] );
+
+				$wcSaaSHelper = new WCPaymentGateways();
+				$wcSaaSHelper->startReplacingNecessaryOptions();
+
+				return true;
+			}
+		}
+	}
+
+	public static function setClientTimezone()
+	{
+		foreach ( self::getCartItems() AS $item )
+		{
+			if( isset( $item['client_time_zone'] ) && $item['client_time_zone'] !== '' )
+			{
+				Date::resetTimezone();
+
+				$_POST['client_time_zone'] = (string)$item['client_time_zone'];
+
+				return true;
+			}
+		}
+	}
+
+	/**
+	 * Sechilen timeslot 10 deqiqe erzinde statusu waiting_for_payment olur ki, bu muddet erzinde 2-ci user eyni timeslotu seche bilmesin.
+	 * Lakin 10 deqiqe sonra avtomatik status cancel olur ve mushteriler artiq bu timeslotu seche bilerler.
+	 * Eyni timeslota 2 mushteri rezervasiya etmesinin qarshisini almaq uchun bu metod yaradilib...
+	 */
+	public static function checkSelectedTimeslot()
+	{
+		$appointmentCustomerId = self::bookneticAppointmentId();
+
+		if( $appointmentCustomerId !== false )
+		{
+			$appointmentCustomerInfo    = self::appointmentCustomerInfo( $appointmentCustomerId );
+			$appointmentInf             = $appointmentCustomerInfo->appointment()->fetch();
+
+			if( $appointmentCustomerInfo->status != 'waiting_for_payment' )
+			{
+				$extras_arr = [];
+
+				foreach ( $appointmentInf->extras()->fetchAll() AS $extraInf )
+				{
+					$extras_arr[] = [
+						'id'            =>  $extraInf->extra_id,
+						'quantity'      =>  $extraInf->quantity,
+						'price'         =>  $extraInf->price,
+						'duration'      =>  $extraInf->duration,
+						'customer'      =>  $extraInf->customer_id
+					];
+				}
+
+				$selectedTimeSlotInfo = AppointmentService::getTimeSlotInfo( $appointmentInf->service_id, $extras_arr, $appointmentInf->staff_id, $appointmentInf->date, $appointmentInf->start_time, true );
+
+				if( empty( $selectedTimeSlotInfo ) )
+				{
+					self::emptyCart();
+					WC()->cart->empty_cart();
+				}
+			}
+		}
 	}
 
 	/**

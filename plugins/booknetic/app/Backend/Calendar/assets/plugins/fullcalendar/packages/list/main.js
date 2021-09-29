@@ -111,6 +111,15 @@ Docs & License: https://fullcalendar.io/
         };
         // like "4:00am"
         ListEventRenderer.prototype.computeEventTimeFormat = function () {
+            if(timeFormat == 'H:i')
+            {
+                return {
+                    hour:   '2-digit',
+                    minute: '2-digit',
+                    hour12: false,
+                    meridiem: false
+                };
+            }
             return {
                 hour: 'numeric',
                 minute: '2-digit',

@@ -77,6 +77,7 @@
 			{
 
 				var picker = new Picker( {
+					popup: booknetic.isMobileVer() ? 'left' : 'right',
 					parent: parent1,
 					onChange: function ( color )
 					{
@@ -89,7 +90,7 @@
 						var scrollX = window.scrollX;
 						var scrollY = window.scrollY;
 						var top = $(parent1).offset().top - scrollY;
-						var left = $(parent1).offset().left + 50 - scrollX;
+						var left = booknetic.isMobileVer() ? ( $(parent1).offset().left - width - 50 ) : ( $(parent1).offset().left + 50 - scrollX );
 
 						if( top + height + scrollY > $(document).outerHeight() )
 						{
@@ -98,7 +99,11 @@
 								left: left,
 								position: 'fixed'
 							});
-							$(parent1).find('.picker_wrapper > .picker_arrow').css('top', height/2+'px');
+
+							if ( ! booknetic.isMobileVer() )
+							{
+								$(parent1).find('.picker_wrapper > .picker_arrow').css('top', height/2+'px');
+							}
 						}
 						else
 						{
@@ -107,7 +112,11 @@
 								left: left,
 								position: 'fixed'
 							});
-							$(parent1).find('.picker_wrapper > .picker_arrow').css('top', 0);
+
+							if ( ! booknetic.isMobileVer() )
+							{
+								$(parent1).find('.picker_wrapper > .picker_arrow').css('top', 0);
+							}
 						}
 					},
 					alpha: false,
@@ -124,6 +133,7 @@
 			var name        = $('#input_name').val();
 			var height      = $('#input_height').val();
 			var fontfamily  = $('#input_fontfamily').val();
+			var custom_css  = $('#custom_css').val();
 			var colors      = {};
 
 			$(".colorpicker01[data-for]").each(function ()
@@ -135,6 +145,7 @@
 			booknetic.ajax('save', {
 				id: $('#appearance-script').data('id'),
 				name: name,
+				custom_css: custom_css,
 				colors: JSON.stringify(colors),
 				height: height,
 				fontfamily: fontfamily

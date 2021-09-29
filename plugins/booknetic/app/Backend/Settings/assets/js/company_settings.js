@@ -23,11 +23,12 @@
 			}
 		}).on('click', '.settings-save-btn', function ()
 		{
-			var company_name		= $("#input_company_name").val(),
-				company_address		= $("#input_company_address").val(),
-				company_phone		= $("#input_company_phone").val(),
-				company_website		= $("#input_company_website").val(),
-				company_image		= $("#company_image_input")[0].files[0];
+			var company_name		            = $("#input_company_name").val(),
+				company_address		            = $("#input_company_address").val(),
+				company_phone		            = $("#input_company_phone").val(),
+				company_website		            = $("#input_company_website").val(),
+				display_logo_on_booking_panel	= $("#input_display_logo_on_booking_panel").is(':checked')?'on':'off',
+				company_image		            = $("#company_image_input")[0].files[0];
 
 			var data = new FormData();
 
@@ -35,6 +36,7 @@
 			data.append('company_address', company_address);
 			data.append('company_phone', company_phone);
 			data.append('company_website', company_website);
+			data.append('display_logo_on_booking_panel', display_logo_on_booking_panel);
 			data.append('company_image', company_image);
 
 			booknetic.ajax('save_company_settings', data, function()

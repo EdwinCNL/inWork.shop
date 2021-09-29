@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-use GuzzleHttp\Client;
-use GuzzleHttp\ClientInterface;
+use Booknetic_GuzzleHttp\Client;
+use Booknetic_GuzzleHttp\ClientInterface;
 
 class Google_AuthHandler_AuthHandlerFactory
 {

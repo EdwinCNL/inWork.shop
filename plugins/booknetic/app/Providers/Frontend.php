@@ -5,6 +5,8 @@ namespace BookneticApp\Providers;
 use BookneticApp\Backend\Appearance\Helpers\Theme;
 use BookneticApp\Backend\Appearance\Model\Appearance;
 use BookneticApp\Backend\Appointments\Helpers\AppointmentService;
+use BookneticApp\Backend\Appointments\Model\Appointment;
+use BookneticApp\Backend\Appointments\Model\AppointmentCustomer;
 use BookneticApp\Backend\Customers\Model\Customer;
 use BookneticApp\Backend\Locations\Model\Location;
 use BookneticApp\Backend\Services\Model\Service;
@@ -35,7 +37,6 @@ class Frontend
 		{
 			self::addShortcodes();
 		}
-
 	}
 
 	private static function checkSocialLogin()
@@ -172,6 +173,12 @@ class Frontend
 	{
 		add_shortcode('booknetic', function( $atts )
 		{
+            wp_enqueue_script( 'booknetic', Helper::assets('js/booknetic.js', 'front-end'), [ 'jquery' ] );
+		    if(Helper::getOption('only_registered_users_can_book', 'off') == 'on' && !is_user_logged_in())
+            {
+                wp_add_inline_script( 'booknetic', 'location.href="'.wp_login_url().'";' );
+                return bkntc__('Redirecting...');
+            }
 			$theme = null;
 			if( isset( $atts['theme'] ) && is_numeric( $atts['theme'] ) && $atts['theme'] > 0 )
 			{
@@ -181,9 +188,8 @@ class Frontend
 			{
 				$theme = Appearance::where('is_default', '1')->fetch();
 			}
-			$fontfamily = $theme['fontfamily'];
+			$fontfamily = $theme ? $theme['fontfamily'] : 'Poppins';
 
-			wp_enqueue_script( 'booknetic', Helper::assets('js/booknetic.js', 'front-end'), [ 'jquery' ] );
 			$bookneticJSData = [
 				'ajax_url'		            => admin_url( 'admin-ajax.php' ),
 				'assets_url'	            => Helper::assets('/', 'front-end') ,
@@ -217,6 +223,7 @@ class Frontend
 
 					// select placeholders
 					'select'                => bkntc__('Select...'),
+					'searching'				=> bkntc__('Searching...'),
 
 					// messages
 					'select_location'       => bkntc__('Please select location.'),
@@ -268,9 +275,12 @@ class Frontend
 			wp_enqueue_style('booknetic.datapicker', Helper::assets('css/datepicker.min.css', 'front-end'));
 			wp_enqueue_style('intlTelInput', Helper::assets('css/intlTelInput.min.css', 'front-end'));
 
-			$theme_id = $theme['id'];
-			$themeCssFile = Theme::getThemeCss( $theme_id );
-			wp_enqueue_style('booknetic-theme', str_replace(['http://', 'https://'], '//', $themeCssFile));
+			$theme_id = $theme ? $theme['id'] : 0;
+			if( $theme_id > 0 )
+			{
+				$themeCssFile = Theme::getThemeCss( $theme_id );
+				wp_enqueue_style('booknetic-theme', str_replace(['http://', 'https://'], '//', $themeCssFile));
+			}
 
 			$company_phone_number = Helper::getOption('company_phone', '');
 
@@ -299,7 +309,7 @@ class Frontend
 				],
 				'service_extras'	=> [
 					'value'			=>	'',
-					'hidden'		=>	Helper::getOption('show_step_service_extras', 'on') == 'off',
+					'hidden'		=>	( Helper::isSaaSVersion() && Permission::getPermission('services') == 'off' ? true : false ) || Helper::getOption('show_step_service_extras', 'on') == 'off',
 					'loader'		=>	'card2',
 					'title'			=>	bkntc__('Service Extras'),
 					'head_title'	=>	bkntc__('Select service extras')
@@ -335,12 +345,12 @@ class Frontend
 			];
 			$steps_order = Helper::getBookingStepsOrder(true);
 
-			if( Helper::getOption('show_step_location', 'on') == 'off' && ($location = Location::where('is_active', '1')->fetch()) )
+			if( ( Helper::isSaaSVersion() && Permission::getPermission('locations') == 'off' ? true : false ) || ( Helper::getOption('show_step_location', 'on') == 'off' ) && ($location = Location::where('is_active', '1')->fetch()) )
 			{
 				$steps['location']['hidden'] = true;
 				$steps['location']['value'] = -1;
 			}
-			else if( isset($atts['location']) && is_numeric($atts['location']) && $atts['location'] > 0 )
+			if( isset($atts['location']) && is_numeric($atts['location']) && $atts['location'] > 0 )
 			{
 				$locationInfo = Location::get( $atts['location'] );
 
@@ -351,12 +361,12 @@ class Frontend
 				}
 			}
 
-			if( Helper::getOption('show_step_staff', 'on') == 'off' && ($staff = Staff::where('is_active', '1')->fetch()) )
+			if( ( Helper::isSaaSVersion() && Permission::getPermission('staff') == 'off' ? true : false ) || ( Helper::getOption('show_step_staff', 'on') == 'off' ) && ($staff = Staff::where('is_active', '1')->fetch()) )
 			{
 				$steps['staff']['hidden'] = true;
 				$steps['staff']['value'] = -1;
 			}
-			else if( isset($atts['staff']) && is_numeric($atts['staff']) && $atts['staff'] > 0 )
+			if( isset($atts['staff']) && is_numeric($atts['staff']) && $atts['staff'] > 0 )
 			{
 				$staffInfo = Staff::get( $atts['staff'] );
 
@@ -367,7 +377,7 @@ class Frontend
 				}
 			}
 
-			if( Helper::getOption('show_step_service', 'on') == 'off' && ($service = Service::where('is_active', '1')->fetch()) )
+			if( ( Helper::isSaaSVersion() && Permission::getPermission('services') == 'off' ? true : false ) || ( Helper::getOption('show_step_service', 'on') == 'off' ) && ($service = Service::where('is_active', '1')->fetch()) )
 			{
 				$steps['service']['hidden'] = true;
 				$steps['service']['value'] = $service['id'];
@@ -378,7 +388,7 @@ class Frontend
 					$steps['recurring_info']['hidden'] = false;
 				}
 			}
-			else if( isset($atts['service']) && is_numeric($atts['service']) && $atts['service'] > 0 )
+			if( isset($atts['service']) && is_numeric($atts['service']) && $atts['service'] > 0 )
 			{
 				$serviceInfo = Service::get( $atts['service'] );
 
@@ -410,6 +420,7 @@ class Frontend
 				wp_enqueue_script( 'booknetic', Helper::assets('js/booknetic-cp.js', 'front-end'), [ 'jquery' ] );
 
 				$userId = Permission::userId();
+				$userEmail = Permission::userEmail();
 				if( !$userId )
 				{
 					if( Helper::isSaaSVersion() )
@@ -425,33 +436,22 @@ class Frontend
 					return bkntc__('Redirecting...');
 				}
 
-				$customer = Customer::where('user_id', $userId)->fetch();
-				if( !$customer )
+				$customers = Customer::noTenant()->where('user_id', $userId)->where('email', $userEmail)->fetchAll();
+				$customerIds = [];
+				foreach ( $customers AS $customerInf )
 				{
-					$wpUserInfo = get_userdata( $userId );
-
-					Customer::insert([
-						'user_id'		=>	$userId,
-						'first_name'	=>	$wpUserInfo->first_name,
-						'last_name'		=>	$wpUserInfo->last_name,
-						'phone_number'	=>	$wpUserInfo->billing_phone,
-						'email'			=>	$wpUserInfo->user_email,
-						'notes'			=>	$wpUserInfo->description
-					]);
-
-					$customer = Customer::where('user_id', $userId)->fetch();
+					$customerIds[] = $customerInf->id;
 				}
 
-				$appointments = DB::DB()->get_results(
-					DB::DB()->prepare('
-					SELECT `tb2`.*, `tb3`.`name` AS `service_name`, `tb4`.`name` AS `staff_name`, `tb4`.`profile_image` AS `staff_profile_image`, `tb1`.`id` AS `appointment_id`, `tb1`.`status`, tb1.service_amount, tb1.extras_amount, tb1.discount
-					FROM `'.DB::table('appointment_customers').'` `tb1`
-					INNER JOIN `'.DB::table('appointments').'` `tb2` ON `tb1`.`appointment_id`=`tb2`.`id`
-					INNER JOIN `'.DB::table('services').'` `tb3` ON `tb2`.`service_id`=`tb3`.`id`
-					INNER JOIN `'.DB::table('staff').'` `tb4` ON `tb2`.`staff_id`=`tb4`.`id`
-					WHERE `tb1`.`customer_id`=%d
-				', [ $customer->id ]), OBJECT_K
-				);
+				// get first customer...
+				$customer = empty( $customers ) ? new Collection( ) : $customers[0];
+
+				$appointments = Appointment::noTenant()
+					->leftJoin('customers', ['id', 'customer_id', 'status', 'service_amount', 'extras_amount', 'discount'])
+					->leftJoin('service', 'name')
+					->leftJoin('staff', ['name', 'profile_image'])
+					->where(DB::table('appointment_customers').'.customer_id', (empty( $customerIds ) ? 0 : $customerIds))
+					->fetchAll();
 
 				$fontfamily = 'Poppins';
 
@@ -460,6 +460,8 @@ class Frontend
 					'assets_url'	    => Helper::assets('/', 'front-end') ,
 					'date_format'	    => Helper::getOption('date_format', 'Y-m-d'),
 					'week_starts_on'    => Helper::getOption('week_starts_on', 'sunday') == 'monday' ? 'monday' : 'sunday',
+					'client_timezone'   => esc_html( Helper::getOption('client_timezone_enable', 'off') ),
+					'tz_offset_param'   => esc_html( Helper::_get('client_time_zone', '-', 'str') ),
 					'localization'      => [
 						// months
 						'January'               => bkntc__('January'),
@@ -485,7 +487,8 @@ class Frontend
 						'Sun'                   => bkntc__('Sun'),
 
 						// select placeholders
-						'select'                => bkntc__('Select...')
+						'select'                => bkntc__('Select...'),
+						'searching'				=> bkntc__('Searching...'),
 					],
 					'tenant_id'                 => Permission::tenantId()
 				]);
@@ -510,9 +513,6 @@ class Frontend
 				$email_is_required		= Helper::getOption('set_email_as_required', 'on');
 				$phone_is_required		= Helper::getOption('set_phone_as_required', 'off');
 
-				$allow_reschedule		= Helper::getOption('customer_panel_allow_reschedule', 'on', false) == 'on';
-				$allow_cancel			= Helper::getOption('customer_panel_allow_cancel', 'on', false) == 'on';
-				$allow_delete_account	= Helper::getOption('customer_panel_allow_delete_account', 'on', false) == 'on';
 
 				ob_start();
 				require self::FRONT_DIR . 'view' . DIRECTORY_SEPARATOR . 'client_panel/booknetic.php';

@@ -2,19 +2,21 @@
 
 namespace BookneticApp\Backend\Locations\Controller;
 
+use BookneticApp\Backend\Appointments\Model\Appointment;
+use BookneticApp\Backend\Locations\Model\Location;
 use BookneticApp\Providers\Controller;
 use BookneticApp\Providers\DataTable;
 use BookneticApp\Providers\DB;
 use BookneticApp\Providers\Helper;
+use BookneticApp\Providers\Permission;
 
 class Main extends Controller
 {
 
 	public function index()
 	{
-		$dataTable = new DataTable( "SELECT * FROM `" . DB::table('locations') . "`" . DB::tenantFilter('WHERE') );
+		$dataTable = new DataTable( new Location() );
 
-		$dataTable->setTableName('locations');
 		$dataTable->setTitle(bkntc__('Locations'));
 		$dataTable->addNewBtn(bkntc__('ADD LOCATION'));
 		$dataTable->activateExportBtn();
@@ -24,10 +26,12 @@ class Main extends Controller
 		$dataTable->searchBy(["name", 'address', 'phone_number', 'notes']);
 
 		$dataTable->addColumns(bkntc__('ID'), 'id');
+
 		$dataTable->addColumns(bkntc__('NAME'), function( $location )
 		{
 			return Helper::profileCard( $location['name'], $location['image'], '', 'Locations' );
 		}, ['is_html' => true, 'order_by_field' => "name"]);
+
 		$dataTable->addColumns(bkntc__('PHONE'), 'phone_number');
 		$dataTable->addColumns(bkntc__('ADDRESS'), 'address');
 
@@ -41,7 +45,7 @@ class Main extends Controller
 		foreach ( $ids AS $id )
 		{
 			// check if appointment exist
-			$checkAppointments = DB::fetch('appointments', ['location_id' => $id]);
+			$checkAppointments = Appointment::where('location_id', $id)->fetch();
 			if( $checkAppointments )
 			{
 				Helper::response(false, bkntc__('This location is using some Appointments. Firstly remove them!'));

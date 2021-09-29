@@ -3,6 +3,7 @@ namespace BookneticApp\Frontend\view;
 
 use BookneticApp\Providers\Helper;
 use BookneticApp\Providers\Date;
+use BookneticApp\Providers\Permission;
 
 defined( 'ABSPATH' ) or die();
 ?>
@@ -48,10 +49,10 @@ defined( 'ABSPATH' ) or die();
 					<div class="booknetic_appointment">
 						<div class="booknetic_appointment_steps">
 							<div class="booknetic_appointment_steps_body">
-								<div data-step-id="location" class="booknetic_appointment_step_element booknetic_active_step"><span class="booknetic_badge">1</span> <span class="booknetic_step_title" data-translate="Location"></span></div>
-								<div data-step-id="staff" class="booknetic_appointment_step_element"><span class="booknetic_badge">2</span> <span class="booknetic_step_title" data-translate="Staff"></span></div>
-								<div data-step-id="service" class="booknetic_appointment_step_element"><span class="booknetic_badge">3</span> <span class="booknetic_step_title" data-translate="Service"></span></div>
-								<div data-step-id="service_extras" class="booknetic_appointment_step_element"><span class="booknetic_badge">4</span> <span class="booknetic_step_title" data-translate="Service Extras"></span></div>
+								<div data-step-id="location" class="booknetic_appointment_step_element<?php print (Helper::isSaaSVersion() && Permission::getPermission('locations') == 'off' ? '_ hidden' : '')?>"><span class="booknetic_badge">1</span> <span class="booknetic_step_title" data-translate="Location"></span></div>
+								<div data-step-id="staff" class="booknetic_appointment_step_element<?php print (Helper::isSaaSVersion() && Permission::getPermission('staff') == 'off' ? '_ hidden' : '')?>"><span class="booknetic_badge">2</span> <span class="booknetic_step_title" data-translate="Staff"></span></div>
+								<div data-step-id="service" class="booknetic_appointment_step_element<?php print (Helper::isSaaSVersion() && Permission::getPermission('services') == 'off' ? '_ hidden' : '')?>"><span class="booknetic_badge">3</span> <span class="booknetic_step_title" data-translate="Service"></span></div>
+								<div data-step-id="service_extras" class="booknetic_appointment_step_element<?php print (Helper::isSaaSVersion() && Permission::getPermission('services') == 'off' ? '_ hidden' : '')?>"><span class="booknetic_badge">4</span> <span class="booknetic_step_title" data-translate="Service Extras"></span></div>
 								<div data-step-id="date_time" class="booknetic_appointment_step_element"><span class="booknetic_badge">5</span> <span class="booknetic_step_title" data-translate="Date & Time"></span></div>
 								<div data-step-id="information" class="booknetic_appointment_step_element"><span class="booknetic_badge">6</span> <span class="booknetic_step_title" data-translate="Information"></span></div>
 								<div data-step-id="confirm_details" class="booknetic_appointment_step_element"><span class="booknetic_badge">7</span> <span class="booknetic_step_title" data-translate="Confirmation"></span></div>
@@ -65,7 +66,7 @@ defined( 'ABSPATH' ) or die();
 						</div>
 						<div class="booknetic_appointment_container">
 
-							<div class="booknetic_appointment_container_header" data-step-id="location"><span data-translate="Select location"></span></div>
+							<div class="booknetic_appointment_container_header hidden" data-step-id="location"><span data-translate="Select location"></span></div>
 							<div class="booknetic_appointment_container_header hidden" data-step-id="staff"><span data-translate="Select staff"></span></div>
 							<div class="booknetic_appointment_container_header hidden" data-step-id="service"><span data-translate="Select service"></span></div>
 							<div class="booknetic_appointment_container_header hidden" data-step-id="service_extras"><span data-translate="Select service extras"></span></div>
@@ -76,7 +77,7 @@ defined( 'ABSPATH' ) or die();
 
 							<div class="booknetic_appointment_container_body">
 
-								<div data-step-id="location">
+								<div class="hidden" data-step-id="location">
 									<?php
 									foreach ( $parameters['locations'] AS $location )
 									{
@@ -317,7 +318,7 @@ defined( 'ABSPATH' ) or die();
 
 												<div class="booknetic_add_coupon<?php print Helper::getOption('hide_coupon_section', 'off') == 'on' ? ' hidden' : ''?>">
 													<input type="text" id="booknetic_coupon" placeholder="<?php print bkntc__('Add coupon')?>">
-													<button type="button" id="booknetic_coupon_ok_btn" class="booknetic_btn_success"><span data-translate="OK"></span></button>
+													<button type="button" class="booknetic_btn_success booknetic_coupon_ok_btn"><span data-translate="OK"></span></button>
 												</div>
 
 												<div class="booknetic_confirm_sum_price">

@@ -22,7 +22,7 @@
 {
 	color: #53d56c;
 }
-.fs-modal .customer-status-btn[data-status="pending"]
+.fs-modal .customer-status-btn[data-status="pending"], .fs-modal .customer-status-btn[data-status="waiting_for_payment"]
 {
 	color: #fd9b78;
 }

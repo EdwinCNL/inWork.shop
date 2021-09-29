@@ -1,6 +1,7 @@
 <?php
 namespace BookneticApp\Frontend\view;
 
+use BookneticApp\Integrations\WooCommerce\WCPaymentGateways;
 use BookneticApp\Providers\Helper;
 use BookneticApp\Providers\Date;
 use BookneticApp\Providers\Permission;
@@ -21,7 +22,7 @@ $gateways = [
 		'is_enabled'	=>	Helper::getOption('local_payment_enable', 'on') == 'on'
 	],
 	'woocommerce'	=>	[
-		'title'			=>	bkntc__('Woocommerce'),
+		'title'			=>	Helper::isSaaSVersion() ? bkntc__('Other') : bkntc__('Woocommerce'),
 		'is_enabled'	=>	Helper::getOption('woocommerce_enabled', 'off') == 'on'
 	]
 ];
@@ -29,31 +30,19 @@ $gateways = [
 $gateways_order = Helper::getOption('payment_gateways_order', 'stripe,paypal,local,woocommerce');
 $gateways_order = explode(',', $gateways_order);
 
-/**/
-$wc_payment_gateways = [];
-if( Helper::isSaaSVersion() )
+if( !in_array( 'local', $gateways_order ) )
+	$gateways_order[] = 'local';
+
+if( !in_array( 'woocommerce', $gateways_order ) )
+	$gateways_order[] = 'woocommerce';
+
+if( Helper::isSaaSVersion() && Helper::getOption('allow_to_use_woocommerce_integration', 'off', false) == 'off' )
 {
 	unset( $gateways['woocommerce'] );
-
-	if( false )
-	{
-		$wc_payment_gateways   = \WC_Payment_Gateways::instance();
-		$wc_payment_gateways   = $wc_payment_gateways->payment_gateways();
-
-		foreach ( $wc_payment_gateways AS $wc_payment_gateway_id => $wc_payment_gateway )
-		{
-			$gateways[ 'wc_' . $wc_payment_gateway_id ] = [
-				'title'         =>  $wc_payment_gateway->title,
-				'is_enabled'    =>  $wc_payment_gateway->enabled == 'enabled',
-				'is_wc'         =>  true
-			];
-
-			$gateways_order[] = 'wc_' . $wc_payment_gateway_id;
-		}
-	}
 }
 
-
+$WCPaymentGateweyService = new WCPaymentGateways();
+$WCPaymentGateweyService->startReplacingNecessaryOptions();
 ?>
 <div id="booknetic_settings_area">
 	<link rel="stylesheet" href="<?php print Helper::assets('css/payment_gateways_settings.css', 'Settings')?>">
@@ -73,26 +62,20 @@ if( Helper::isSaaSVersion() )
 			<div class="step_settings_container">
 				<div class="step_elements_list">
 					<?php
-					$wc_payments__ = false;
 					foreach ( $gateways_order AS $gateway )
 					{
 						if( !isset( $gateways[$gateway] ) )
 							continue;
 
 						$disabled = '';
-						if( ( $gateway == 'paypal' || $gateway == 'stripe' ) && Helper::isSaaSVersion() && Permission::tenantInf()->getPermission( $gateway ) == 'off' )
+						if( ( $gateway == 'paypal' || $gateway == 'stripe' ) && Helper::isSaaSVersion() && Permission::getPermission( $gateway ) == 'off' )
 						{
 							$disabled = ' disabled';
 						}
 
-						if( isset( $gateways[$gateway]['is_wc'] ) && !$wc_payments__ )
-						{
-							print '<div class="mb-2">'.bkntc__('Other payment methods:').'</div>';
-							$wc_payments__ = true;
-						}
 						?>
 						<div class="step_element" data-step-id="<?php print $gateway?>">
-							<span class="drag_drop_helper<?php print ( isset( $gateways[$gateway]['is_wc'] ) ? ' hidden' : '' )?>"><img src="<?php print Helper::icon('drag-default.svg')?>"></span>
+							<span class="drag_drop_helper"><img src="<?php print Helper::icon('drag-default.svg')?>"></span>
 							<span><?php print $gateways[$gateway]['title']?></span>
 							<div class="step_switch">
 								<div class="fs_onoffswitch">
@@ -111,7 +94,7 @@ if( Helper::isSaaSVersion() )
 						<div class="hidden" data-step="paypal">
 
 							<?php
-							if( Helper::isSaaSVersion() && Permission::tenantInf()->getPermission( 'paypal' ) == 'off' ):
+							if( Helper::isSaaSVersion() && Permission::getPermission( 'paypal' ) == 'off' ):
 								print Helper::renderView( 'Base.view.modal.permission_denied', [
 									'no_close_btn'  => true,
 									'text'          => bkntc__( 'You can\'t use Paypal with the %s plan. Please upgrade your plan to use Paypal.', [ esc_html( Permission::tenantInf()->plan()->fetch()->name ) ] )
@@ -142,7 +125,7 @@ if( Helper::isSaaSVersion() )
 						<div class="hidden" data-step="stripe">
 
 							<?php
-							if( Helper::isSaaSVersion() && Permission::tenantInf()->getPermission( 'stripe' ) == 'off' ):
+							if( Helper::isSaaSVersion() && Permission::getPermission( 'stripe' ) == 'off' ):
 								print Helper::renderView( 'Base.view.modal.permission_denied', [
 									'no_close_btn'  => true,
 									'text'          => bkntc__( 'You can\'t use Stripe with the %s plan. Please upgrade your plan to use Stripe.', [ Permission::tenantInf()->plan()->fetch()->name ] )
@@ -168,8 +151,18 @@ if( Helper::isSaaSVersion() )
 
 						</div>
 
-						<?php if( !Helper::isSaaSVersion() ):?>
 						<div class="hidden" data-step="woocommerce">
+							<?php if( !Helper::isSaaSVersion() ):?>
+							<div class="form-group col-md-12">
+								<div class="form-control-checkbox">
+									<label for="input_woocommerce_skip_confirm_step"><?php print bkntc__('Skip the Confirmation step')?>: <i class="far fa-question-circle do_tooltip" data-content="<?php print bkntc__("If you use Deposit Payments or Coupons, then you can have a confirmation step for your customers. Otherwise, it will redirect to WooCommerce by automatically skipping this step.")?>"></i></label>
+									<div class="fs_onoffswitch">
+										<input type="checkbox" class="fs_onoffswitch-checkbox" id="input_woocommerce_skip_confirm_step"<?php print Helper::getOption('woocommerce_skip_confirm_step', 'on')=='on'?' checked':''?>>
+										<label class="fs_onoffswitch-label" for="input_woocommerce_skip_confirm_step"></label>
+									</div>
+								</div>
+							</div>
+
 							<div class="form-group col-md-12">
 								<label for="input_woocommerce_rediret_to"><?php print bkntc__('Redirect customer to')?>:</label>
 								<select class="form-control" id="input_woocommerce_rediret_to">
@@ -183,27 +176,29 @@ if( Helper::isSaaSVersion() )
 								<textarea class="form-control" id="input_woocommerde_order_details"><?php print htmlspecialchars( Helper::getOption('woocommerde_order_details', "Date: {appointment_date}\nTime: {appointment_start_time}\nStaff: {staff_name}") )?></textarea>
 								<button type="button" class="btn btn-default btn-sm mt-2" data-load-modal="Settings.keywords_list"><?php print bkntc__('List of keywords')?> <i class="far fa-question-circle"></i></button>
 							</div>
+							<?php else:?>
+								<?php if ( ! class_exists( 'woocommerce' ) ): ?>
+									<span class="text-secondary"><?php print bkntc__('Other payment methods are not activated. Please contact the service provider.')?></span>
+								<?php else: ?>
+									<?php foreach ( $WCPaymentGateweyService->paymentGatewaysList() AS $paymentGateway ):?>
+										<div class="row mb-3">
+											<div class="col-md-9">
+												<div class="form-control-checkbox">
+													<label for="input_wc_payment_gateway_<?php print esc_html($paymentGateway->id)?>"><?php print esc_html( $paymentGateway->title )?></label>
+													<div class="fs_onoffswitch">
+														<input type="checkbox" class="fs_onoffswitch-checkbox woocommerce_payment_gateway_checkbox" data-id="<?php print esc_html($paymentGateway->id)?>" id="input_wc_payment_gateway_<?php print esc_html($paymentGateway->id)?>"<?php print $paymentGateway->enabled == 'enabled' || $paymentGateway->enabled == 'yes' ? ' checked' : ''?>>
+														<label class="fs_onoffswitch-label" for="input_wc_payment_gateway_<?php print esc_html($paymentGateway->id)?>"></label>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-3 d-flex align-items-center">
+												<a href="<?php print admin_url('admin.php?page=booknetic&module=settings&action=woocommerce_gateway_settings&wc_payment_gateway_id=' . esc_html($paymentGateway->id))?>" style="" class="btn btn-default"><?php print bkntc__('Set up')?></a>
+											</div>
+										</div>
+									<?php endforeach;?>
+								<?php endif; ?>
+							<?php endif;?>
 						</div>
-						<?php else:?>
-							<?php foreach ( $wc_payment_gateways AS $wc_payment_gateway_id => $wc_payment_gateway ):?>
-								<div class="woocommerce_fileds hidden" data-step="<?php print 'wc_' . esc_html($wc_payment_gateway_id)?>">
-
-									<?php
-									if( Permission::tenantInf()->getPermission( 'wc_' . $wc_payment_gateway_id ) == 'off' )
-									{
-										print Helper::renderView( 'Base.view.modal.permission_denied', [
-											'no_close_btn'  => true,
-											'text'          => bkntc__( 'You can\'t use Paypal with the %s plan. Please upgrade your plan to use Paypal.', [ esc_html( Permission::tenantInf()->plan()->fetch()->name ) ] )
-										] );
-									}
-									else
-									{
-										print '<iframe src="'.admin_url('admin.php?page=booknetic&module=settings&action=woocommerce_gateway_settings&wc_payment_gateway_id=' . urlencode( $wc_payment_gateway_id )).'"></iframe>';
-									}
-									?>
-								</div>
-							<?php endforeach;?>
-						<?php endif;?>
 
 					</form>
 				</div>

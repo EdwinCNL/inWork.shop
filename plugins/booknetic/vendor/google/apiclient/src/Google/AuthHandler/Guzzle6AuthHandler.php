@@ -6,8 +6,8 @@ use Google\Auth\FetchAuthTokenCache;
 use Google\Auth\Middleware\AuthTokenMiddleware;
 use Google\Auth\Middleware\ScopedAccessTokenMiddleware;
 use Google\Auth\Middleware\SimpleMiddleware;
-use GuzzleHttp\Client;
-use GuzzleHttp\ClientInterface;
+use Booknetic_GuzzleHttp\Client;
+use Booknetic_GuzzleHttp\ClientInterface;
 use Psr\Cache\CacheItemPoolInterface;
 
 /**

@@ -10,6 +10,7 @@ namespace BookneticApp\Providers;
  * @method static Collection update( $data )
  * @method static Collection delete()
  * @method static QueryBuilder where( $arr, $value = false, $valueSt2 = false )
+ * @method static QueryBuilder whereFindInSet( $field, $value )
  * @method static int count()
  * @method static int sum()
  * @method static QueryBuilder orderBy( $arr )
@@ -20,9 +21,9 @@ namespace BookneticApp\Providers;
  * @method static Collection fetch()
  * @method static Collection[] fetchAll()
  * @method static string toSql()
- * @method static QueryBuilder leftJoin( $joinTo )
- * @method static QueryBuilder rightJoin( $joinTo )
- * @method static QueryBuilder innerJoin( $joinTo )
+ * @method static QueryBuilder leftJoin( $joinTo, $select_fields )
+ * @method static QueryBuilder rightJoin( $joinTo, $select_fields )
+ * @method static QueryBuilder innerJoin( $joinTo, $select_fields )
  */
 class Model
 {

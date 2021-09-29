@@ -18,6 +18,7 @@
 			booknetic.ajax('send_sms', { id: $('#add_new_JS').data('notification-id'), phone_number: phone_number }, function()
 			{
 				booknetic.modalHide( modal );
+				location.reload();
 			});
 		});
 	});

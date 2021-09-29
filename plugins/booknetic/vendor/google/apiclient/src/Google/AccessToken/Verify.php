@@ -18,8 +18,8 @@
 
 use Firebase\JWT\ExpiredException as ExpiredExceptionV3;
 use Firebase\JWT\SignatureInvalidException;
-use GuzzleHttp\Client;
-use GuzzleHttp\ClientInterface;
+use Booknetic_GuzzleHttp\Client;
+use Booknetic_GuzzleHttp\ClientInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Google\Auth\Cache\MemoryCacheItemPool;
 use Stash\Driver\FileSystem;
@@ -36,7 +36,7 @@ class Google_AccessToken_Verify
   const OAUTH2_ISSUER_HTTPS = 'https://accounts.google.com';
 
   /**
-   * @var GuzzleHttp\ClientInterface The http client
+   * @var Booknetic_GuzzleHttp\ClientInterface The http client
    */
   private $http;
 

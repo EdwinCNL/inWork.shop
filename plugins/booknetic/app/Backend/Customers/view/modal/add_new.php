@@ -103,7 +103,7 @@ defined( 'ABSPATH' ) or die();
 			<div class="form-row">
 				<div class="form-group col-md-6">
 					<label for="input_gender"><?php print bkntc__('Gender')?></label>
-					<select id="input_gender" class="form-control">
+					<select id="input_gender" class="form-control" placeholder="<?php print bkntc__('Gender')?>">
 						<option value="male"<?php print ($parameters['customer']['gender'] == 'male' ? ' selected' : '')?>><?php print bkntc__('Male')?></option>
 						<option value="female"<?php print ($parameters['customer']['gender'] == 'female' ? ' selected' : '')?>><?php print bkntc__('Female')?></option>
 					</select>

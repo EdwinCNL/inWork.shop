@@ -37,8 +37,8 @@ use Google\Auth\SignBlobInterface;
  * ```
  * use Google\Auth\Credentials\AppIdentityCredentials;
  * use Google\Auth\Middleware\AuthTokenMiddleware;
- * use GuzzleHttp\Client;
- * use GuzzleHttp\HandlerStack;
+ * use Booknetic_GuzzleHttp\Client;
+ * use Booknetic_GuzzleHttp\HandlerStack;
  *
  * $gae = new AppIdentityCredentials('https://www.googleapis.com/auth/books');
  * $middleware = new AuthTokenMiddleware($gae);
@@ -112,7 +112,7 @@ class AppIdentityCredentials extends CredentialsLoader implements
      *
      * Fetches the auth tokens using the AppIdentityService if available.
      * As the AppIdentityService uses protobufs to fetch the access token,
-     * the GuzzleHttp\ClientInterface instance passed in will not be used.
+     * the Booknetic_GuzzleHttp\ClientInterface instance passed in will not be used.
      *
      * @param callable $httpHandler callback which delivers psr7 request
      * @return array A set of auth related metadata, containing the following

@@ -27,5 +27,9 @@ class Ajax extends \BookneticApp\Providers\Ajax
 	}
 
 
+	public function ping()
+	{
+		Helper::response( true );
+	}
 
 }

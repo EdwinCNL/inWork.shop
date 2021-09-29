@@ -89,6 +89,15 @@ class DB
 		return self::DB()->query( self::raw( $queryString ) );
 	}
 
+	public static function update( $table , $data = [], $where = null, $noTenant = false )
+	{
+		$where = is_numeric( $where ) && $where >= 0 ? [ $where ] : $where;
+
+		Permission::modelFilter( $table, $where, $noTenant );
+
+		return self::DB()->update( self::table($table), $data, $where );
+	}
+
 	public static function fetch()
 	{
 		return self::DB()->get_row( call_user_func_array( [static::class, 'selectQuery'], func_get_args() ),ARRAY_A );
@@ -119,6 +128,7 @@ class DB
 		return '';
 	}
 
+	//TODO::last id error
 	public static function lastInsertedId()
 	{
 		return DB::DB()->insert_id;
@@ -158,6 +168,11 @@ class DB
 
 				$whereQuery .= ($whereQuery == '' ? '' : ' AND ') . $field . ' ' . $symbol . ' ' . '%s';
 				$argss[] = (string)$value;
+			}
+			else if( is_array( $value ) && count($value) === 2 && strtoupper($value[0]) == 'FIND_IN_SET' )
+			{
+				$whereQuery .= ($whereQuery == '' ? '' : ' AND ') . ' FIND_IN_SET( %s, ' . $field . ' ) ';
+				$argss[] = (string)$value[1];
 			}
 			else if( is_array( $value ) && count( $value ) === 2 && in_array( strtoupper( $value[0] ), ['IS', 'IS NOT'] ) && is_null( $value[1] ) )
 			{

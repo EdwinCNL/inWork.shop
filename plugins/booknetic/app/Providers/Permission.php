@@ -73,6 +73,12 @@ class Permission
 		return get_current_user_id();
 	}
 
+	public static function userEmail()
+	{
+		$current_user = wp_get_current_user();
+		return $current_user->user_email;
+	}
+
 	public static function isAdministrator()
 	{
 		if( in_array( 'administrator', self::userInfo()->roles ) )
@@ -89,7 +95,7 @@ class Permission
 
 	public static function isSuperAdministrator()
 	{
-		if( self::isDemoVersion() )
+		if( self::isDemoVersion() && !in_array( 'booknetic_saas_tenant', self::userInfo()->roles ) )
 			return true;
 
 		if( in_array( 'administrator', self::userInfo()->roles ) )
@@ -129,7 +135,7 @@ class Permission
 		if( self::isAdministrator() )
 			return DB::tenantFilter( $connector );
 
-		return ' '.$connector.' `id` IN (SELECT `customer_id` FROM `'.DB::table('appointment_customers').'` WHERE `appointment_id` IN (SELECT `id` FROM `'.DB::table('appointments').'` '.self::queryFilter('appointments', 'staff_id', 'WHERE').')) ';
+		return ' '.$connector.' ( `created_by`=\''.Permission::userId().'\' OR `id` IN (SELECT `customer_id` FROM `'.DB::table('appointment_customers').'` WHERE `appointment_id` IN (SELECT `id` FROM `'.DB::table('appointments').'` '.self::queryFilter('appointments', 'staff_id', 'WHERE').'))) ';
 	}
 
 	public static function canAccessTo( $module )
@@ -168,7 +174,8 @@ class Permission
 		}
 		else if( $table == 'appointments' )
 		{
-			$where['staff_id'] = self::myStaffId();
+			$staff_ids = self::myStaffId();
+			$where['staff_id'] = count( $staff_ids ) > 0 ? $staff_ids[0] : 0;
 		}
 	}
 
@@ -219,10 +226,9 @@ class Permission
 			if( Helper::isSaaSVersion() )
 			{
 				$currentDomain          = \BookneticSaaS\Providers\Helper::getCurrentDomain();
-				$currentDomain          = $currentDomain[0];
 				$tenantIdFromRequest    = Helper::_any('tenant_id', '', 'int');
 
-				if( !self::isBackEnd() && !empty( $currentDomain ) )
+				if( !self::isBackEnd() && !wp_doing_ajax() && !empty( $currentDomain ) )
 				{
 					$checkTenantExist = Tenant::where('domain', $currentDomain)->fetch();
 
@@ -274,6 +280,11 @@ class Permission
 		}
 
 		return self::$tenantInf;
+	}
+
+	public static function getPermission( $permission )
+	{
+		return self::tenantInf()->getPermission( $permission );
 	}
 
 	public static function setTenantId( $tenantId )

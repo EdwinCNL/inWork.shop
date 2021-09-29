@@ -24,7 +24,7 @@ class Backend
 
 	public static function init()
 	{
-		if( Helper::isSaaSVersion() && Permission::tenantId() > 0 && Permission::tenantInf()->getPermission( 'dashboard' ) === 'off' )
+		if( Helper::isSaaSVersion() && Permission::tenantId() > 0 && Permission::getPermission( 'dashboard' ) === 'off' )
 		{
 			self::$DEFAULT_MODULE = 'Billing';
 		}
@@ -148,6 +148,7 @@ class Backend
 				if( isset( $result['saas_url'] ) && !empty( $result['saas_url'] ) )
 				{
 					$saasInstaller = new PluginInstaller( $result['saas_url'] );
+
 					if( $saasInstaller->install() === false )
 					{
 						Helper::response(false, bkntc__('An error occurred, please try again later'));
@@ -218,19 +219,14 @@ class Backend
 				Helper::response( false, bkntc__( 'Please enter the purchase code!' ) );
 			}
 
-			if ( Helper::getInstalledVersion() == Helper::getVersion() )
-			{
-				Helper::response( false, bkntc__( 'Your plugin is already activated!' ) );
-			}
-
 			set_time_limit( 0 );
 
-			$check_purchase_code = self::API_URL . '?act=install&version=' . urlencode( Helper::getVersion() ) . '&purchase_code=' . urlencode( $code ) . '&domain=' . urlencode( site_url() );
+			$check_purchase_code = self::API_URL . '?act=reactivate&version=' . urlencode( Helper::getVersion() ) . '&purchase_code=' . urlencode( $code ) . '&domain=' . urlencode( site_url() );
 			$api_result          = Curl::getURL( $check_purchase_code );
 
 			if ( empty( $api_result ) )
 			{
-				Helper::response( false, bkntc__( 'Your server can not access our license server via CURL! Our license server is "%s". Please contact your hosting provider/server administrator and ask them to solve the problem. If you are sure that problem is not your server/hosting side then contact FS Poster administrators.', [ htmlspecialchars( self::API_URL ) ] ) );
+				Helper::response( false, bkntc__( 'Your server can not access our license server via CURL! Our license server is "%s". Please contact your hosting provider/server administrator and ask them to solve the problem. If you are sure that problem is not your server/hosting side then contact FS Poster administrators.', [ htmlspecialchars( self::API_URL ) ], false ) );
 			}
 
 			$result = json_decode( $api_result, TRUE );
@@ -240,19 +236,18 @@ class Backend
 				Helper::response( false, bkntc__( 'Reactivation failed! Response: %s', [ esc_html( $api_result ) ] ) );
 			}
 
-			if ( ! ( $result[ 'status' ] === 'ok' && isset( $result[ 'sql' ] ) ) )
+			if ( $result[ 'status' ] !== 'ok' )
 			{
 				Helper::response( false, isset( $result[ 'error_msg' ] ) ? $result[ 'error_msg' ] : bkntc__( 'Error! Response: %s', [ esc_html( $api_result ) ] ) );
 			}
 
-			Helper::setOption( 'plugin_disabled', '0', TRUE );
-			Helper::setOption( 'plugin_alert', '', TRUE );
-			Helper::setOption( 'poster_plugin_installed', Helper::getVersion(), TRUE );
-			Helper::setOption( 'poster_plugin_purchase_key', $code, TRUE );
+			Helper::setOption( 'plugin_disabled', '0', false );
+			Helper::setOption( 'plugin_alert', '', false );
+			Helper::setOption( 'poster_plugin_installed', Helper::getVersion(), false );
+			Helper::setOption( 'poster_plugin_purchase_key', $code, false );
 
-			Helper::response( TRUE, [ 'msg' => bkntc__( 'Plugin reactivated!' ) ] );
+			Helper::response( true, [ 'msg' => bkntc__( 'Plugin reactivated!' ) ] );
 		});
-
 	}
 
 	public static function disabledMenu()

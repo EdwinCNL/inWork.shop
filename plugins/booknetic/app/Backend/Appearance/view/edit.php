@@ -25,7 +25,7 @@ defined( 'ABSPATH' ) or die();
 
 <div class="row m-4">
 
-	<div class="col-md-6 col-lg-4 col-xl-3 p-3 pr-md-1">
+	<div class="col-md-6 col-lg-3 col-xl-4 p-3 pr-md-1">
 		<div class="fs_portlet fs_portlet_with_footer">
 			<div class="fs_portlet_title"><?php print bkntc__('Options')?></div>
 			<div class="fs_portlet_content">
@@ -115,24 +115,37 @@ defined( 'ABSPATH' ) or die();
 					</span>
 				</div>
 
+                <div class="f_option_element f_option_element_custom_css">
+                    <span class="f_option_name"><?php print bkntc__('Custom CSS')?></span>
+                </div>
+                <div class="f_option_element f_option_element_custom_css_textarea">
+                    <div>
+                        <textarea name="custom_css" id="custom_css"><?php print isset( $parameters['info']['custom_css'] ) ? esc_html( $parameters['info']['custom_css'] ) : ''; ?></textarea>
+                    </div>
+                </div>
+
 			</div>
 			<div class="fs_portlet_footer">
-
-				<?php
-				if( $parameters['id'] > 0 )
-				{
-				?>
-					<div class="theme_id_cls"><?php print bkntc__('Theme ID: %d', [$parameters['id']])?></div>
-					<button type="button" class="btn btn-danger btn-lg" id="delete_btn"><?php print bkntc__('DELETE')?></button>
-				<?php
-				}
-				?>
-				<button type="button" class="btn btn-success btn-lg" id="save_btn"><?php print bkntc__('SAVE')?></button>
+                <div>
+                    <div>
+                        <?php if( $parameters['id'] > 0 ) : ?>
+                            <button type="button" class="btn btn-danger btn-lg" id="delete_btn"><?php print bkntc__('DELETE')?></button>
+                        <?php endif; ?>
+                        <button type="button" class="btn btn-success btn-lg" id="save_btn"><?php print bkntc__('SAVE')?></button>
+                    </div>
+                </div>
+                <div>
+                    <div>
+                        <?php if( $parameters['id'] > 0 ) : ?>
+                            <div class="theme_id_cls"><?php print bkntc__('Theme ID: %d', [$parameters['id']])?></div>
+                        <?php endif; ?>
+                    </div>
+                </div>
 			</div>
 		</div>
 	</div>
 
-	<div class="col-md-6 col-lg-8 col-xl-9 p-3 pl-md-1">
+	<div class="col-md-6 col-lg-9 col-xl-8 p-3 pl-md-1">
 		<div class="fs_portlet">
 			<div class="fs_portlet_title"><?php print bkntc__('Design')?></div>
 			<div class="fs_portlet_content">

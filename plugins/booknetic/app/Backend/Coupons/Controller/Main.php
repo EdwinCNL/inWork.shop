@@ -7,6 +7,7 @@ use BookneticApp\Providers\Controller;
 use BookneticApp\Providers\DataTable;
 use BookneticApp\Providers\DB;
 use BookneticApp\Providers\Helper;
+use BookneticApp\Providers\Math;
 
 class Main extends Controller
 {
@@ -27,7 +28,7 @@ class Main extends Controller
 		$dataTable->addColumns(bkntc__('CODE'), 'code');
 		$dataTable->addColumns(bkntc__('DISCOUNT'), function( $coupon )
 		{
-			return Helper::floor( $coupon['discount'] ) . ( $coupon['discount_type'] == 'percent' ? '%' : Helper::getOption('curency', '$') );
+			return Math::floor( $coupon['discount'] ) . ( $coupon['discount_type'] == 'percent' ? '%' : Helper::getOption('curency', '$') );
 		}, ['order_by_field' => 'discount']);
 		$dataTable->addColumns(bkntc__('USAGE LIMIT'), 'usage_limit_txt');
 		$dataTable->addColumns(bkntc__('Times Used'), 'used_count');

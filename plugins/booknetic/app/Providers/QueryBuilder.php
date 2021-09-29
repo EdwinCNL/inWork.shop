@@ -52,6 +52,11 @@ class QueryBuilder
 		return $this;
 	}
 
+	public function whereFindInSet( $field, $value )
+	{
+		return $this->where( $field, 'find_in_set', $value );
+	}
+
 	public function orderBy( $arr )
 	{
 		$this->orderByArr = array_merge($this->orderByArr, (array)$arr);
@@ -66,8 +71,13 @@ class QueryBuilder
 		return $this;
 	}
 
-	public function select( $arr )
+	public function select( $arr, $unselect_old_fields = false )
 	{
+		if( $unselect_old_fields )
+		{
+			$this->columnsArr = [];
+		}
+
 		$this->columnsArr = array_merge($this->columnsArr, (array)$arr);
 
 		return $this;
@@ -94,7 +104,7 @@ class QueryBuilder
 		return $this;
 	}
 
-	private function join( $joinTo, $joinType, $select_fields )
+	private function join( $joinTo, $joinType, $select_fields = 'id' )
 	{
 		$model = $this->model;
 
@@ -128,17 +138,17 @@ class QueryBuilder
 		return $this;
 	}
 
-	public function leftJoin( $joinTo, $select_fields )
+	public function leftJoin( $joinTo, $select_fields = 'id' )
 	{
 		return $this->join( $joinTo, 'LEFT', $select_fields );
 	}
 
-	public function rightJoin( $joinTo, $select_fields )
+	public function rightJoin( $joinTo, $select_fields = 'id' )
 	{
 		return $this->join( $joinTo, 'RIGHT', $select_fields );
 	}
 
-	public function innerJoin( $joinTo, $select_fields )
+	public function innerJoin( $joinTo, $select_fields = 'id' )
 	{
 		return $this->join( $joinTo, 'INNER', $select_fields );
 	}
@@ -198,11 +208,11 @@ class QueryBuilder
 			return false;
 		}
 
-		$result = DB::DB()->update( DB::table( $this->getTableName() ), $data, $whereArr );
+		$result = DB::update( $this->getTableName(), $data, $whereArr, $this->noTenant );
 
 		if( method_exists( $this->model, 'afterUpdate' ) )
 		{
-			call_user_func( [ $this->model, 'afterUpdate' ], $data, $whereArr );
+			call_user_func( [ $this->model, 'afterUpdate' ], $data, $whereArr, $old_data );
 		}
 
 		return $result;

@@ -3,6 +3,7 @@ namespace BookneticApp\Frontend\view;
 
 use BookneticApp\Providers\Helper;
 use BookneticApp\Providers\Date;
+use BookneticApp\Providers\Math;
 
 defined( 'ABSPATH' ) or die();
 
@@ -16,13 +17,13 @@ function breakTpl( $start = '', $end = '', $display = false )
 				<div>
 					<div class="inner-addon left-addon">
 						<i><img src="<?php print Helper::icon('time.svg')?>"/></i>
-						<select class="form-control break_start" placeholder="Break start"><option selected><?php print $start?></option></select>
+						<select class="form-control break_start" placeholder="Break start"><option selected><?php print ! empty( $start ) ? Date::time( $start ) : ''; ?></option></select>
 					</div>
 				</div>
 				<div>
 					<div class="inner-addon left-addon">
 						<i><img src="<?php print Helper::icon('time.svg')?>"/></i>
-						<select class="form-control break_end" placeholder="Break end"><option selected><?php print $end?></option></select>
+						<select class="form-control break_end" placeholder="Break end"><option selected><?php print ! empty( $end ) ? Date::time( $end ) : ''; ?></option></select>
 					</div>
 				</div>
 				<div class="delete-break-btn"><img src="<?php print Helper::icon('trash_mini.svg')?>"></div>
@@ -56,8 +57,8 @@ function employeeTpl( $allStuf, $staffId = 0, $price = '', $deposit = '', $depos
 
 		<div class="form-group col-md-4 hidden">
 			<div class="input-group">
-				<input class="form-control except_price_input" title="Price" placeholder="0" value="<?php print $price == -1 ? Helper::floor( $servicePrice ) : Helper::floor( $price )?>">
-				<input class="form-control except_deposit_input" title="Deposit" placeholder="0" value="<?php print $price == -1 ? 100 : Helper::floor( $deposit )?>">
+				<input class="form-control except_price_input" title="Price" placeholder="0" value="<?php print $price == -1 ? Math::floor( $servicePrice ) : Math::floor( $price )?>">
+				<input class="form-control except_deposit_input" title="Deposit" placeholder="0" value="<?php print $price == -1 ? 100 : Math::floor( $deposit )?>">
 				<select class="form-control except_deposit_type_input">
 					<option value="percent"<?php print $deposit_type=='percent' ? ' selected' : ''?>>%</option>
 					<option value="price"<?php print $deposit_type=='price' ? ' selected' : ''?>><?php print htmlspecialchars( Helper::currencySymbol() )?></option>
@@ -105,10 +106,10 @@ function specialDayTpl( $id = 0, $date = '', $timesheet = '' )
 			<div class="form-group col-md-6">
 				<div class="input-group">
 					<div class="col-md-6 p-0 m-0">
-						<select class="form-control input_special_day_start" placeholder="<?php print bkntc__('Start time')?>"><option selected><?php print $startTime?></option></select>
+						<select class="form-control input_special_day_start" placeholder="<?php print bkntc__('Start time')?>"><option selected><?php print ! empty( $startTime ) ? Date::time( $startTime ) : ''; ?></option></select>
 					</div>
 					<div class="col-md-6 p-0 m-0">
-						<select class="form-control input_special_day_end" placeholder="<?php print bkntc__('End time')?>"><option selected><?php print $endTime?></option></select>
+						<select class="form-control input_special_day_end" placeholder="<?php print bkntc__('End time')?>"><option selected><?php print ! empty( $endTime ) ? Date::time( $endTime ) : ''; ?></option></select>
 					</div>
 				</div>
 			</div>
@@ -154,12 +155,16 @@ function extrasTpl( $id = 0, $name = '', $duration = 0, $price = 0, $max_quantit
 		<div class="extra_actions">
 			<img src="<?php print Helper::icon('edit.svg', 'Services')?>" class="edit_extra">
 			<img src="<?php print Helper::icon('hide.svg', 'Services')?>" class="hide_extra">
+			<img src="<?php print Helper::icon('copy.svg', 'Services')?>" class="copy_extra" data-toggle="dropdown" aria-haspopup="false" aria-expanded="false">
+			<div class="dropdown-menu dropdown-menu-right row-actions-area">
+				<button class="dropdown-item copy_to_all_services" type="button"><?php print bkntc__('Copy to all services')?></button>
+				<button class="dropdown-item copy_to_parent_services" type="button"><?php print bkntc__('Copy to the same category services')?></button>
+			</div>
 			<img src="<?php print Helper::icon('remove.svg', 'Services')?>" class="delete_extra">
 		</div>
 	</div>
 	<?php
 }
-
 ?>
 
 <link rel="stylesheet" href="<?php print Helper::assets('css/add_new.css', 'Services')?>">
@@ -173,7 +178,7 @@ function extrasTpl( $id = 0, $name = '', $duration = 0, $price = 0, $max_quantit
 
 <div class="fs-modal-body">
 	<div class="fs-modal-body-inner">
-		<form id="addServiceForm">
+		<form id="addServiceForm" class="validate-form">
 
 			<ul class="nav nav-tabs nav-light">
 				<li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab_service_details"><?php print bkntc__('SERVICE DETAILS')?></a></li>
@@ -197,11 +202,11 @@ function extrasTpl( $id = 0, $name = '', $duration = 0, $price = 0, $max_quantit
 					<div class="form-row">
 						<div class="form-group col-md-6">
 							<label for="input_name"><?php print bkntc__('Service name')?> <span class="required-star">*</span></label>
-							<input type="text" class="form-control" id="input_name" value="<?php print htmlspecialchars($parameters['service']['name'])?>">
+							<input type="text" class="form-control required" id="input_name" value="<?php print htmlspecialchars($parameters['service']['name'])?>">
 						</div>
 						<div class="form-group col-md-6">
 							<label for="input_category"><?php print bkntc__('Category')?> <span class="required-star">*</span></label>
-							<select id="input_category" class="form-control">
+							<select id="input_category" class="form-control required">
 								<option></option>
 								<?php
 								foreach( $parameters['categories'] AS $category )
@@ -214,55 +219,48 @@ function extrasTpl( $id = 0, $name = '', $duration = 0, $price = 0, $max_quantit
 					</div>
 
 					<div class="form-row">
-						<div class="form-group col-md-3">
+
+						<div class="form-group col-md-6">
 							<label for="input_price"><?php print bkntc__('Price')?> ( <?php print htmlspecialchars( Helper::currencySymbol() )?> ) <span class="required-star">*</span></label>
-							<input id="input_price" class="form-control" placeholder="0.00" value="<?php print empty($parameters['service']['price']) ? '' : Helper::floor( $parameters['service']['price'], Helper::getOption('price_number_of_decimals', '2') )?>">
+							<input id="input_price" class="form-control required" placeholder="0.00" value="<?php print empty($parameters['service']['price']) ? '' : Math::floor( $parameters['service']['price'], Helper::getOption('price_number_of_decimals', '2') )?>">
 						</div>
+
 						<div class="form-group col-md-3">
-							<label for="input_deposit"><?php print bkntc__('Deposit')?> ( <?php print htmlspecialchars( Helper::currencySymbol() )?> ) <span class="required-star">*</span></label>
+							<label for="input_deposit"><?php print bkntc__('Deposit')?> <span class="required-star">*</span></label>
 							<div class="input-group">
-								<input id="input_deposit" class="form-control" placeholder="0.00" value="<?php print empty($parameters['service']['deposit']) ? '100' : Helper::floor( $parameters['service']['deposit'], Helper::getOption('price_number_of_decimals', '2') )?>">
+								<input id="input_deposit" class="form-control required" placeholder="0.00" value="<?php print empty($parameters['service']['deposit']) ? '100' : Math::floor( $parameters['service']['deposit'], Helper::getOption('price_number_of_decimals', '2') )?>">
 								<select id="input_deposit_type" class="form-control">
 									<option value="percent"<?php print $parameters['service']['deposit_type']=='percent'?' selected':''?>>%</option>
 									<option value="price"<?php print $parameters['service']['deposit_type']=='price'?' selected':''?>><?php print htmlspecialchars( Helper::currencySymbol() )?></option>
 								</select>
 							</div>
 						</div>
-						<div class="form-group col-md-6">
-							<label>&nbsp;</label>
-							<div class="form-control-checkbox">
-								<label for="input_hide_price"><?php print bkntc__('Hide price in booking panel:')?></label>
-								<div class="fs_onoffswitch">
-									<input type="checkbox" class="fs_onoffswitch-checkbox" id="input_hide_price"<?php print $parameters['service']['hide_price']==1?' checked':''?>>
-									<label class="fs_onoffswitch-label" for="input_hide_price"></label>
-								</div>
+
+
+						<div class="form-group col-md-3">
+							<label for="input_deposit"><?php print bkntc__('Tax')?> <span class="required-star">*</span></label>
+							<div class="input-group">
+								<input id="input_tax" class="form-control required" placeholder="0.00" value="<?php print empty($parameters['service']['tax']) ? '0.00' : Math::floor( $parameters['service']['tax'], Helper::getOption('price_number_of_decimals', '2') )?>">
+								<select id="input_tax_type" class="form-control">
+									<option value="percent"<?php print $parameters['service']['tax_type']=='percent'?' selected':''?>>%</option>
+									<option value="price"<?php print $parameters['service']['tax_type']=='price'?' selected':''?>><?php print htmlspecialchars( Helper::currencySymbol() )?></option>
+								</select>
 							</div>
 						</div>
+						
 					</div>
 
+					
 					<div class="form-row">
-						<div class="form-group col-md-6">
+						<div class="form-group col-md-3">
 							<label for="input_duration"><?php print bkntc__('Duration')?> <span class="required-star">*</span></label>
-							<select id="input_duration" class="form-control">
+							<select id="input_duration" class="form-control required">
 								<option value="<?php print $parameters['service']['duration']?>" selected><?php print Helper::secFormat($parameters['service']['duration']*60)?></option>
 							</select>
 						</div>
-						<div class="form-group col-md-6">
-							<label>&nbsp;</label>
-							<div class="form-control-checkbox">
-								<label for="input_hide_duration"><?php print bkntc__('Hide duration in booking panel:')?></label>
-								<div class="fs_onoffswitch">
-									<input type="checkbox" class="fs_onoffswitch-checkbox" id="input_hide_duration"<?php print $parameters['service']['hide_duration']==1?' checked':''?>>
-									<label class="fs_onoffswitch-label" for="input_hide_duration"></label>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="form-row">
-						<div class="form-group col-md-6">
+						<div class="form-group col-md-3">
 							<label for="input_time_slot_length"><?php print bkntc__('Time slot length')?> <span class="required-star">*</span></label>
-							<select id="input_time_slot_length" class="form-control">
+							<select id="input_time_slot_length" class="form-control required">
 								<option value="0"<?php print $parameters['service']['timeslot_length']=='0' ? ' selected':''?>><?php print bkntc__('Default')?></option>
 								<option value="-1"<?php print $parameters['service']['timeslot_length']=='-1' ? ' selected':''?>><?php print bkntc__('Slot length as service duration')?></option>
 								<option value="1"<?php print $parameters['service']['timeslot_length']=='1' ? ' selected':''?>><?php print Helper::secFormat(1*60)?></option>
@@ -303,6 +301,31 @@ function extrasTpl( $id = 0, $name = '', $duration = 0, $price = 0, $max_quantit
 							<select id="input_buffer_after" class="form-control">
 								<option value="<?php print $parameters['service']['buffer_after']?>" selected><?php print Helper::secFormat($parameters['service']['buffer_after']*60)?></option>
 							</select>
+						</div>
+					</div>
+
+					<div class="form-row">
+
+						<div class="form-group col-md-6">
+							<label>&nbsp;</label>
+							<div class="form-control-checkbox">
+								<label for="input_hide_price"><?php print bkntc__('Hide price in booking panel:')?></label>
+								<div class="fs_onoffswitch">
+									<input type="checkbox" class="fs_onoffswitch-checkbox" id="input_hide_price"<?php print $parameters['service']['hide_price']==1?' checked':''?>>
+									<label class="fs_onoffswitch-label" for="input_hide_price"></label>
+								</div>
+							</div>
+						</div>
+						
+						<div class="form-group col-md-6">
+							<label>&nbsp;</label>
+							<div class="form-control-checkbox">
+								<label for="input_hide_duration"><?php print bkntc__('Hide duration in booking panel:')?></label>
+								<div class="fs_onoffswitch">
+									<input type="checkbox" class="fs_onoffswitch-checkbox" id="input_hide_duration"<?php print $parameters['service']['hide_duration']==1?' checked':''?>>
+									<label class="fs_onoffswitch-label" for="input_hide_duration"></label>
+								</div>
+							</div>
 						</div>
 					</div>
 
@@ -405,7 +428,7 @@ function extrasTpl( $id = 0, $name = '', $duration = 0, $price = 0, $max_quantit
 						</div>
 					</div>
 
-					<div class="form-row <?php print Helper::getOption('zoom_enable', 'off', false) == 'off' ? ' hidden' : ''?>">
+					<div class="form-row <?php print (Helper::getOption('zoom_enable', 'off', false) == 'off' ? ' hidden' : '')?>">
 
 						<div class="form-group col-md-6">
 							<div class="form-control-checkbox">
@@ -466,13 +489,13 @@ function extrasTpl( $id = 0, $name = '', $duration = 0, $price = 0, $max_quantit
 											<div class="col-md-6 m-0 p-0">
 												<div class="inner-addon left-addon">
 													<i><img src="<?php print Helper::icon('time.svg')?>"/></i>
-													<select id="input_timesheet_<?php print ($dayNum+1)?>_start" class="form-control" placeholder="<?php print bkntc__('Start time')?>"><option selected><?php print htmlspecialchars($editInfo['start'])?></option></select>
+													<select id="input_timesheet_<?php print ($dayNum+1)?>_start" class="form-control" placeholder="<?php print bkntc__('Start time')?>"><option selected><?php print ! empty( $editInfo['start'] ) ? Date::time( $editInfo['start'] ) : ''; ?></option></select>
 												</div>
 											</div>
 											<div class="col-md-6 m-0 p-0">
 												<div class="inner-addon left-addon">
 													<i><img src="<?php print Helper::icon('time.svg')?>"/></i>
-													<select id="input_timesheet_<?php print ($dayNum+1)?>_end" class="form-control" placeholder="<?php print bkntc__('End time')?>"><option selected><?php print htmlspecialchars($editInfo['end'])?></option></select>
+													<select id="input_timesheet_<?php print ($dayNum+1)?>_end" class="form-control" placeholder="<?php print bkntc__('End time')?>"><option selected><?php print ! empty( $editInfo['end'] ) ? Date::time( $editInfo['end'] ) : ''; ?></option></select>
 												</div>
 											</div>
 										</div>
@@ -572,7 +595,7 @@ function extrasTpl( $id = 0, $name = '', $duration = 0, $price = 0, $max_quantit
 						<div class="form-row">
 							<div class="form-group col-md-6">
 								<label for="input_extra_name"><?php print bkntc__('Name')?> <span class="required-star">*</span></label>
-								<input class="form-control" id="input_extra_name" maxlength="100">
+								<input class="form-control required" id="input_extra_name" maxlength="100">
 							</div>
 							<div class="form-group col-md-6">
 								<label for="input_extra_max_quantity"><?php print bkntc__('Max. quantity')?></label>
@@ -583,7 +606,7 @@ function extrasTpl( $id = 0, $name = '', $duration = 0, $price = 0, $max_quantit
 						<div class="form-row">
 							<div class="form-group col-md-6">
 								<label for="input_extra_price"><?php print bkntc__('Price')?> <span class="required-star">*</span></label>
-								<input class="form-control" id="input_extra_price">
+								<input class="form-control required" id="input_extra_price">
 							</div>
 							<div class="form-group col-md-6">
 								<label>&nbsp;</label>
@@ -641,7 +664,7 @@ function extrasTpl( $id = 0, $name = '', $duration = 0, $price = 0, $max_quantit
 	}
 	?>
 	<button type="button" class="btn btn-lg btn-default" data-dismiss="modal"><?php print bkntc__('CLOSE')?></button>
-	<button type="button" class="btn btn-lg btn-primary" id="addServiceSave"><?php print $parameters['service']?bkntc__('SAVE SERVICE'):bkntc__('ADD SERVICE')?></button>
+	<button type="button" class="btn btn-lg btn-primary validate-button" id="addServiceSave"><?php print $parameters['service']?bkntc__('SAVE SERVICE'):bkntc__('ADD SERVICE')?></button>
 </div>
 
 <div class="fs-popover" id="service_color_panel">

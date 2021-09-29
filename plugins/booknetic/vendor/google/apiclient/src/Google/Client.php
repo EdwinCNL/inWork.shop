@@ -22,9 +22,9 @@ use Google\Auth\HttpHandler\HttpHandlerFactory;
 use Google\Auth\OAuth2;
 use Google\Auth\Credentials\ServiceAccountCredentials;
 use Google\Auth\Credentials\UserRefreshCredentials;
-use GuzzleHttp\Client;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Ring\Client\StreamHandler;
+use Booknetic_GuzzleHttp\Client;
+use Booknetic_GuzzleHttp\ClientInterface;
+use Booknetic_GuzzleHttp\Ring\Client\StreamHandler;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
@@ -51,7 +51,7 @@ class Google_Client
   private $auth;
 
   /**
-   * @var GuzzleHttp\ClientInterface $http
+   * @var Booknetic_GuzzleHttp\ClientInterface $http
    */
   private $http;
 
@@ -368,8 +368,8 @@ class Google_Client
    * Adds auth listeners to the HTTP client based on the credentials
    * set in the Google API Client object
    *
-   * @param GuzzleHttp\ClientInterface $http the http client object.
-   * @return GuzzleHttp\ClientInterface the http client object
+   * @param Booknetic_GuzzleHttp\ClientInterface $http the http client object.
+   * @return Booknetic_GuzzleHttp\ClientInterface the http client object
    */
   public function authorize(ClientInterface $http = null)
   {
@@ -1091,7 +1091,7 @@ class Google_Client
 
   /**
    * Set the Http Client object
-   * @param GuzzleHttp\ClientInterface $http
+   * @param Booknetic_GuzzleHttp\ClientInterface $http
    */
   public function setHttpClient(ClientInterface $http)
   {
@@ -1099,7 +1099,7 @@ class Google_Client
   }
 
   /**
-   * @return GuzzleHttp\ClientInterface implementation
+   * @return Booknetic_GuzzleHttp\ClientInterface implementation
    */
   public function getHttpClient()
   {

@@ -1,9 +1,9 @@
 <?php
-namespace GuzzleHttp\Handler;
+namespace Booknetic_GuzzleHttp\Handler;
 
-use GuzzleHttp\Promise as P;
-use GuzzleHttp\Promise\Promise;
-use GuzzleHttp\Utils;
+use Booknetic_GuzzleHttp\Promise as P;
+use Booknetic_GuzzleHttp\Promise\Promise;
+use Booknetic_GuzzleHttp\Utils;
 use Psr\Http\Message\RequestInterface;
 
 /**

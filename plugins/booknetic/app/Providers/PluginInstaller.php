@@ -22,14 +22,15 @@ class PluginInstaller
 
 		$upgrader = new \Plugin_Upgrader( new BookneticQuietSkin( ) );
 
-		$install = $upgrader->install( $this->download_link );
-
-		if ($install !== true)
+		if ( ! file_exists( WP_PLUGIN_DIR . '/booknetic-saas/init.php' ) )
 		{
-			return false;
+			$upgrader->install( $this->download_link );
 		}
 
-		activate_plugin( WP_PLUGIN_DIR . '/booknetic-saas/init.php' );
+		if ( file_exists( WP_PLUGIN_DIR . '/booknetic-saas/init.php' ) )
+		{
+			activate_plugin( WP_PLUGIN_DIR . '/booknetic-saas/init.php' );
+		}
 
 		return true;
 	}

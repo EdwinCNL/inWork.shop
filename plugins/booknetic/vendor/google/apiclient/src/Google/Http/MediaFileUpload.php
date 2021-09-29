@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-use GuzzleHttp\Psr7;
-use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Psr7\Uri;
+use Booknetic_GuzzleHttp\Psr7;
+use Booknetic_GuzzleHttp\Psr7\Request;
+use Booknetic_GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\RequestInterface;
 
 /**

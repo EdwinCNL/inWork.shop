@@ -17,7 +17,7 @@ class Main extends Controller
 		$dataTable = new DataTable( "
 			SELECT 
 				tb1.id AS appointment_id, tb1.date, tb1.start_time, tb1.staff_id, tb1.service_id,
-				tb2.id, tb2.payment_status, tb2.number_of_customers, tb2.service_amount, tb2.extras_amount, tb2.discount, tb2.paid_amount, tb2.payment_method, tb2.customer_id,
+				tb2.id, tb2.payment_status, tb2.number_of_customers, tb2.service_amount, tb2.extras_amount, tb2.tax_amount, tb2.discount, tb2.paid_amount, tb2.giftcard_amount, tb2.payment_method, tb2.customer_id,
 				CONCAT(tb3.first_name, ' ', tb3.last_name) AS customer_name, tb3.phone_number AS customer_phone_number, tb3.email AS customer_email, tb3.profile_image AS customer_profile_image,
 				(SELECT `name` FROM `" . DB::table('services') . "` WHERE id=tb1.service_id) AS service_name,
 				(SELECT `name` FROM `" . DB::table('staff') . "` WHERE id=tb1.staff_id) AS staff_name
@@ -68,10 +68,14 @@ class Main extends Controller
 
 		$dataTable->addColumns(bkntc__('SERVICE'), 'service_name');
 
-		$dataTable->addColumns(bkntc__('METHOD'), function ( $payment )
+		$dataTable->addColumns(bkntc__('METHOD'), function ( $appointment )
 		{
-			return Helper::paymentMethod( $payment['payment_method'] );
-		}, ['order_by_field' => 'payment_method']);
+			if($appointment['payment_method'] == 'giftcard' ){
+				return Helper::paymentMethod( $appointment['payment_method'] ). ' <img class="invoice-icon" src="' . Helper::icon('invoice.svg') . '" title="' . bkntc__( 'Paid from giftcard: ' ) . Helper::price( $appointment['giftcard_amount'] ) . '"> ';
+			}else{
+				return Helper::paymentMethod( $appointment['payment_method'] );
+			}
+		}, ['order_by_field' => 'payment_method', 'is_html' => true]);
 
 		$dataTable->addColumns(bkntc__('SERVICE AMOUNT'), function( $appointment )
 		{
@@ -83,6 +87,12 @@ class Main extends Controller
 			return Helper::price( $appointment['extras_amount'] );
 		}, [ 'order_by_field' => 'extras_amount' ]);
 
+
+		$dataTable->addColumns(bkntc__('TAX AMOUNT'), function( $appointment )
+		{
+			return Helper::price( $appointment['tax_amount'] );
+		}, [ 'order_by_field' => 'tax_amount' ]);
+
 		$dataTable->addColumns(bkntc__('DISCOUNT'), function( $appointment )
 		{
 			return Helper::price( $appointment['discount'] );
@@ -90,8 +100,12 @@ class Main extends Controller
 
 		$dataTable->addColumns(bkntc__('PAID AMOUNT'), function( $appointment )
 		{
-			return Helper::price( $appointment['paid_amount'] );
-		}, [ 'order_by_field' => 'paid_amount' ]);
+			if($appointment['payment_method'] != 'giftcard' && $appointment['giftcard_amount'] != 0 ){
+				return Helper::price( $appointment['paid_amount'] ). ' <img class="invoice-icon" src="' . Helper::icon('invoice.svg') . '"> ';
+			}else{
+				return Helper::price( $appointment['paid_amount'] );
+			}
+		}, [ 'order_by_field' => 'paid_amount', 'is_html' => true ]);
 
 		$dataTable->addColumns(bkntc__('STATUS'), function( $appointment )
 		{
@@ -119,8 +133,4 @@ class Main extends Controller
 
 		$this->view( 'index', ['table' => $table] );
 	}
-
-
-
-
 }

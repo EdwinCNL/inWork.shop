@@ -17,9 +17,9 @@
 
 namespace Google\Auth\Subscriber;
 
-use GuzzleHttp\Event\BeforeEvent;
-use GuzzleHttp\Event\RequestEvents;
-use GuzzleHttp\Event\SubscriberInterface;
+use Booknetic_GuzzleHttp\Event\BeforeEvent;
+use Booknetic_GuzzleHttp\Event\RequestEvents;
+use Booknetic_GuzzleHttp\Event\SubscriberInterface;
 
 /**
  * SimpleSubscriber is a Guzzle Subscriber that implements Google's Simple API
@@ -65,7 +65,7 @@ class SimpleSubscriber implements SubscriberInterface
      * Example:
      * ```
      * use Google\Auth\Subscriber\SimpleSubscriber;
-     * use GuzzleHttp\Client;
+     * use Booknetic_GuzzleHttp\Client;
      *
      * $my_key = 'is not the same as yours';
      * $subscriber = new SimpleSubscriber(['key' => $my_key]);

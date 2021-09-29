@@ -51,7 +51,7 @@ defined( 'ABSPATH' ) or die();
 						<select class="form-control" id="input_min_time_req_prior_booking">
 							<option value="0"<?php print Helper::getOption('min_time_req_prior_booking', '0')=='0' ? ' selected':''?>><?php print bkntc__('Disabled')?></option>
 							<?php
-							foreach ( [1,2,3,4,5,10,15,20,25,30,35,40,45,50,55,60,90,120,180,240,300,360,420,480,540,600,660,720,1440,2880,4320,5760,7200,8640,10080] AS $minute )
+							foreach ( [1,2,3,4,5,10,15,20,25,30,35,40,45,50,55,60,90,120,180,240,300,360,420,480,540,600,660,720,1440,2880,4320,5760,7200,8640,10080,11520,12960,14400,15840,17280,18720,20160,21600,23040,24480,25920,27360,28800,30240,31680,33120,34560,36000,37440,38880,40320,41760,43200] AS $minute )
 							{
 								?>
 								<option value="<?php print $minute?>"<?php print Helper::getOption('min_time_req_prior_booking', '0')==$minute ? ' selected':''?>><?php print Helper::secFormat($minute*60)?></option>
@@ -82,6 +82,7 @@ defined( 'ABSPATH' ) or die();
 							<option value="m/d/Y"<?php print Helper::getOption('date_format', 'Y-m-d')=='m/d/Y' ? ' selected':''?>><?php print date('m/d/Y')?> [ m/d/Y ]</option>
 							<option value="d-m-Y"<?php print Helper::getOption('date_format', 'Y-m-d')=='d-m-Y' ? ' selected':''?>><?php print date('d-m-Y')?> [ d-m-Y ]</option>
 							<option value="d/m/Y"<?php print Helper::getOption('date_format', 'Y-m-d')=='d/m/Y' ? ' selected':''?>><?php print date('d/m/Y')?> [ d/m/Y ]</option>
+							<option value="d.m.Y"<?php print Helper::getOption('date_format', 'Y-m-d')=='d.m.Y' ? ' selected':''?>><?php print date('d.m.Y')?> [ d.m.Y ]</option>
 						</select>
 					</div>
 					<div class="form-group col-md-3">
@@ -142,8 +143,28 @@ defined( 'ABSPATH' ) or die();
 				</div>
 				<?php endif;?>
 
-				<?php if( Helper::isSaaSVersion() && Permission::tenantInf()->plan()->fetch()->can_remove_branding == 1 ):?>
-					<div class="form-row">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <div class="form-control-checkbox">
+                            <label for="input_allow_admins_to_book_outside_working_hours"><?php print bkntc__('Allow admins to book appointments outside working hours')?>:</label>
+                            <div class="fs_onoffswitch">
+                                <input type="checkbox" class="fs_onoffswitch-checkbox" id="input_allow_admins_to_book_outside_working_hours"<?php print Helper::getOption('allow_admins_to_book_outside_working_hours', 'off')=='on'?' checked':''?>>
+                                <label class="fs_onoffswitch-label" for="input_allow_admins_to_book_outside_working_hours"></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <div class="form-control-checkbox">
+                            <label for="input_only_registered_users_can_book"><?php print bkntc__('Only registered users can book')?>:</label>
+                            <div class="fs_onoffswitch">
+                                <input type="checkbox" class="fs_onoffswitch-checkbox" id="input_only_registered_users_can_book"<?php print Helper::getOption('only_registered_users_can_book', 'off')=='on'?' checked':''?>>
+                                <label class="fs_onoffswitch-label" for="input_only_registered_users_can_book"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+				    <?php if( Helper::isSaaSVersion() && Permission::tenantInf()->plan()->fetch()->can_remove_branding == 1 ):?>
 						<div class="form-group col-md-6">
 							<div class="form-control-checkbox">
 								<label for="input_remove_branding"><?php print bkntc__('Remove branding')?>:</label>
@@ -153,17 +174,15 @@ defined( 'ABSPATH' ) or die();
 								</div>
 							</div>
 						</div>
-					</div>
-				<?php endif;?>
+				    <?php endif;?>
+                </div>
 
 				<?php if( Helper::isSaaSVersion() ):?>
 				<div class="form-row">
 					<div class="form-group col-md-6">
 						<label for="input_timezone"><?php print bkntc__('Timezone')?>:</label>
 						<select class="form-control" id="input_timezone">
-							<?php
-							echo wp_timezone_choice( Date::getTimeZoneStringWP(), get_user_locale() );
-							?>
+							<?php echo wp_timezone_choice( Date::getTimeZoneStringWP(), get_user_locale() ); ?>
 						</select>
 					</div>
 				</div>

@@ -3,6 +3,7 @@ namespace BookneticApp\Frontend\view;
 
 use BookneticApp\Providers\Helper;
 use BookneticApp\Providers\Date;
+use BookneticApp\Providers\Permission;
 
 defined( 'ABSPATH' ) or die();
 
@@ -10,42 +11,50 @@ $steps = [
 	'location'			=>	[
 		'title'		=>	bkntc__('Location'),
 		'sortable'	=>	true,
-		'can_hide'	=>	true
+		'can_hide'	=>	true,
+		'hidden'    =>  Helper::isSaaSVersion() && Permission::getPermission('locations') == 'off' ? true : false
 	],
 	'staff'				=>	[
 		'title'		=>	bkntc__('Staff'),
 		'sortable'	=>	true,
-		'can_hide'	=>	true
+		'can_hide'	=>	true,
+		'hidden'    =>  Helper::isSaaSVersion() && Permission::getPermission('staff') == 'off' ? true : false
 	],
 	'service'			=>	[
 		'title'		=>	bkntc__('Service'),
 		'sortable'	=>	true,
-		'can_hide'	=>	true
+		'can_hide'	=>	true,
+		'hidden'    =>  Helper::isSaaSVersion() && Permission::getPermission('services') == 'off' ? true : false
 	],
 	'service_extras'	=>	[
 		'title'		=>	bkntc__('Service Extras'),
 		'sortable'	=>	true,
-		'can_hide'	=>	true
+		'can_hide'	=>	true,
+		'hidden'    =>  Helper::isSaaSVersion() && Permission::getPermission('services') == 'off' ? true : false
 	],
 	'information'		=>	[
 		'title'		=>	bkntc__('Information'),
 		'sortable'	=>	true,
-		'can_hide'	=>	false
+		'can_hide'	=>	false,
+		'hidden'    =>  false
 	],
 	'date_time'			=>	[
 		'title'		=>	bkntc__('Date & Time'),
 		'sortable'	=>	true,
-		'can_hide'	=>	false
+		'can_hide'	=>	false,
+		'hidden'    =>  false
 	],
 	'confirm_details'	=>	[
 		'title'		=>	bkntc__('Confirmation'),
 		'sortable'	=>	false,
-		'can_hide'	=>	true
+		'can_hide'	=>	true,
+		'hidden'    =>  false
 	],
 	'finish'			=>	[
 		'title'		=>	bkntc__('Finish'),
 		'sortable'	=>	false,
-		'can_hide'	=>	false
+		'can_hide'	=>	false,
+		'hidden'    =>  false
 	]
 ];
 $steps_order = Helper::getBookingStepsOrder();
@@ -76,7 +85,7 @@ $steps_order = Helper::getBookingStepsOrder();
 							continue;
 
 						?>
-						<div class="step_element<?php print !$steps[$step_id]['sortable'] ? ' no_drag_drop' : ''?>" data-step-id="<?php print $step_id?>">
+						<div class="step_element<?php print (!$steps[$step_id]['sortable'] ? ' no_drag_drop' : '') . ($steps[$step_id]['hidden'] ? ' hidden' : '')?>" data-step-id="<?php print $step_id?>">
 							<span class="drag_drop_helper"><img src="<?php print Helper::icon('drag-default.svg')?>"></span>
 							<span><?php print $steps[$step_id]['title']?></span>
 							<?php
@@ -241,6 +250,7 @@ $steps_order = Helper::getBookingStepsOrder();
 								</div>
 							</div>
 
+							<?php if( ! Helper::isSaaSVersion() || Permission::getPermission('coupons') != 'off' ):?>
 							<div class="form-group col-md-12">
 								<div class="form-control-checkbox">
 									<label for="input_hide_coupon_section"><?php print bkntc__('Hide coupon section')?>:</label>
@@ -250,6 +260,19 @@ $steps_order = Helper::getBookingStepsOrder();
 									</div>
 								</div>
 							</div>
+							<?php endif;?>
+
+							<?php if( ! Helper::isSaaSVersion() || Permission::getPermission('giftcards') != 'off' ):?>
+							<div class="form-group col-md-12">
+								<div class="form-control-checkbox">
+									<label for="input_hide_giftcard_section"><?php print bkntc__('Hide giftcard section')?>:</label>
+									<div class="fs_onoffswitch">
+										<input type="checkbox" class="fs_onoffswitch-checkbox" id="input_hide_giftcard_section"<?php print Helper::getOption('hide_giftcard_section', 'off')=='on'?' checked':''?>>
+										<label class="fs_onoffswitch-label" for="input_hide_giftcard_section"></label>
+									</div>
+								</div>
+							</div>
+							<?php endif;?>
 
 							<div class="form-group col-md-12">
 								<div class="form-control-checkbox">

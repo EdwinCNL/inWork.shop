@@ -72,7 +72,8 @@ class Theme
 
 		$themeColors['%%id%%'] = $appearanceId;
 		$themeColors['%%height%%'] = (int)$themeInf['height'];
-		$themeColors['%%fontfamily%%'] = $themeInf['fontfamily'];
+		$themeColors['%%fontfamily%%'] = isset($themeInf['fontfamily']) ? $themeInf['fontfamily'] : '';
+		$themeColors['%%custom_css%%'] = isset($themeInf['custom_css']) ? $themeInf['custom_css'] : '';
 
 		$cssFileContent = self::prepareCssFile( $themeColors );
 

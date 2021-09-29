@@ -17,9 +17,9 @@
  */
 
 use Google\Auth\HttpHandler\HttpHandlerFactory;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Psr7;
-use GuzzleHttp\Psr7\Request;
+use Booknetic_GuzzleHttp\ClientInterface;
+use Booknetic_GuzzleHttp\Psr7;
+use Booknetic_GuzzleHttp\Psr7\Request;
 
 /**
  * Wrapper around Google Access Tokens which provides convenience functions
@@ -28,7 +28,7 @@ use GuzzleHttp\Psr7\Request;
 class Google_AccessToken_Revoke
 {
   /**
-   * @var GuzzleHttp\ClientInterface The http client
+   * @var Booknetic_GuzzleHttp\ClientInterface The http client
    */
   private $http;
 

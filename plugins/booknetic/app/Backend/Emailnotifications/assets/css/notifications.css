@@ -145,3 +145,17 @@
 	border-color: #e3eaf3;
 	background: #FFF;
 }
+.rtl .fs_notifications_list .text-primary
+{
+	margin-left: unset;
+	margin-right: 25px;
+}
+.rtl .fsn_title
+{
+	float: right;
+}
+.rtl .fsn_switch_btn
+{
+	float: left;
+}
+

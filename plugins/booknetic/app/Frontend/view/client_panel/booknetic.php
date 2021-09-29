@@ -1,6 +1,7 @@
 <?php
 namespace BookneticApp\Frontend\view;
 
+use BookneticApp\Backend\Appointments\Model\Appointment;
 use BookneticApp\Providers\Date;
 use BookneticApp\Providers\Helper;
 
@@ -36,6 +37,9 @@ defined( 'ABSPATH' ) or die();
 				<thead>
 					<tr>
 						<th class="pl-4"><?php print bkntc__('ID')?></th>
+						<?php if( Helper::isSaaSVersion() ):?>
+						<th><?php print bkntc__('Company')?></th>
+						<?php endif;?>
 						<th><?php print bkntc__('SERVICE')?></th>
 						<th><?php print bkntc__('STAFF')?></th>
 						<th><?php print bkntc__('APPOINTMENT DATE')?></th>
@@ -47,30 +51,34 @@ defined( 'ABSPATH' ) or die();
 				</thead>
 				<tbody>
 					<?php foreach ( $appointments AS $appointment ) : ?>
-						<tr data-id="<?php print $appointment->appointment_id?>" data-date="<?php print Date::dateSQL( $appointment->date )?>" data-time="<?php print Date::timeSQL( $appointment->start_time )?>" data-datebased="<?php print ( $appointment->duration >= 24 * 60 ) ? 1 : 0 ?>">
-							<td class="pl-4"><?php print esc_html($appointment->appointment_id)?></td>
+
+						<tr data-id="<?php print $appointment->customers_id?>" data-date="<?php print Date::dateSQL( $appointment->date )?>" data-time="<?php print Date::timeSQL( $appointment->start_time )?>" data-datebased="<?php print ( $appointment->duration >= 24 * 60 ) ? 1 : 0 ?>">
+							<td class="pl-4"><?php print esc_html($appointment->customers_id)?></td>
+							<?php if( Helper::isSaaSVersion() ):?>
+								<td><?php print esc_html( \BookneticSaaS\Providers\Helper::getOption('company_name', '', $appointment->tenant_id) )?></td>
+							<?php endif;?>
 							<td><?php print esc_html($appointment->service_name)?></td>
 							<td><?php print Helper::profileCard( $appointment->staff_name, $appointment->staff_profile_image, '', 'Staff' );?></td>
 							<td class="td_datetime"><?php print ( $appointment->duration >= 24 * 60 ) ? Date::datee( $appointment->date ) : Date::dateTime( $appointment->date . ' ' . $appointment->start_time )?></td>
-							<td><?php print Helper::price( $appointment->service_amount + $appointment->extras_amount - $appointment->discount )?></td>
+							<td><?php print Helper::price( $appointment->customers_service_amount + $appointment->customers_extras_amount - $appointment->customers_discount )?></td>
 							<td><?php print Helper::secFormat(((int)$appointment->duration + (int)$appointment->extras_duration) * 60)?></td>
-							<td>
-								<?php if( $appointment->status == 'approved' ) :?>
-									<span class="booknetic_appointment_status_<?php print esc_html($appointment->status)?>"><?php print bkntc__('Approved')?></span>
-								<?php elseif( $appointment->status == 'pending' ) :?>
-									<span class="booknetic_appointment_status_<?php print esc_html($appointment->status)?>"><?php print bkntc__('Pending')?></span>
-								<?php elseif( $appointment->status == 'canceled' ) :?>
-									<span class="booknetic_appointment_status_<?php print esc_html($appointment->status)?>"><?php print bkntc__('Canceled')?></span>
+							<td class="booknetic_appointment_status_td">
+								<?php if( $appointment->customers_status == 'approved' ) :?>
+									<span class="booknetic_appointment_status_<?php print esc_html($appointment->customers_status)?>"><?php print bkntc__('Approved')?></span>
+								<?php elseif( $appointment->customers_status == 'pending' ) :?>
+									<span class="booknetic_appointment_status_<?php print esc_html($appointment->customers_status)?>"><?php print bkntc__('Pending')?></span>
+								<?php elseif( $appointment->customers_status == 'canceled' ) :?>
+									<span class="booknetic_appointment_status_<?php print esc_html($appointment->customers_status)?>"><?php print bkntc__('Canceled')?></span>
 								<?php else:?>
-									<span class="booknetic_appointment_status_<?php print esc_html($appointment->status)?>"><?php print bkntc__('Rejected')?></span>
+									<span class="booknetic_appointment_status_<?php print esc_html($appointment->customers_status)?>"><?php print bkntc__('Rejected')?></span>
 								<?php endif; ?>
 							</td>
 							<td>
-								<?php if( $allow_reschedule ): ?>
-								<button class="booknetic_reschedule_btn <?php print ( $appointment->status != 'rejected' ) ? '' : ' booknetic_hidden' ?>" type="button" title="<?php print bkntc__('Reschedule')?>"><i class="fa fa-clock-o"></i></button>
+								<?php if( Helper::getCustomerOption('customer_panel_allow_reschedule', 'on', $appointment->tenant_id) == 'on' && Appointment::checkAllowSchedule($appointment) ): ?>
+								    <button class="booknetic_reschedule_btn <?php print ( $appointment->customers_status != 'rejected' ) ? '' : ' booknetic_hidden' ?>" type="button" title="<?php print bkntc__('Reschedule')?>"><i class="fa fa-clock-o"></i></button>
 								<?php endif; ?>
-								<?php if( $allow_cancel ): ?>
-								<button class="booknetic_cancel_btn <?php print ( $appointment->status != 'rejected' && $appointment->status != 'canceled' ) ? '' : ' booknetic_hidden' ?>" type="button" title="<?php print bkntc__('Cancel')?>"><i class="fa fa-times"></i></button>
+								<?php if( Helper::getCustomerOption('customer_panel_allow_cancel', 'on', $appointment->tenant_id) == 'on' && Appointment::checkAllowCancel($appointment) ): ?>
+								    <button class="booknetic_cancel_btn <?php print ( $appointment->customers_status != 'rejected' && $appointment->customers_status != 'canceled' ) ? '' : ' booknetic_hidden' ?>" type="button" title="<?php print bkntc__('Cancel')?>"><i class="fa fa-times"></i></button>
 								<?php endif; ?>
 							</td>
 						</tr>
@@ -121,7 +129,7 @@ defined( 'ABSPATH' ) or die();
 
 			<div class="booknetic_cp_profile_footer">
 				<button type="button" id="booknetic_profile_save" class="booknetic_btn_primary"><?php print bkntc__('SAVE')?></button>
-				<?php if( $allow_delete_account ): ?>
+				<?php  if( Helper::getCustomerOption('customer_panel_allow_delete_account', 'on', $appointment->tenant_id) == 'on' ): ?>
 				<button type="button" id="booknetic_profile_delete" class="booknetic_btn_danger"><?php print bkntc__('DELETE MY PROFILE')?></button>
 				<?php endif; ?>
 			</div>

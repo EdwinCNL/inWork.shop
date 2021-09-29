@@ -21,7 +21,7 @@
 				['height', ['height']]
 			],
 			hint: {
-				mentions: ['appointment_id','appointment_date','appointment_date_time','appointment_start_time','appointment_end_time','appointment_duration','appointment_buffer_before','appointment_buffer_after','appointment_status','appointment_service_price','appointment_extras_price','appointment_discount_price','appointment_sum_price','appointment_paid_price','appointment_payment_method','appointment_custom_field_ID','service_name','service_price','service_duration','service_notes','service_color','service_image_url','service_category_name','customer_full_name','customer_first_name','customer_last_name','customer_phone','customer_email','customer_birthday','customer_notes','customer_profile_image_url','customer_panel_url','customer_panel_password','staff_name','staff_email','staff_phone','staff_about','staff_profile_image_url','location_name','location_address','location_image_url','location_phone_number','location_notes','company_name','company_image_url','company_website','company_phone','company_address','zoom_meeting_url','zoom_meeting_password'],
+				mentions: $( '.fsn_shorttags_element' ).map( function ( i, val ) { return $( val ).text().match( /[a-zA-Z0-9_]+/g ); } ),
 				match: /\B\{(\w*)$/,
 				search: function (keyword, callback)
 				{

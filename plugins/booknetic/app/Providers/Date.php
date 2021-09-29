@@ -6,18 +6,33 @@ class Date
 {
 
 	private static $time_zone;
+	private static $time_zone_option;
 
-
-	public static function getTimeZone( $client_time_zone = false )
+	public static function getTimeZone( $client_time_zone = false, $saved_timezone = '-' )
 	{
-		if( $client_time_zone && Helper::_post('client_time_zone', '', 'int') != '' )
+		if( ($client_time_zone && Helper::_any('client_time_zone', '-', 'str') !== '-' ||  $saved_timezone !== '-') && self::clientTimezoneOptionIsEnabled() )
 		{
-			$clientTimeZoneOffset = Helper::_post('client_time_zone', '', 'string') * -1;
+			$clientTimeZone = Helper::_any( 'client_time_zone', '-', 'str' );
 
-			$hours = abs( (int)($clientTimeZoneOffset / 60) );
-			$minutes = abs($clientTimeZoneOffset) - $hours * 60;
+			if( $clientTimeZone === '-' && $saved_timezone !== '-' )
+            {
+                $clientTimeZone = $saved_timezone;
+            }
+			// Detect if javascript sent the timezone string
+			if ( preg_match( '/^[a-zA-Z]+\/[a-zA-Z]+$/', $clientTimeZone ) )
+			{
+				$timezone = $clientTimeZone;
+			}
+			// else javascript sent the timezone offset
+			else if ( intval( $clientTimeZone ) == $clientTimeZone )
+			{
+				$clientTimeZoneOffset = intval( $clientTimeZone ) * -1;
 
-			$timezone = ($clientTimeZoneOffset > 0 ? '+' : '-') . sprintf('%02d:%02d', $hours, $minutes);
+				$hours = abs( (int)($clientTimeZoneOffset / 60) );
+				$minutes = abs($clientTimeZoneOffset) - $hours * 60;
+
+				$timezone = ($clientTimeZoneOffset > 0 ? '+' : '-') . sprintf('%02d:%02d', $hours, $minutes);
+			}
 
 			return new \DateTimeZone( $timezone );
 		}
@@ -47,7 +62,7 @@ class Date
 				$hours = abs( (int)$tz_offset );
 				$minutes = ( abs($tz_offset) - $hours ) * 60;
 
-				$timezone = ($tz_offset > 0 ? '+' : '-') . sprintf('%02d:%02d', $hours, $minutes);
+				$timezone = ($tz_offset >= 0 ? '+' : '-') . sprintf('%02d:%02d', $hours, $minutes);
 			}
 			else
 			{
@@ -118,14 +133,14 @@ class Date
 		self::$time_zone = new \DateTimeZone( $timezone );
 	}
 
-	public static function dateTime( $date = 'now', $modify = false, $client_time_zone = false )
+	public static function dateTime( $date = 'now', $modify = false, $client_time_zone = false, $saved_timezone = '-' )
 	{
 		if( !is_numeric( $date ) )
 		{
 			$date = self::epoch( $date );
 		}
 
-		$datetime = new \DateTime( 'now', self::getTimeZone( $client_time_zone ) );
+		$datetime = new \DateTime( 'now', self::getTimeZone( $client_time_zone, $saved_timezone ) );
 		$datetime->setTimestamp( $date );
 
 		if( !empty( $modify ) )
@@ -136,14 +151,14 @@ class Date
 		return $datetime->format( self::formatDateTime() );
 	}
 
-	public static function datee( $date = 'now', $modify = false, $client_time_zone = false )
+	public static function datee( $date = 'now', $modify = false, $client_time_zone = false, $saved_timezone = '-' )
 	{
 		if( !is_numeric( $date ) )
 		{
 			$date = self::epoch( $date );
 		}
 
-		$datetime = new \DateTime( 'now', self::getTimeZone( $client_time_zone ) );
+		$datetime = new \DateTime( 'now', self::getTimeZone( $client_time_zone, $saved_timezone ) );
 		$datetime->setTimestamp( $date );
 
 		if( !empty( $modify ) )
@@ -154,14 +169,14 @@ class Date
 		return $datetime->format( self::formatDate() );
 	}
 
-	public static function time( $date = 'now', $modify = false, $client_time_zone = false )
+	public static function time( $date = 'now', $modify = false, $client_time_zone = false, $saved_timezone = '-' )
 	{
 		if( !is_numeric( $date ) )
 		{
 			$date = self::epoch( $date );
 		}
 
-		$datetime = new \DateTime( 'now', self::getTimeZone( $client_time_zone ) );
+		$datetime = new \DateTime( 'now', self::getTimeZone( $client_time_zone, $saved_timezone ) );
 		$datetime->setTimestamp( $date );
 
 		if( !empty( $modify ) )
@@ -193,14 +208,14 @@ class Date
 		}
 	}
 
-	public static function dateTimeSQL( $date = 'now', $modify = false )
+	public static function dateTimeSQL( $date = 'now', $modify = false, $client_time_zone = false  )
 	{
 		if( !is_numeric( $date ) )
 		{
 			$date = self::epoch( $date );
 		}
 
-		$datetime = new \DateTime( 'now', self::getTimeZone() );
+		$datetime = new \DateTime( 'now', self::getTimeZone($client_time_zone) );
 		$datetime->setTimestamp( $date );
 
 		if( !empty( $modify ) )
@@ -211,14 +226,14 @@ class Date
 		return $datetime->format( self::formatDateTime( true ) );
 	}
 
-	public static function dateSQL( $date = 'now', $modify = false )
+	public static function dateSQL( $date = 'now', $modify = false,$client_time_zone = false )
 	{
 		if( !is_numeric( $date ) )
 		{
 			$date = self::epoch( $date );
 		}
 
-		$datetime = new \DateTime( 'now', self::getTimeZone() );
+		$datetime = new \DateTime( 'now', self::getTimeZone($client_time_zone) );
 		$datetime->setTimestamp( $date );
 
 		if( !empty( $modify ) )
@@ -229,14 +244,14 @@ class Date
 		return $datetime->format( self::formatDate( true ) );
 	}
 
-	public static function format( $format , $date = 'now', $modify = false )
+	public static function format( $format , $date = 'now', $modify = false, $client_time_zone = false  )
 	{
 		if( !is_numeric( $date ) )
 		{
 			$date = self::epoch( $date );
 		}
 
-		$datetime = new \DateTime( 'now', self::getTimeZone() );
+		$datetime = new \DateTime( 'now', self::getTimeZone($client_time_zone) );
 		$datetime->setTimestamp( $date );
 
 		if( !empty( $modify ) )
@@ -247,14 +262,14 @@ class Date
 		return $datetime->format( $format );
 	}
 
-	public static function timeSQL( $date = 'now', $modify = false )
+	public static function timeSQL( $date = 'now', $modify = false, $client_time_zone = false )
 	{
 		if( !is_numeric( $date ) )
 		{
 			$date = self::epoch( $date );
 		}
 
-		$datetime = new \DateTime( 'now', self::getTimeZone() );
+		$datetime = new \DateTime( 'now', self::getTimeZone($client_time_zone) );
 		$datetime->setTimestamp( $date );
 
 		if( !empty( $modify ) )
@@ -265,10 +280,17 @@ class Date
 		return $datetime->format( self::formatTime( true ) );
 	}
 
-
 	public static function epoch( $date = 'now', $modify = false )
 	{
-		$datetime = new \DateTime( $date, self::getTimeZone() );
+		if( is_numeric( $date ) )
+		{
+			$datetime = new \DateTime( 'now', self::getTimeZone() );
+			$datetime->setTimestamp( $date );
+		}
+		else
+		{
+			$datetime = new \DateTime( $date, self::getTimeZone() );
+		}
 
 		if( !empty( $modify ) )
 		{
@@ -326,5 +348,57 @@ class Date
 
 		return $datetime->format( $format );
 	}
+
+	public static function reformatDateFromCustomFormat( $date )
+    {
+	    if ( preg_match( '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/', $date ) )
+	    {
+		    return $date;
+	    }
+
+        $format = Helper::getOption('date_format', 'Y-m-d');
+
+        if($format == 'Y-m-d')
+        {
+            return $date;
+        }
+        else if($format == 'm/d/Y')
+        {
+            $date = explode('/', $date);
+            return $date[2].'-'.$date[0].'-'.$date[1];
+        }
+        else if($format == 'd-m-Y')
+        {
+            $date = explode('-', $date);
+            return $date[2].'-'.$date[1].'-'.$date[0];
+        }
+        else if($format == 'd/m/Y')
+        {
+            $date = explode('/', $date);
+            return $date[2].'-'.$date[1].'-'.$date[0];
+        }
+        else if($format == 'd.m.Y')
+        {
+            $date = explode('.', $date);
+            return $date[2].'-'.$date[1].'-'.$date[0];
+        }
+
+        return $date;
+    }
+
+    public static function resetTimezone()
+    {
+    	self::$time_zone = null;
+    }
+
+    private static function clientTimezoneOptionIsEnabled()
+    {
+    	if( is_null( self::$time_zone_option ) )
+	    {
+		    self::$time_zone_option = Helper::getOption('client_timezone_enable', 'off') === 'on' ? true : false;
+	    }
+
+	    return self::$time_zone_option;
+    }
 
 }

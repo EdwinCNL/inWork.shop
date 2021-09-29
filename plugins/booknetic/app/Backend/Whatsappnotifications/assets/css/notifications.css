@@ -91,3 +91,17 @@
 	margin: 0 2px;
 	font-weight: 600;
 }
+
+.rtl .fs_notifications_list .text-primary
+{
+	margin-left: unset;
+	margin-right: 25px;
+}
+.rtl .fsn_title
+{
+	float: right;
+}
+.rtl .fsn_switch_btn
+{
+	float: left;
+}

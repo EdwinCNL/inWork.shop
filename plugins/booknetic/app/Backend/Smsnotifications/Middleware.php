@@ -17,7 +17,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 				return true;
 			}
 
-			if( Permission::tenantInf()->getPermission( 'sms_notifications' ) === 'on' )
+			if( Permission::getPermission( 'sms_notifications' ) === 'on' )
 			{
 				return true;
 			}
@@ -32,7 +32,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 	{
 		// add menu...
 		$this->createMenu(bkntc__('SMS Notifications'))
-			->setOrder(11)
+			->setOrder(13)
 			->setParent( 'notifications', 'fa fa-bell', bkntc__( 'Notifications' ) )
 			->show();
 

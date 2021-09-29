@@ -23,23 +23,25 @@ defined( 'ABSPATH' ) or die();
 		<div class="ms-content">
 
 			<form class="position-relative">
-
+                <?php if ( ! Helper::isSaaSVersion() ) : ?>
 				<div class="form-row enable_disable_row">
 
 					<div class="form-group col-md-2">
-						<input id="input_customer_panel_enable" type="radio" name="input_customer_panel_enable" value="off"<?php print Helper::getOption('customer_panel_enable', 'off')=='off'?' checked':''?>>
+						<input id="input_customer_panel_enable" type="radio" name="input_customer_panel_enable" value="off"<?php print Helper::getOption('customer_panel_enable', 'off',false)=='off'?' checked':''?>>
 						<label for="input_customer_panel_enable"><?php print bkntc__('Disabled')?></label>
 					</div>
 					<div class="form-group col-md-2">
-						<input id="input_customer_panel_disable" type="radio" name="input_customer_panel_enable" value="on"<?php print Helper::getOption('customer_panel_enable', 'off')=='on'?' checked':''?>>
+						<input id="input_customer_panel_disable" type="radio" name="input_customer_panel_enable" value="on"<?php print Helper::getOption('customer_panel_enable', 'off',false)=='on'?' checked':''?>>
 						<label for="input_customer_panel_disable"><?php print bkntc__('Enabled')?></label>
 					</div>
 
 				</div>
+                <?php endif; ?>
 
 				<div id="customer_panel_settings_area">
 
 					<div class="form-row">
+                        <?php if ( ! Helper::isSaaSVersion() ) : ?>
 						<div class="form-group col-md-6">
 							<label for="input_customer_panel_page_id"><?php print bkntc__('Page of Customer Panel')?>:</label>
 							<select class="form-control" id="input_customer_panel_page_id">
@@ -48,6 +50,15 @@ defined( 'ABSPATH' ) or die();
 								<?php endforeach; ?>
 							</select>
 						</div>
+                        <?php endif;?>
+							<div class="form-group col-md-6">
+								<label for="input_timeslot_length"><?php print bkntc__('Time restriction to change appointments')?>:</label>
+								<select class="form-control" id="input_time_restriction_to_make_changes_on_appointments">
+									<?php foreach ( [1,2,3,4,5,10,12,15,20,25,30,35,40,45,50,55,60,90,120,180,240,300] AS $minute ) :?>
+										<option value="<?php print $minute?>"<?php print Helper::getOption('time_restriction_to_make_changes_on_appointments', '5')==$minute ? ' selected':''?>><?php print Helper::secFormat($minute*60)?></option>
+									<?php endforeach;?>
+								</select>
+							</div>
 					</div>
 
 					<div class="form-row">

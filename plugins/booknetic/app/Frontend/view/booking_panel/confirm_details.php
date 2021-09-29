@@ -7,7 +7,7 @@ use BookneticApp\Providers\Date;
 defined( 'ABSPATH' ) or die();
 ?>
 
-<div class="booknetic_confirm_date_time booknetic_portlet <?php print $parameters['woocommerce_enabled'] || $parameters['hide_confirm_step'] ? 'booknetic_hidden' : ''?>">
+<div class="booknetic_confirm_date_time booknetic_portlet <?php print ($parameters['woocommerce_enabled'] && !$parameters['wc_show_confirm_step']) || $parameters['hide_confirm_step'] ? 'booknetic_hidden' : ''?>">
 
 	<div>
 		<span class="booknetic_text_primary"><?php print bkntc__('Date & Time')?>:</span>
@@ -46,36 +46,58 @@ defined( 'ABSPATH' ) or die();
 </div>
 
 
-<div class="booknetic_confirm_step_body <?php print $parameters['woocommerce_enabled'] || $parameters['hide_confirm_step'] ? 'booknetic_hidden' : ''?>">
+<div class="booknetic_confirm_step_body <?php print ($parameters['woocommerce_enabled'] && !$parameters['wc_show_confirm_step']) || $parameters['hide_confirm_step'] ? 'booknetic_hidden' : ''?>">
 
 	<div class="booknetic_confirm_sum_body<?php print ($parameters['hide_payments'] && !$parameters['hide_price_section'] ? ' booknetic_confirm_sum_body_full_width' : '') . ($parameters['hide_price_section'] ? ' booknetic_hidden' : '');?>">
 		<div class="booknetic_portlet">
-
-			<div class="booknetic_confirm_details">
-				<div class="booknetic_confirm_details_title"><?php print esc_html($parameters['service']['name']) . ( $parameters['appointments_count'] > 0 ? ' x' . $parameters['appointments_count'] : '' ) ?></div>
-				<div class="booknetic_confirm_details_price"><?php print Helper::price( $parameters['appointments_count'] * $parameters['service_price'] )?></div>
-			</div>
-
-			<?php foreach ( $parameters['extras'] AS $extra ) :?>
+			<div class="booknetic_portlet_content">
 				<div class="booknetic_confirm_details">
-					<div class="booknetic_confirm_details_title"><?php print esc_html($extra['name'].' x' . ( $extra['quantity'] * $parameters['appointments_count'] ))?></div>
-					<div class="booknetic_confirm_details_price"><?php print Helper::price( $extra['price'] * $extra['quantity'] * $parameters['appointments_count'] )?></div>
+					<div class="booknetic_confirm_details_title"><?php print esc_html($parameters['service']['name']) . ( $parameters['appointments_count'] > 0 ? ' x ' . $parameters['appointments_count']   * $parameters['total_customer_count'] : '' ) ?></div>
+					<div class="booknetic_confirm_details_price"><?php print Helper::price( $parameters['appointments_count'] * $parameters['service_price'] * $parameters['total_customer_count'] )?></div>
 				</div>
-			<?php endforeach; ?>
 
-			<div class="booknetic_confirm_details booknetic_discount<?php print $parameters['hide_discount_row'] ? ' booknetic_hidden' : ''?>">
-				<div class="booknetic_confirm_details_title"><?php print bkntc__('Discount')?></div>
-				<div class="booknetic_confirm_details_price booknetic_discount_price"><?php print Helper::price($parameters['discount'])?></div>
+				<?php foreach ( $parameters['extras'] AS $extra ) :?>
+					<div class="booknetic_confirm_details">
+						<div class="booknetic_confirm_details_title"><?php print esc_html($extra['name'].' x ' . ( $extra['quantity'] * $parameters['appointments_count'] ))?></div>
+						<div class="booknetic_confirm_details_price"><?php print Helper::price( $extra['price'] * $extra['quantity'] * $parameters['appointments_count'] )?></div>
+					</div>
+				<?php endforeach; ?>
+
+				<?php if( $parameters['has_tax'] ): ?>
+					<div class="booknetic_confirm_details">
+						<div class="booknetic_confirm_details_title"><?php print esc_html( bkntc__('Tax') . ( $parameters['tax_type'] == 'percent' ? ' - ' . $parameters['tax'] . ' %' : '' ) ) ?></div>
+						<div class="booknetic_confirm_details_price"><?php print Helper::price( $parameters['tax_amount'] )?></div>
+					</div>
+				<?php endif; ?>
+
+				<div class="booknetic_confirm_details booknetic_discount<?php print isset($parameters['hide_discount_row']) && $parameters['hide_discount_row'] ? ' booknetic_hidden' : ''?>">
+					<div class="booknetic_confirm_details_title"><?php print bkntc__('Discount')?></div>
+					<div class="booknetic_confirm_details_price booknetic_discount_price"><?php print Helper::price($parameters['discount'])?></div>
+				</div>
+
+				<div class="booknetic_confirm_details booknetic_gift_discount<?php print isset($parameters['hide_gift_discount_row']) && $parameters['hide_gift_discount_row'] ? ' booknetic_hidden' : ''?>">
+					<div class="booknetic_confirm_details_title"><?php print bkntc__('Charge for Gift Card')?></div>
+					<div class="booknetic_confirm_details_price booknetic_gift_discount_price"><?php print Helper::price($parameters['gift_discount'])?></div>
+				</div>
+
+				<div class="booknetic_show_balance"></div>
 			</div>
 
-			<div class="booknetic_add_coupon<?php print Helper::getOption('hide_coupon_section', 'off') == 'on' ? ' booknetic_hidden' : ''?>">
-				<input type="text" id="booknetic_coupon" placeholder="<?php print bkntc__('Add coupon')?>">
-				<button type="button" id="booknetic_coupon_ok_btn" class="booknetic_btn_success"><?php print bkntc__('OK')?></button>
+			<div class="booknetic_cupon_and_giftcard">
+				<div class="booknetic_add_coupon<?php print Helper::getOption('hide_coupon_section', 'off') == 'on' ? ' booknetic_hidden' : ''?>">
+					<input type="text" id="booknetic_coupon" placeholder="<?php print bkntc__('Coupon')?>">
+					<button type="button" class="booknetic_btn_success booknetic_coupon_ok_btn"><?php print bkntc__('OK')?></button>
+				</div>
+
+				<div class="booknetic_add_giftcard<?php print Helper::getOption('hide_giftcard_section', 'off') == 'on' ? ' booknetic_hidden' : ''?>">
+					<input type="text" id="booknetic_giftcard" placeholder="<?php print bkntc__('Giftcard')?>">
+					<button type="button" class="booknetic_btn_warning booknetic_giftcard_ok_btn"><?php print bkntc__('ADD')?></button>
+				</div>
 			</div>
 
 			<div class="booknetic_confirm_sum_price">
 				<div><?php print bkntc__('Total price')?></div>
-				<div class="booknetic_sum_price"><?php print Helper::price($parameters['sum'])?></div>
+				<div class="booknetic_sum_price"><?php print Helper::price($parameters['sum_amount_with_tax'])?></div>
 			</div>
 
 		</div>
@@ -90,7 +112,7 @@ defined( 'ABSPATH' ) or die();
 				if( $parameters['woocommerce_enabled'] )
 				{
 					?>
-					<div class="booknetic_payment_method booknetic_payment_method_selected" data-payment-type="woocommerce"></div>
+					<div class="booknetic_payment_method booknetic_payment_method_selected booknetic_hidden" data-payment-type="woocommerce"></div>
 					<?php
 				}
 				else
@@ -138,7 +160,7 @@ defined( 'ABSPATH' ) or die();
 					?>
 					<div class="booknetic_deposit_price booknetic_hide_on_local <?php print $first_is_local_method ? 'booknetic_hidden' : '';?>">
 						<div><?php print bkntc__('Deposit')?>:</div>
-						<div class="booknetic_deposit_amount_txt"><?php print ( $parameters['deposit_type'] == 'percent' ? $parameters['deposit'] . '% , ' : '' ) . Helper::price( $parameters['deposit_type'] == 'price' ? $parameters['deposit'] : ($parameters['sum'] * $parameters['deposit'] / 100))?></div>
+						<div class="booknetic_deposit_amount_txt"><?php print ( $parameters['deposit_type'] == 'percent' ? $parameters['deposit'] . '% , ' : '' ) . Helper::price( $parameters['deposit_type'] == 'price' ? $parameters['deposit'] : ($parameters['sum_amount_with_tax'] * $parameters['deposit'] / 100))?></div>
 					</div>
 					<?php
 				}
@@ -151,10 +173,10 @@ defined( 'ABSPATH' ) or die();
 </div>
 
 <?php
-if( $parameters['woocommerce_enabled'] )
+if( $parameters['woocommerce_enabled'] && !$parameters['wc_show_confirm_step'] )
 {
 ?>
-<div class="booknetic_confirm_date_time booknetic_text_primary">
+<div class="booknetic_confirm_date_time booknetic_text_primary booknetic_redirect_to_wc">
 	<?php print bkntc__('Please wait, You are automatically redirecting to order page...') ?>
 </div>
 <?php

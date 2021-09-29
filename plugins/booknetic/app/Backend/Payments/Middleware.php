@@ -10,7 +10,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 
 	public static function handle()
 	{
-		if( Helper::isSaaSVersion() && Permission::tenantInf()->getPermission( 'payments' ) === 'off' )
+		if( Helper::isSaaSVersion() && Permission::getPermission( 'payments' ) === 'off' )
 		{
 			return false;
 		}
@@ -23,7 +23,7 @@ class Middleware extends \BookneticApp\Providers\Middleware
 		// add menu...
 		$this->createMenu(bkntc__('Payments'))
 			->setIcon('fa fa-wallet')
-			->setOrder(4)
+			->setOrder(5)
 			->show();
 
 

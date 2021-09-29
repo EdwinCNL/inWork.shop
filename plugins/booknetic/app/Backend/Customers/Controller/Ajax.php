@@ -62,7 +62,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		$wp_user	                = Helper::_post('wp_user', '0', 'integer');
 		$first_name	                = Helper::_post('first_name', '', 'string');
 		$last_name	                = Helper::_post('last_name', '', 'string');
-		$gender		                = Helper::_post('gender', 'male', 'string', ['male', 'female']);
+		$gender		                = Helper::_post('gender', '', 'string', ['male', 'female']);
 		$birthday	                = Helper::_post('birthday', '', 'string');
 		$phone		                = Helper::_post('phone', '', 'string');
 		$email		                = Helper::_post('email', '', 'email');
@@ -102,6 +102,11 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			Helper::response(false, bkntc__('Please fill in all required fields correctly!'));
 		}
 
+		if( ( ! $isEdit || $email != $getOldInf->email ) && ( email_exists( $email ) !== false || username_exists( $email ) !== false) )
+		{
+			Helper::response( false, bkntc__('There is another customer with the same email adress!') );
+		}
+
 		if( !Permission::isAdministrator() )
 		{
 			$wp_user = $isEdit ? $getOldInf->user_id : 0;
@@ -117,10 +122,6 @@ class Ajax extends \BookneticApp\Providers\Ajax
 				if( !($isEdit && $getOldInf->user_id > 0) && empty( $wp_user_password ) )
 				{
 					Helper::response( false, bkntc__('Please type the password of the WordPress user!') );
-				}
-				else if( (!$isEdit || $email != $getOldInf->email) && (email_exists( $email ) !== false || username_exists( $email ) !== false) )
-				{
-					Helper::response( false, bkntc__('The WordPress user with the same email address already exists!') );
 				}
 
 				if( $isEdit && $getOldInf->user_id > 0 )
@@ -220,7 +221,7 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			'last_name'		=>	trim($last_name),
 			'phone_number'	=>	$phone,
 			'email'			=>	$email,
-			'birthdate'		=>	Date::dateSQL( $birthday ),
+			'birthdate'		=>	empty( $birthday ) ? null : Date::dateSQL( $birthday ),
 			'notes'			=>	$note,
 			'profile_image'	=>	$profile_image,
 			'gender'		=>	$gender
@@ -249,6 +250,8 @@ class Ajax extends \BookneticApp\Providers\Ajax
 		}
 		else
 		{
+			$sqlData['created_by'] = Permission::userId();
+
 			Customer::insert( $sqlData );
 		}
 
@@ -315,6 +318,18 @@ class Ajax extends \BookneticApp\Providers\Ajax
 			{
 				continue;
 			}
+
+			if( isset( $insertData[ 'phone_number' ] ) && !empty( $insertData[ 'phone_number' ] ) && strpos( $insertData[ 'phone_number' ], '+' ) !== 0 )
+			{
+				$insertData[ 'phone_number' ] = '+' . $insertData[ 'phone_number' ];
+			}
+
+			if( isset( $insertData[ 'birthdate' ] ) )
+			{
+				$insertData[ 'birthdate' ] = empty( $insertData[ 'birthdate' ] ) ? null : Date::dateSQL( $insertData[ 'birthdate' ] );
+			}
+
+            $insertData['created_by'] = Permission::userId();
 
 			Customer::insert( $insertData );
 		}

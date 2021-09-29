@@ -1,5 +1,5 @@
 <?php
-namespace GuzzleHttp\Promise;
+namespace Booknetic_GuzzleHttp\Promise;
 
 interface TaskQueueInterface
 {

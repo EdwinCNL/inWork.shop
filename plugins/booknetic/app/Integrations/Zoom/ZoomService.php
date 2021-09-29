@@ -12,7 +12,7 @@ use BookneticApp\Providers\DB;
 use BookneticApp\Providers\Helper;
 use BookneticApp\Providers\Session;
 use Firebase\JWT\JWT;
-use GuzzleHttp\Client;
+use Booknetic_GuzzleHttp\Client;
 
 class ZoomService
 {
@@ -58,9 +58,11 @@ class ZoomService
 	public function subAccountsList()
 	{
 		$accounts = [];
+		$page_number = 1;
+
 		while( true )
 		{
-			$list = $this->client->get('https://api.zoom.us/v2/users?status=active&page_size=50&page_number=1');
+			$list = $this->client->get('https://api.zoom.us/v2/users?status=active&page_size=50&page_number=' . $page_number);
 
 			$result = json_decode( (string)$list->getBody(), true );
 			if( !isset( $result['users'] ) )
@@ -73,6 +75,8 @@ class ZoomService
 			{
 				break;
 			}
+
+			$page_number++;
 		}
 
 		return $accounts;
@@ -172,9 +176,9 @@ class ZoomService
 
 	private function meetingParameters( $isPatch = false )
 	{
-		$setPassword    = !$isPatch && Helper::getOption('zoom_set_random_password', 'on', false) == 'on';
-		$meetingsTopic  = Helper::getOption('zoom_meeting_title', '', false);
-		$meetingsAgenda = Helper::getOption('zoom_meeting_agenda', '', false);
+		$setPassword    = !$isPatch && Helper::getOption('zoom_set_random_password', 'on') == 'on';
+		$meetingsTopic  = Helper::getOption('zoom_meeting_title', '');
+		$meetingsAgenda = Helper::getOption('zoom_meeting_agenda', '');
 
 		$meetingParamters = [
 			"topic"         =>  $this->replaceShortTags( $meetingsTopic ),
@@ -210,6 +214,7 @@ class ZoomService
 			'{appointment_sum_price}',
 			'{appointment_paid_price}',
 			'{appointment_payment_method}',
+			'{appointment_tax_amount}',
 
 			'{service_name}',
 			'{service_price}',
@@ -245,6 +250,9 @@ class ZoomService
 			'{company_website}',
 			'{company_phone}',
 			'{company_address}',
+
+            '{appointment_created_date}',
+            '{appointment_created_time}',
 		], [
 			$this->appointmentCustomerInf('id'),
 			Date::datee( $this->appointmentInf['date'] ),
@@ -262,6 +270,7 @@ class ZoomService
 			Helper::price( $this->appointmentCustomerInf('service_amount', false, 0) + $this->appointmentCustomerInf('extras_amount', false, 0) - $this->appointmentCustomerInf('discount', false, 0) ),
 			Helper::price( $this->appointmentCustomerInf('paid_amount', false, 0) ),
 			Helper::paymentMethod( $this->appointmentCustomerInf('payment_method', false) ),
+			Helper::price( $this->appointmentCustomerInf('tax_amount', false, 0) ),
 
 			$this->serviceInf['name'],
 			Helper::price( $this->serviceInf['price'] ),
@@ -296,7 +305,10 @@ class ZoomService
 			Helper::profileImage( Helper::getOption('company_image', ''), 'Settings'),
 			Helper::getOption('company_website', ''),
 			Helper::getOption('company_phone', ''),
-			Helper::getOption('company_address', '')
+			Helper::getOption('company_address', ''),
+
+            Date::datee( $this->appointmentCustomerInf('created_at', false , ''), false, false ),
+            Date::time($this->appointmentCustomerInf('created_at', false , ''), false, false ),
 
 		], $body );
 
@@ -340,7 +352,7 @@ class ZoomService
 
 		if( !$customData )
 		{
-			return $this->appointmentId . ':' . $this->appointmentCustomerInf( 'customer_id', false, 0 ) . ':' . $cf_id;
+			return '';
 		}
 
 		if( $customData['type'] == 'file' )
@@ -382,7 +394,7 @@ class ZoomService
 
 	private function getBearerToken()
 	{
-		if( Helper::isSaaSVersion() )
+		if( Helper::isSaaSVersion() && Helper::getOption('zoom_integration_method', 'oauth', false) == 'oauth' )
 		{
 			$zoomData = Helper::getOption('zoom_user_data');
 			if( empty( $zoomData ) )
@@ -454,8 +466,8 @@ class ZoomService
 
 	private function generateJWT()
 	{
-		$key    = Helper::getOption('zoom_api_key', '', false);
-		$secret = Helper::getOption('zoom_api_secret', '', false);
+		$key    = Helper::getOption('zoom_api_key', '');
+		$secret = Helper::getOption('zoom_api_secret', '');
 
 		$token = [
 			"iss"   => $key,

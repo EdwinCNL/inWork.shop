@@ -100,7 +100,11 @@ function customerTpl( $display = false )
 						<div class="form-row">
 							<div class="form-group col-md-12">
 								<label for="input_location"><?php print bkntc__('Location')?> <span class="required-star">*</span></label>
-								<select class="form-control" id="input_location"></select>
+								<select class="form-control" id="input_location">
+									<?php if( $parameters['location'] ):?>
+									<option value="<?php print (int)$parameters['location']->id?>"><?php print esc_html( $parameters['location']->name )?></option>
+									<?php endif;?>
+								</select>
 							</div>
 						</div>
 
@@ -375,7 +379,7 @@ function customerTpl( $display = false )
 									<label for="input_recurring_start_date"><?php print bkntc__('Start date')?> <span class="required-star">*</span></label>
 									<div class="inner-addon left-addon">
 										<i><img src="<?php print Helper::icon('calendar.svg')?>"/></i>
-										<input type="text" class="form-control" id="input_recurring_start_date" value="<?php print Date::dateSQL()?>">
+										<input type="text" class="form-control" id="input_recurring_start_date" value="<?php print Date::datee( $parameters['date'] )?>">
 									</div>
 								</div>
 								<div class="form-group col-md-4">
@@ -398,7 +402,7 @@ function customerTpl( $display = false )
 									<label for="input_date"><?php print bkntc__('Date')?> <span class="required-star">*</span></label>
 									<div class="inner-addon left-addon">
 										<i><img src="<?php print Helper::icon('calendar.svg')?>"/></i>
-										<input class="form-control" id="input_date" placeholder="<?php print bkntc__('Select...')?>">
+										<input class="form-control" id="input_date" value="<?php print Date::format(Helper::getOption('date_format', 'Y-m-d'), $parameters['date'] )?>" placeholder="<?php print bkntc__('Select...')?>">
 									</div>
 								</div>
 								<div class="form-group col-md-6">

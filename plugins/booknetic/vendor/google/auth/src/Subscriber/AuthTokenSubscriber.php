@@ -19,9 +19,9 @@ namespace Google\Auth\Subscriber;
 
 use Google\Auth\FetchAuthTokenInterface;
 use Google\Auth\GetQuotaProjectInterface;
-use GuzzleHttp\Event\BeforeEvent;
-use GuzzleHttp\Event\RequestEvents;
-use GuzzleHttp\Event\SubscriberInterface;
+use Booknetic_GuzzleHttp\Event\BeforeEvent;
+use Booknetic_GuzzleHttp\Event\RequestEvents;
+use Booknetic_GuzzleHttp\Event\SubscriberInterface;
 
 /**
  * AuthTokenSubscriber is a Guzzle Subscriber that adds an Authorization header
@@ -81,7 +81,7 @@ class AuthTokenSubscriber implements SubscriberInterface
      *
      * Example:
      * ```
-     * use GuzzleHttp\Client;
+     * use Booknetic_GuzzleHttp\Client;
      * use Google\Auth\OAuth2;
      * use Google\Auth\Subscriber\AuthTokenSubscriber;
      *

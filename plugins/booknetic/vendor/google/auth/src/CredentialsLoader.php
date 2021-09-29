@@ -137,7 +137,7 @@ abstract class CredentialsLoader implements FetchAuthTokenInterface
      * @param array $httpClientOptions (optional) Array of request options to apply.
      * @param callable $httpHandler (optional) http client to fetch the token.
      * @param callable $tokenCallback (optional) function to be called when a new token is fetched.
-     * @return \GuzzleHttp\Client
+     * @return \Booknetic_GuzzleHttp\Client
      */
     public static function makeHttpClient(
         FetchAuthTokenInterface $fetcher,
@@ -145,11 +145,11 @@ abstract class CredentialsLoader implements FetchAuthTokenInterface
         callable $httpHandler = null,
         callable $tokenCallback = null
     ) {
-        $version = \GuzzleHttp\ClientInterface::VERSION;
+        $version = \Booknetic_GuzzleHttp\ClientInterface::VERSION;
 
         switch ($version[0]) {
             case '5':
-                $client = new \GuzzleHttp\Client($httpClientOptions);
+                $client = new \Booknetic_GuzzleHttp\Client($httpClientOptions);
                 $client->setDefaultOption('auth', 'google_auth');
                 $subscriber = new Subscriber\AuthTokenSubscriber(
                     $fetcher,
@@ -164,10 +164,10 @@ abstract class CredentialsLoader implements FetchAuthTokenInterface
                     $httpHandler,
                     $tokenCallback
                 );
-                $stack = \GuzzleHttp\HandlerStack::create();
+                $stack = \Booknetic_GuzzleHttp\HandlerStack::create();
                 $stack->push($middleware);
 
-                return new \GuzzleHttp\Client([
+                return new \Booknetic_GuzzleHttp\Client([
                    'handler' => $stack,
                    'auth' => 'google_auth',
                 ] + $httpClientOptions);

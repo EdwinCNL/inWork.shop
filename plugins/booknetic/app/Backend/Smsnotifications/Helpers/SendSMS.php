@@ -8,6 +8,7 @@ use BookneticApp\Backend\Appointments\Model\AppointmentExtra;
 use BookneticApp\Backend\Customers\Model\Customer;
 use BookneticApp\Backend\Emailnotifications\Model\Notification;
 use BookneticApp\Backend\Locations\Model\Location;
+use BookneticApp\Backend\NotificationTab\Model\NotificationTab;
 use BookneticApp\Backend\Services\Model\Service;
 use BookneticApp\Backend\Services\Model\ServiceCategory;
 use BookneticApp\Backend\Staff\Model\Staff;
@@ -84,30 +85,36 @@ class SendSMS
 			$queryWhere['id'] = $this->actionId;
 		}
 
-		$notifications	= Notification::where( $queryWhere )->fetchAll();
-
-		if( count( $notifications ) === 0 )
-		{
-			return;
-		}
-
-		$sendToStaff	= false;
-		$sendToCustomer	= false;
-
-		foreach ( $notifications AS $notification )
-		{
-			if( $notification['send_to'] == 'staff' )
-			{
-				$sendToStaff	= $notification;
-			}
-			else if( $notification['send_to'] == 'customer' )
-			{
-				$sendToCustomer	= $notification;
-			}
-		}
-
 		$this->appointmentInf			= Appointment::get( $this->appointmentID );
 		$this->appointmentCustomerInf	= AppointmentCustomer::where('appointment_id', $this->appointmentID)->where('customer_id', $this->customerID)->fetch();
+
+        $sendToStaff = Notification::where( $queryWhere )->where('tab_id', 'is', NULL)->where('send_to', 'staff')->fetch();
+		$getNotfTabIds = DB::DB()->get_results( DB::DB()->prepare( 'SELECT id FROM '.DB::table( 'notification_tabs' ).' WHERE FIND_IN_SET( "sms", notification_types )  AND  ( FIND_IN_SET( %d, locations ) OR IFNULL( locations, "" ) = "" )  AND ( FIND_IN_SET( %d, services ) OR IFNULL( services, "" ) = "" )  AND ( FIND_IN_SET( %s, languages ) OR IFNULL( languages, "" ) = "" )  AND ( FIND_IN_SET( %d, staff ) OR IFNULL( staff, "" ) = "" ) ' . Permission::queryFilter( 'notification_tabs' ), [
+			$this->appointmentInf['location_id'],
+			$this->appointmentInf['service_id'],
+			$this->appointmentCustomerInf['locale'],
+			$this->appointmentInf['staff_id']
+		] ), ARRAY_A );
+
+        $notfTabIds = [0];
+        foreach($getNotfTabIds as $value)
+        {
+            $notfTabIds[] = $value['id'];
+        }
+
+        $sendToCustomer = Notification::where( $queryWhere )->where('send_to', 'customer')
+            ->where('tab_id',  $notfTabIds)->fetch();
+
+        if(!$sendToCustomer)
+        {
+            $sendToCustomer = Notification::where( $queryWhere )->where('tab_id', 'is', NULL)
+                ->where('send_to', 'customer')->fetch();
+        }
+
+        if(!$sendToCustomer && !$sendToStaff)
+        {
+            return false;
+        }
 
 		$this->customerInf				= Customer::get( $this->customerID );
 		$this->staffInf					= Staff::get( $this->appointmentInf['staff_id'] );
@@ -116,7 +123,7 @@ class SendSMS
 		$this->serviceCategoryInf		= ServiceCategory::get( $this->serviceInf['category_id'] );
 		$this->locationInf				= Location::get( $this->appointmentInf['location_id'] );
 
-		if( $sendToCustomer !== false )
+		if( $sendToCustomer )
 		{
 			$customerPhone	= $this->customerInf['phone_number'];
 
@@ -125,7 +132,7 @@ class SendSMS
 			$this->sendSMS( $customerPhone, $smsBody );
 		}
 
-		if( $sendToStaff !== false )
+		if( $sendToStaff )
 		{
 			$staffPhone = $this->staffInf['phone_number'];
 
@@ -195,6 +202,19 @@ class SendSMS
 		}
 	}
 
+    private function translateStatus($status)
+    {
+        switch($status)
+        {
+            case 'approved': return bkntc__('Approved'); break;
+            case 'pending': return bkntc__('Pending'); break;
+            case 'waiting_for_payment': return bkntc__('Waiting for payment'); break;
+            case 'canceled': return bkntc__('Canceled'); break;
+            case 'rejected': return bkntc__('Rejected'); break;
+            default: return $status; break;
+        }
+    }
+
 	private function replaceShortTags( $body, $toStaff = false )
 	{
 		$body = str_replace( [
@@ -214,6 +234,7 @@ class SendSMS
 			'{appointment_sum_price}',
 			'{appointment_paid_price}',
 			'{appointment_payment_method}',
+			'{appointment_tax_amount}',
 
 			'{service_name}',
 			'{service_price}',
@@ -253,17 +274,20 @@ class SendSMS
 			'{company_address}',
 
 			'{zoom_meeting_url}',
-			'{zoom_meeting_password}'
+			'{zoom_meeting_password}',
+
+            '{appointment_created_date}',
+            '{appointment_created_time}',
 		], [
 			$this->appointmentCustomerInf['id'],
-			Date::datee( $this->appointmentInf['date'] ),
-			Date::dateTime($this->appointmentInf['date'] . ' ' . $this->appointmentInf['start_time'] ),
-			Date::time( $this->appointmentInf['date'] . ' ' . $this->appointmentInf['start_time'] ),
-			Date::time(Date::epoch( $this->appointmentInf['date'] . ' ' . $this->appointmentInf['start_time'] ) + $this->appointmentInf['duration'] * 60),
-			Helper::secFormat( $this->appointmentInf['duration'] * 60 ),
+            Date::datee( $this->appointmentInf['date'] . ' ' . $this->appointmentInf['start_time'], false, !$toStaff, $this->appointmentCustomerInf['client_timezone'] ), // staff ucun gonderende musterinin timezonuna gore getmemelidir
+            Date::dateTime( $this->appointmentInf['date'] . ' ' . $this->appointmentInf['start_time'], false, !$toStaff, $this->appointmentCustomerInf['client_timezone'] ), // staff ucun gonderende musterinin timezonuna gore getmemelidir
+            Date::time( $this->appointmentInf['date'] . ' ' . $this->appointmentInf['start_time'], false, !$toStaff, $this->appointmentCustomerInf['client_timezone'] ), // staff ucun gonderende musterinin timezonuna gore getmemelidir
+            Date::time(Date::epoch( $this->appointmentInf['date'] . ' ' . $this->appointmentInf['start_time'] ) + $this->appointmentInf['duration'] * 60, false, !$toStaff, $this->appointmentCustomerInf['client_timezone']), // staff ucun gonderende musterinin timezonuna gore getmemelidir
+            Helper::secFormat( $this->appointmentInf['duration'] * 60 ),
 			Helper::secFormat( $this->appointmentInf['buffer_before'] * 60 ),
 			Helper::secFormat( $this->appointmentInf['buffer_after'] * 60 ),
-			$this->appointmentCustomerInf['status'],
+			self::translateStatus($this->appointmentCustomerInf['status']),
 			Helper::price( $this->appointmentCustomerInf['service_amount'] ),
 			Helper::price( $this->appointmentCustomerInf['extras_amount'] ),
 			$this->extraServicesList(),
@@ -271,6 +295,7 @@ class SendSMS
 			Helper::price( $this->appointmentCustomerInf['service_amount'] + $this->appointmentCustomerInf['extras_amount'] - $this->appointmentCustomerInf['discount'] ),
 			Helper::price( $this->appointmentCustomerInf['paid_amount'] ),
 			Helper::paymentMethod( $this->appointmentCustomerInf['payment_method'] ),
+			Helper::price( $this->appointmentCustomerInf['tax_amount'] ),
 
 			$this->serviceInf['name'],
 			Helper::price( $this->serviceInf['price'] ),
@@ -310,7 +335,10 @@ class SendSMS
 			Helper::getOption('company_address', ''),
 
 			$this->getZoomData('url', $toStaff),
-			$this->getZoomData('password', $toStaff)
+			$this->getZoomData('password', $toStaff),
+
+            Date::datee( $this->appointmentCustomerInf['created_at'], false, !$toStaff ), // staff ucun gonderende musterinin timezonuna gore getmemelidir
+            Date::time($this->appointmentCustomerInf['created_at'], false, !$toStaff), // staff ucun gonderende musterinin timezonuna gore getmemelidir
 
 		], $body );
 

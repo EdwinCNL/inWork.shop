@@ -2,6 +2,7 @@
 
 namespace BookneticApp\Backend\Billing\Controller;
 
+use BookneticApp\Providers\Curl;
 use BookneticSaaS\Backend\Plans\Model\Plan;
 use BookneticSaaS\Backend\Tenants\Model\TenantBilling;
 use BookneticApp\Backend\Staff\Model\Staff;
@@ -74,6 +75,15 @@ class Main extends Controller
 		]);
 	}
 
+	public function download_qr()
+	{
+		$qrData = Curl::getURL('https://chart.googleapis.com/chart?chs=540x540&cht=qr&choe=UTF-8&chl=' . urlencode( site_url() . '/' . esc_html( Permission::tenantInf()->domain ) ) );
+
+		header('Content-Disposition: Attachment;filename=QR.png');
+		header("Content-type: image/png");
+
+		print $qrData;
+	}
 
 
 

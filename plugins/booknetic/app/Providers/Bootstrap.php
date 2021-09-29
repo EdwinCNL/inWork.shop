@@ -27,6 +27,7 @@ namespace
 namespace BookneticApp\Providers
 {
 
+	use BookneticApp\Backend\Settings\Helpers\LocalizationService;
 	use BookneticApp\Integrations\WooCommerce\WooCommerceService;
 
 	/**
@@ -74,6 +75,12 @@ namespace BookneticApp\Providers
 				}
 
 				load_plugin_textdomain( 'booknetic', FALSE, $path );
+
+				if( Helper::isSaaSVersion() )
+				{
+					$language = Session::get('active_language');
+					LocalizationService::setLanguage( $language );
+				}
 			});
 		}
 

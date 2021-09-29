@@ -18,9 +18,9 @@
 namespace Google\Auth\Subscriber;
 
 use Google\Auth\CacheTrait;
-use GuzzleHttp\Event\BeforeEvent;
-use GuzzleHttp\Event\RequestEvents;
-use GuzzleHttp\Event\SubscriberInterface;
+use Booknetic_GuzzleHttp\Event\BeforeEvent;
+use Booknetic_GuzzleHttp\Event\RequestEvents;
+use Booknetic_GuzzleHttp\Event\SubscriberInterface;
 use Psr\Cache\CacheItemPoolInterface;
 
 /**
@@ -109,7 +109,7 @@ class ScopedAccessTokenSubscriber implements SubscriberInterface
      * ```
      * use google\appengine\api\app_identity\AppIdentityService;
      * use Google\Auth\Subscriber\ScopedAccessTokenSubscriber;
-     * use GuzzleHttp\Client;
+     * use Booknetic_GuzzleHttp\Client;
      *
      * $scope = 'https://www.googleapis.com/auth/taskqueue'
      * $subscriber = new ScopedAccessToken(

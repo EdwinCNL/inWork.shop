@@ -33,6 +33,7 @@ class Paypal
 
 	private $_paymentId;
 	private $_price;
+	private $_tax = 0;
 	private $_currency;
 	private $_itemId;
 	private $_itemName;
@@ -69,6 +70,11 @@ class Paypal
 		$this->_currency = $currency;
 
 		return $this;
+	}
+
+	public function setTax( $tax_amount )
+	{
+		$this->_tax = $tax_amount;
 	}
 
 	public function setItem( $itemId , $itemName , $itemDescription )
@@ -120,13 +126,13 @@ class Paypal
 
 		$details = new Details();
 		$details->setShipping(0)
-			->setTax(0)
+			->setTax($this->_tax)
 			->setSubtotal($this->_price);
 
 
 		$amount = new Amount();
 		$amount->setCurrency($this->_currency)
-			->setTotal($this->_price)
+			->setTotal($this->_price + $this->_tax)
 			->setDetails($details);
 
 
@@ -159,9 +165,14 @@ class Paypal
 		}
 		catch (\Exception $ex)
 		{
+			$errorData = json_decode( (string) $ex->getData(), true );
+
+
+			error_log( print_r ( $errorData , true ) );
+
 			return [
 				'status'	=> false,
-				'error'		=> bkntc__('Colud\'t create a payment!')
+				'error'		=> isset($errorData['message']) ? esc_html( $errorData['message'] ) : bkntc__('Couldn\'t create a payment!')
 			];
 		}
 	}

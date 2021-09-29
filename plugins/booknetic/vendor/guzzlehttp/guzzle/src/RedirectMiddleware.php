@@ -1,10 +1,10 @@
 <?php
-namespace GuzzleHttp;
+namespace Booknetic_GuzzleHttp;
 
-use GuzzleHttp\Exception\BadResponseException;
-use GuzzleHttp\Exception\TooManyRedirectsException;
-use GuzzleHttp\Promise\PromiseInterface;
-use GuzzleHttp\Psr7;
+use Booknetic_GuzzleHttp\Exception\BadResponseException;
+use Booknetic_GuzzleHttp\Exception\TooManyRedirectsException;
+use Booknetic_GuzzleHttp\Promise\PromiseInterface;
+use Booknetic_GuzzleHttp\Psr7;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
@@ -13,7 +13,7 @@ use Psr\Http\Message\UriInterface;
  * Request redirect middleware.
  *
  * Apply this middleware like other middleware using
- * {@see \GuzzleHttp\Middleware::redirect()}.
+ * {@see \Booknetic_GuzzleHttp\Middleware::redirect()}.
  */
 class RedirectMiddleware
 {

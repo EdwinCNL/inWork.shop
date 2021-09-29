@@ -7,8 +7,8 @@ function reloadCalendarFn()
 		service		=	$("#calendar_service_filter").val(),
 		staff		=	[],
 		activeRange	=	FSCalendar.state.dateProfile.activeRange,
-		startDate	=	activeRange.start.getFullYear() + '-' + booknetic.zeroPad(parseInt(activeRange.start.getMonth())+1) + '-' + booknetic.zeroPad(activeRange.start.getDate()),
-		endDate		=	activeRange.end.getFullYear() + '-' + booknetic.zeroPad(parseInt(activeRange.end.getMonth())+1) + '-' + booknetic.zeroPad(activeRange.end.getDate());
+		startDate	=	activeRange.start.getUTCFullYear() + '-' + booknetic.zeroPad(parseInt(activeRange.start.getUTCMonth())+1) + '-' + booknetic.zeroPad(activeRange.start.getUTCDate()),
+		endDate		=	activeRange.end.getUTCFullYear() + '-' + booknetic.zeroPad(parseInt(activeRange.end.getUTCMonth())+1) + '-' + booknetic.zeroPad(activeRange.end.getUTCDate());
 
 	$(".staff-section > .selected-staff").each(function()
 	{
@@ -29,6 +29,14 @@ function reloadCalendarFn()
 			eventSources[i].remove();
 		}
 
+		result['data'].forEach(function(item, key)
+		{
+			if(typeof item.title != 'undefined')
+			{
+				result['data'][key].title = booknetic.htmlspecialchars_decode(item.title);
+			}
+		});
+
 		FSCalendar.addEventSource( result['data'] );
 
 		FSCalendarRange = {
@@ -46,6 +54,7 @@ function reloadCalendarFn()
 	{
 		$(".filters_panel select").select2({
 			theme: 'bootstrap',
+			placeholder: booknetic.__('select'),
 			allowClear: true
 		});
 
@@ -78,6 +87,30 @@ function reloadCalendarFn()
 		}).on('change', '.filters_panel select', reloadCalendarFn).on('click', '.create_new_appointment_btn', function ()
 		{
 			booknetic.loadModal('Appointments.add_new', {});
+		}).on('click', '.add-appointment-on-calendar', function ()
+		{
+			var date = $(this).closest('td').data('date');
+			booknetic.loadModal('Appointments.add_new', {date});
+		}).on('mouseenter', '.fc-view-container td', function() {
+			const index = $(this).index();
+			let td = $(this).parents('table:eq(0)').find('thead').find('tr').find('td:eq('+index+')');
+			if(typeof td.attr('data-date') == 'undefined')
+			{
+				td = $(this).parents('table:eq(0)').find('tbody').find('tr').find('td:eq('+index+')');
+				if(typeof td.attr('data-date') == 'undefined')
+					return false;
+			}
+			td.append('<a class="add-appointment-on-calendar" title="'+booknetic.__('new_appointment')+'"><i class="fa fa-plus"></i></a>');
+		}).on('mouseleave', '.fc-view-container td', function() {
+			const index = $(this).index();
+			let td = $(this).parents('table:eq(0)').find('thead').find('tr').find('td:eq('+index+')');
+			if(typeof td.attr('data-date') == 'undefined')
+			{
+				td = $(this).parents('table:eq(0)').find('tbody').find('tr').find('td:eq('+index+')');
+				if(typeof td.attr('data-date') == 'undefined')
+					return false;
+			}
+			td.find('a.add-appointment-on-calendar').remove();
 		});
 
 		if( timeFormat == 'H:i' )
@@ -85,6 +118,7 @@ function reloadCalendarFn()
 			var timeFormatObj = {
 				hour:   '2-digit',
 				minute: '2-digit',
+				hour12: false,
 				meridiem: false
 			};
 		}
@@ -116,13 +150,13 @@ function reloadCalendarFn()
 			{
 				let week_days = [booknetic.__("Sun"), booknetic.__("Mon"), booknetic.__("Tue"), booknetic.__("Wed"), booknetic.__("Thu"), booknetic.__("Fri"), booknetic.__("Sat")];
 
-				return week_days[ date.date.marker.getDay() ]
+				return week_days[ date.date.marker.getUTCDay() ]
 			},
 			listDayAltFormat: function ( date )
 			{
 				let month_names = [booknetic.__("January"), booknetic.__("February"), booknetic.__("March"), booknetic.__("April"), booknetic.__("May"), booknetic.__("June"), booknetic.__("July"), booknetic.__("August"), booknetic.__("September"), booknetic.__("October"), booknetic.__("November"), booknetic.__("December")];
 
-				return month_names[date.date.marker.getMonth()] + ' ' + date.date.marker.getDate() + ', ' + date.date.marker.getFullYear();
+				return booknetic.reformatDateFromCustomFormat(dateFormat, date.date.marker.getUTCDate(), month_names[date.date.marker.getUTCMonth()], date.date.marker.getUTCFullYear());
 			},
 
 			slotLabelFormat : timeFormatObj,
@@ -137,8 +171,8 @@ function reloadCalendarFn()
 				}
 
 				var activeRange	=	FSCalendar.state.dateProfile.activeRange,
-					startDate	=	new Date( activeRange.start.getFullYear() + '-' + booknetic.zeroPad(parseInt(activeRange.start.getMonth())+1) + '-' + booknetic.zeroPad(activeRange.start.getDate()) ),
-					endDate		=	new Date( activeRange.end.getFullYear() + '-' + booknetic.zeroPad(parseInt(activeRange.end.getMonth())+1) + '-' + booknetic.zeroPad(activeRange.end.getDate()) );
+					startDate	=	new Date( activeRange.start.getUTCFullYear() + '-' + booknetic.zeroPad(parseInt(activeRange.start.getUTCMonth())+1) + '-' + booknetic.zeroPad(activeRange.start.getUTCDate()) ),
+					endDate		=	new Date( activeRange.end.getUTCFullYear() + '-' + booknetic.zeroPad(parseInt(activeRange.end.getUTCMonth())+1) + '-' + booknetic.zeroPad(activeRange.end.getUTCDate()) );
 
 				// if old range, then break
 				if( ( FSCalendarRange.start.getTime() <= startDate.getTime() && FSCalendarRange.end.getTime() >= startDate.getTime() ) && ( FSCalendarRange.start.getTime() <= endDate.getTime() && FSCalendarRange.end.getTime() >= endDate.getTime() ) )
@@ -192,7 +226,7 @@ function reloadCalendarFn()
 			},
 			eventClick: function (info)
 			{
-				var id = info.event.extendedProps['appointment_id'];console.log(info.event.extendedProps)
+				var id = info.event.extendedProps['appointment_id'];
 
 				booknetic.loadModal('Appointments.info', {id: id});
 			},
@@ -204,6 +238,7 @@ function reloadCalendarFn()
 				day:    booknetic.__('day'),
 				list:   booknetic.__('list')
 			},
+
 			titleFormat: function( date )
 			{
 				let start       = date.date.marker;
@@ -213,15 +248,15 @@ function reloadCalendarFn()
 
 				if( diff_days >= 28 ) // month view
 				{
-					return month_names[start.getMonth()] + ' ' + start.getFullYear();
+					return month_names[start.getUTCMonth()] + ' ' + start.getUTCFullYear();
 				}
 				else if( diff_days == 1 )
 				{
-					return month_names[start.getMonth()] + ' ' + start.getDate() + ', ' + start.getFullYear();
+					return booknetic.reformatDateFromCustomFormat(dateFormat, booknetic.zeroPad(start.getUTCDate()), booknetic.zeroPad(start.getUTCMonth()+1), start.getUTCFullYear());
 				}
 				else
 				{
-					return month_names[start.getMonth()] + ' ' + start.getDate() + ', ' + start.getFullYear() + ' - ' + month_names[end.getMonth()] + ' ' + end.getDate() + ', ' + end.getFullYear();
+					return booknetic.reformatDateFromCustomFormat(dateFormat, booknetic.zeroPad(start.getUTCDate()), booknetic.zeroPad(start.getUTCMonth()+1), start.getUTCFullYear()) + ' - ' + booknetic.reformatDateFromCustomFormat(dateFormat, booknetic.zeroPad(end.getUTCDate()), booknetic.zeroPad(end.getUTCMonth()+1), end.getUTCFullYear());
 				}
 			},
 			columnHeaderText: function ( date )
@@ -230,7 +265,7 @@ function reloadCalendarFn()
 
 				if( FSCalendar.view.type == 'timeGridWeek' )
 				{
-					return week_days[ date.getDay() ] + ' ' + booknetic.zeroPad(date.getMonth()+1) + '/' + booknetic.zeroPad(date.getDate());
+					return week_days[ date.getDay() ] + ', ' + booknetic.reformatDateFromCustomFormat(dateFormat, booknetic.zeroPad(date.getDate()), booknetic.zeroPad(date.getMonth()+1), date.getFullYear());
 				}
 
 				return week_days[ date.getDay() ]
@@ -247,3 +282,4 @@ function reloadCalendarFn()
 	});
 
 })(jQuery);
+
