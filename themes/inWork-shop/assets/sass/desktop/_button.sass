@@ -1,0 +1,37 @@
+a
+  text-decoration: none
+  .in-btn
+    display: flex
+    align-items: center
+    padding: 13px 22px 16px
+    background-color: $blue
+    border-radius: 24px
+    color: $white
+    font-family: "Lato", $fonts-standard
+    $box-shadow: 0 3px 8px 1px rgba(0,0,0,0.2)
+    -webkit-box-shadow: $box-shadow
+    box-shadow: $box-shadow
+    transition: all 0.2s ease-in-out
+    cursor: pointer
+    &:hover
+      background-color: $blue-hover
+      $box-shadow: 0 0 0 0 rgba(0,0,0,0)
+      -webkit-box-shadow: $box-shadow
+      box-shadow: $box-shadow
+      transition: all 0.2s ease-in-out
+  &:nth-child(2)
+    margin-left: 16px
+  .in-btn__CTA
+    @include gradient($yellow, $yellow-light)
+    &:hover
+      @include gradient($yellow-light, $yellow)
+  .btn__arrow-down
+    padding: 10px 12px 12px 22px
+    &:after
+      content: ""
+      display: inline-block
+      height: 26px
+      width: 26px
+      background-image: url("#{$image-path}arrow-down-white.svg")
+      margin-left: 8px
+

@@ -1,5 +1,15 @@
+html
+  scroll-behavior: smooth
+
 body
   margin: 0 !important
+
+.frontpage
+  background-image: url("#{$image-path}blue-cloud@2x.png")
+  background-repeat: no-repeat
+  background-position-x: 90%
+  background-position-y: 3.5rem
+  background-size: 60%
 
 main, footer
   @include page-width()
@@ -24,43 +34,39 @@ main, footer
   border-bottom: 1px solid white
 
 .section-container__hero
-  height: 50vh
-  max-height: 350px
+  height: calc(100vh - 68px)
   position: relative
   display: flex
-  align-items: center
-  background-image: url("#{$image-path}inworkshop-hero-bg.png")
-  background-repeat: no-repeat
-  background-position: bottom
-  .section-container__slogan
-    margin-left: 10%
-  .hero__image-container
-    position: absolute
-    height: 280px
-    width: 280px
-    -webkit-border-radius: 15vh
-    -moz-border-radius: 15vh
-    border-radius: 25vh
-    background-color: rgba(255,255,255, 0.4)
-    border: 1px solid rgba(255,255,255, 0.8)
-    right: 10%
-    bottom: 22px
-    .hero__image
-      //background-image: url("#{$image-path}girl-with-pen.png")
-      position: absolute
-      background-size: contain
-      background-repeat: no-repeat
-      height: 370px
-      width: 230px
-      bottom: -13px
-      right: 14px
-      z-index: 10000
-
+  .section-content__container
+    display: flex
+    flex-direction: column
+    align-self: center
+    flex: 2 0 auto
+    .hero__content
+      max-width: 66%
+      .sub-tile
+        margin: 8px 0 24px
+      .button__container
+        display: flex
+        justify-content: start
+        flex-direction: row
+  .section-content__image
+    display: flex
+    align-self: center
+    flex: 1 0 auto
+    position: relative
+    img
+      z-index: 5
+      display: block
+      max-width: 420px
+      max-height: 321px
+      width: auto
+      height: auto
 
 .section-container__booker
   display: flex
   justify-content: center
-  margin-top: 24px
+  padding-top: 92px
 
 #booknetic_theme_8
   box-shadow: none
