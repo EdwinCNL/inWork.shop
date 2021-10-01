@@ -1,25 +1,63 @@
 /* Theme Name: inWork.shop Author: Edwin Cornelisse Author URI: www.edwincornelisse.nl Description: This theme is specifically build for the website inWork.shop. Version: 1.1 */
 /* Fixed styles for desktop and mobile. */
-@font-face { font-family: 'lato-light'; src: url("/wp-content/themes/inWork-shop/assets/fonts/lato-light-webfont.woff2") format("woff2"), url("/wp-content/themes/inWork-shop/assets/fonts/lato-light-webfont.woff") format("woff"); font-weight: normal; font-style: normal; }
+@font-face { font-family: 'Lato-bold-it'; src: url("/wp-content/themes/inWork-shop/assets/fonts/Lato-BoldItalic.eot"); src: local("Lato Bold Italic"), local("Lato-BoldItalic"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-BoldItalic.eot?#iefix") format("embedded-opentype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-BoldItalic.woff2") format("woff2"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-BoldItalic.woff") format("woff"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-BoldItalic.ttf") format("truetype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-BoldItalic.svg#Lato-BoldItalic") format("svg"); font-weight: bold; font-style: italic; font-display: swap; }
 
-@font-face { font-family: 'lato-regular'; src: url("/wp-content/themes/inWork-shop/assets/fonts/lato-regular-webfont.woff2") format("woff2"), url("/wp-content/themes/inWork-shop/assets/fonts/lato-regular-webfont.woff") format("woff"); font-weight: normal; font-style: normal; }
+@font-face { font-family: 'Lato-bold'; src: url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Bold.eot"); src: local("Lato Bold"), local("Lato-Bold"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Bold.eot?#iefix") format("embedded-opentype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Bold.woff2") format("woff2"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Bold.woff") format("woff"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Bold.ttf") format("truetype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Bold.svg#Lato-Bold") format("svg"); font-weight: bold; font-style: normal; font-display: swap; }
 
-@font-face { font-family: 'lato-bold'; src: url("/wp-content/themes/inWork-shop/assets/fonts/lato-bold-webfont.woff2") format("woff2"), url("/wp-content/themes/inWork-shop/assets/fonts/lato-bold-webfont.woff") format("woff"); font-weight: normal; font-style: normal; }
+@font-face { font-family: 'Lato-hairline-it'; src: url("/wp-content/themes/inWork-shop/assets/fonts/Lato-HairlineItalic.eot"); src: local("Lato-HairlineItalic"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-HairlineItalic.eot?#iefix") format("embedded-opentype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-HairlineItalic.woff2") format("woff2"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-HairlineItalic.woff") format("woff"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-HairlineItalic.ttf") format("truetype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-HairlineItalic.svg#Lato-HairlineItalic") format("svg"); font-weight: 300; font-style: italic; font-display: swap; }
 
-h1 { font-family: lato-light; font-size: 3rem; margin: 0; }
+@font-face { font-family: 'Lato-hairline'; src: url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Hairline.eot"); src: local("Lato-Hairline"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Hairline.eot?#iefix") format("embedded-opentype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Hairline.woff2") format("woff2"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Hairline.woff") format("woff"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Hairline.ttf") format("truetype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Hairline.svg#Lato-Hairline") format("svg"); font-weight: 300; font-style: normal; font-display: swap; }
+
+@font-face { font-family: 'Lato-black-it'; src: url("/wp-content/themes/inWork-shop/assets/fonts/Lato-BlackItalic.eot"); src: local("Lato Black Italic"), local("Lato-BlackItalic"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-BlackItalic.eot?#iefix") format("embedded-opentype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-BlackItalic.woff2") format("woff2"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-BlackItalic.woff") format("woff"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-BlackItalic.ttf") format("truetype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-BlackItalic.svg#Lato-BlackItalic") format("svg"); font-weight: 900; font-style: italic; font-display: swap; }
+
+@font-face { font-family: 'Lato-black'; src: url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Black.eot"); src: local("Lato Black"), local("Lato-Black"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Black.eot?#iefix") format("embedded-opentype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Black.woff2") format("woff2"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Black.woff") format("woff"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Black.ttf") format("truetype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Black.svg#Lato-Black") format("svg"); font-weight: 900; font-style: normal; font-display: swap; }
+
+@font-face { font-family: 'Lato-light-it'; src: url("/wp-content/themes/inWork-shop/assets/fonts/Lato-LightItalic.eot"); src: local("Lato-LightItalic"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-LightItalic.eot?#iefix") format("embedded-opentype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-LightItalic.woff2") format("woff2"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-LightItalic.woff") format("woff"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-LightItalic.ttf") format("truetype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-LightItalic.svg#Lato-LightItalic") format("svg"); font-weight: 300; font-style: italic; font-display: swap; }
+
+@font-face { font-family: 'Lato-light'; src: url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Light.eot"); src: local("Lato-Light"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Light.eot?#iefix") format("embedded-opentype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Light.woff2") format("woff2"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Light.woff") format("woff"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Light.ttf") format("truetype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Light.svg#Lato-Light") format("svg"); font-weight: 300; font-style: normal; font-display: swap; }
+
+@font-face { font-family: 'Lato-it'; src: url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Italic.eot"); src: local("Lato Italic"), local("Lato-Italic"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Italic.eot?#iefix") format("embedded-opentype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Italic.woff2") format("woff2"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Italic.woff") format("woff"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Italic.ttf") format("truetype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Italic.svg#Lato-Italic") format("svg"); font-weight: normal; font-style: italic; font-display: swap; }
+
+@font-face { font-family: 'Lato'; src: url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Regular.eot"); src: local("Lato Regular"), local("Lato-Regular"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Regular.eot?#iefix") format("embedded-opentype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Regular.woff2") format("woff2"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Regular.woff") format("woff"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Regular.ttf") format("truetype"), url("/wp-content/themes/inWork-shop/assets/fonts/Lato-Regular.svg#Lato-Regular") format("svg"); font-weight: normal; font-style: normal; font-display: swap; }
+
+h1 { font-family: "Lato-it", Helvetica, sans-serif; font-size: 3rem; margin: 0; }
 
 h2 { font-family: lato-bold; font-size: 2.3rem; margin: 0; }
 
-h3 { font-family: lato-regular; font-size: 1.5rem; margin: 0; }
+h3 { font-family: "Lato-light", Helvetica, sans-serif; font-size: 1.5rem; margin: 0; }
 
 .font-white { color: #FFFFFF; }
 
+.font-blue { color: #007BFF; }
+
+.font-purple { color: #6610F2; }
+
 .font-dark-blue { color: #230871; }
 
-.font-black { color: #404040; }
+.font-black { color: #4d4d4d; }
 
 /* Desktop only styles. */
+a { text-decoration: none; }
+
+a .in-btn { display: flex; align-items: center; padding: 13px 22px 16px; background-color: #007BFF; border-radius: 24px; color: #FFFFFF; font-family: "Lato", Helvetica, sans-serif; -webkit-box-shadow: 0 3px 8px 1px rgba(0, 0, 0, 0.2); box-shadow: 0 3px 8px 1px rgba(0, 0, 0, 0.2); transition: all 0.2s ease-in-out; cursor: pointer; }
+
+a .in-btn:hover { background-color: #0066D3; -webkit-box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); transition: all 0.2s ease-in-out; }
+
+a:nth-child(2) { margin-left: 16px; }
+
+a .in-btn__CTA { background: #fd7e14; background: linear-gradient(90deg, #fd7e14 0%, #ffa458 100%); }
+
+a .in-btn__CTA:hover { background: #ffa458; background: linear-gradient(90deg, #ffa458 0%, #fd7e14 100%); }
+
+a .btn__arrow-down { padding: 10px 12px 12px 22px; }
+
+a .btn__arrow-down:after { content: ""; display: inline-block; height: 26px; width: 26px; background-image: url("/wp-content/themes/inWork-shop/assets/images/arrow-down-white.svg"); margin-left: 8px; }
+
+html { scroll-behavior: smooth; }
+
 body { margin: 0 !important; }
+
+.frontpage { background-image: url("/wp-content/themes/inWork-shop/assets/images/blue-cloud@2x.png"); background-repeat: no-repeat; background-position-x: 90%; background-position-y: 3.5rem; background-size: 60%; }
 
 main, footer { width: 100%; max-width: 1120px; margin: auto; }
 
@@ -27,15 +65,21 @@ main, footer { width: 100%; max-width: 1120px; margin: auto; }
 
 .section-container { width: 100%; border-bottom: 1px solid white; }
 
-.section-container__hero { height: 50vh; max-height: 350px; position: relative; display: flex; align-items: center; background-image: url("/wp-content/themes/inWork-shop/assets/images/inworkshop-hero-bg.png"); background-repeat: no-repeat; background-position: bottom; }
+.section-container__hero { height: calc(100vh - 68px); position: relative; display: flex; }
 
-.section-container__hero .section-container__slogan { margin-left: 10%; }
+.section-container__hero .section-content__container { display: flex; flex-direction: column; align-self: center; flex: 2 0 auto; }
 
-.section-container__hero .hero__image-container { position: absolute; height: 280px; width: 280px; -webkit-border-radius: 15vh; -moz-border-radius: 15vh; border-radius: 25vh; background-color: rgba(255, 255, 255, 0.4); border: 1px solid rgba(255, 255, 255, 0.8); right: 10%; bottom: 22px; }
+.section-container__hero .section-content__container .hero__content { max-width: 66%; }
 
-.section-container__hero .hero__image-container .hero__image { position: absolute; background-size: contain; background-repeat: no-repeat; height: 370px; width: 230px; bottom: -13px; right: 14px; z-index: 10000; }
+.section-container__hero .section-content__container .hero__content .sub-tile { margin: 8px 0 24px; }
 
-.section-container__booker { display: flex; justify-content: center; margin-top: 24px; }
+.section-container__hero .section-content__container .hero__content .button__container { display: flex; justify-content: start; flex-direction: row; }
+
+.section-container__hero .section-content__image { display: flex; align-self: center; flex: 1 0 auto; position: relative; }
+
+.section-container__hero .section-content__image img { z-index: 5; display: block; max-width: 420px; max-height: 321px; width: auto; height: auto; }
+
+.section-container__booker { display: flex; justify-content: center; padding-top: 92px; }
 
 #booknetic_theme_8 { box-shadow: none; flex-direction: column; }
 
@@ -133,6 +177,6 @@ main, footer { width: 100%; max-width: 1120px; margin: auto; }
 
 .section-container__slider-container .slider__container-dots { display: flex; flex-direction: row; justify-content: center; }
 
-.section-container__slider-container .slider__container-dots .slider__dot { width: 24px; height: 24px; border: 1px solid #404040; border-radius: 12px; }
+.section-container__slider-container .slider__container-dots .slider__dot { width: 24px; height: 24px; border: 1px solid #4d4d4d; border-radius: 12px; }
 
 .section-container__slider-container .slider__container-dots .slider__dot-active { background-color: red; }

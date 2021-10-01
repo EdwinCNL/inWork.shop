@@ -9,7 +9,7 @@
     <meta name="author" content="www.edwincornelisse.nl">
     <?php wp_head(); ?>
 </head>
-<body>
+<body class="frontpage">
 
 <?php if (!is_user_logged_in()) { ?>
     <div class="underconsturction__cover">

@@ -2,29 +2,35 @@
 // inWorkshop Brand Colours
 
 //Primary
-
-$dark-blue: #230871
-
-//Secondary
-
 $blue: #007BFF
-$yellow: #FFB548
+$yellow: rgba(253,126,20,1)
+$yellow-light: rgba(255,164,88,1)
 $purple: #6610F2
+
+//Hover
+$blue-hover: #0066D3
+$yellow-hover: #E87515
 
 // Support colors
 
 $red: #931D23
 $green: #008266
+$dark-blue: #230871
 
 // Black & Whites
 
-$black: #404040
+$black: #4d4d4d
 $dark-gray: #6d6d6d
 $gray: #929292
 $mid-gray: #B1B1B1
 $smokey-gray: #F5F5F5
 $white: #FFFFFF
 
+//Gradient
+
+@mixin gradient($Gradient-color, $Gradient-color-2)
+  background: $Gradient-color
+  background: linear-gradient(90deg, $Gradient-color 0%, $Gradient-color-2 100%)
 
 $nav-height: 68px
 $page-margin: 16px
